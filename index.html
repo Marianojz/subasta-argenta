@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Subastas y Tienda - Demo Avanzado Completo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  
+  <style>
+    :root {
+      --primary: #ff3e7f;
+      --primary-dark: #e83672;
+      --secondary: #ff9d00;
+      --accent: #00d4ff;
+      --success: #00ff88;
+      --warning: #ffcc00;
+      --danger: #ff3860;
+      --dark: #0f0f23;
+      --dark-light: #1a1a2e;
+      --text: #f0f0f5;
+      --text-light: #a0a0b0;
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%);
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto;
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .glass-light {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 5px 15px rgba(255, 62, 127, 0.5);
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes logoGlow {
+      0% { box-shadow: 0 5px 15px rgba(255, 62, 127, 0.5); }
+      100% { box-shadow: 0 5px 25px rgba(255, 62, 127, 0.8), 0 0 30px rgba(255, 62, 127, 0.4); }
+    }
+    
+    .countdown.pulse { 
+      animation: pulse 1.5s infinite; 
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 204, 0, 0.8); }
+      100% { transform: scale(1); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.6s ease both;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: none; }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease both;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: none; }
+    }
+    
+    .auction-card, .product-card {
+      transition: all 0.4s ease;
+      border-left: 4px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .auction-card::before, .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.6s;
+    }
+    
+    .auction-card:hover::before, .product-card:hover::before {
+      left: 100%;
+    }
+    
+    .auction-card:hover, .product-card:hover {
+      transform: translateY(-5px) scale(1.01);
+      border-left-color: var(--primary);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(255, 62, 127, 0.4);
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 62, 127, 0.6);
+    }
+    
+    .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+    }
+    
+    .filter-section {
+      transition: all 0.3s ease;
+    }
+    
+    .filter-toggle {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+      }
+      
+      .filter-content {
+        display: none;
+      }
+      
+      .filter-content.active {
+        display: block;
+        animation: slideDown 0.4s ease;
+      }
+      
+      @keyframes slideDown {
+        from { opacity: 0; max-height: 0; }
+        to { opacity: 1; max-height: 500px; }
+      }
+    }
+    
+    .mobile-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.75rem;
+      z-index: 100;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .mobile-menu-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      color: var(--text-light);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    
+    .mobile-menu-item.active {
+      color: var(--primary);
+      background: rgba(255, 62, 127, 0.1);
+    }
+    
+    .mobile-menu-item i {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .status-active {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--success);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    }
+    
+    .status-ended {
+      background: rgba(255, 56, 96, 0.2);
+      color: var(--danger);
+      box-shadow: 0 0 10px rgba(255, 56, 96, 0.3);
+    }
+    
+    .status-available {
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    
+    .category-tag {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 62, 127, 0.2);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .category-tag i {
+      margin-right: 0.25rem;
+      font-size: 0.7rem;
+    }
+    
+    .price-tag {
+      font-weight: 700;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    input, select, textarea {
+      background: rgba(26, 26, 46, 0.7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: var(--text) !important;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px rgba(255, 62, 127, 0.3) !important;
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: var(--text-light) !important;
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, rgba(255, 62, 127, 0.15), rgba(255, 157, 0, 0.15));
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stats-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255, 62, 127, 0.3);
+    }
+    
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    
+    .stats-label {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-animate {
+      background: linear-gradient(-45deg, var(--primary), var(--secondary), var(--accent), var(--success));
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+    }
+    
+    .section-transition {
+      transition: all 0.5s ease;
+    }
+    
+    .glow {
+      box-shadow: 0 0 15px rgba(255, 62, 127, 0.6);
+    }
+    
+    .glow:hover {
+      box-shadow: 0 0 25px rgba(255, 62, 127, 0.8);
+    }
+    
+    .header-glow {
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .bid-history {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+    
+    .bidder-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      margin-right: -8px;
+      border: 2px solid var(--dark);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .more-bidders {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--dark);
+      margin-right: 5px;
+      border: 2px solid var(--dark);
+    }
+    
+    .image-upload-container {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .image-upload-container:hover {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.05);
+    }
+    
+    .image-upload-container.dragover {
+      border-color: var(--success);
+      background: rgba(0, 255, 136, 0.05);
+    }
+    
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    
+    .increment-buttons {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .increment-btn {
+      flex: 1;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .increment-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .increment-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .quick-bid-btn {
+      background: rgba(255, 157, 0, 0.2);
+      border: 1px solid rgba(255, 157, 0, 0.5);
+      color: var(--secondary);
+    }
+    
+    .quick-bid-btn:hover {
+      background: rgba(255, 157, 0, 0.3);
+    }
+    
+    .bot-badge {
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+    }
+
+    .toast {
+      background: var(--dark-light);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .toast-success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast-error {
+      border-left: 4px solid var(--danger);
+    }
+
+    .toast-info {
+      border-left: 4px solid var(--accent);
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+
+    .cart-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 0;
+    }
+
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .quantity-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quantity-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .quantity-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .quantity-btn:disabled:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-tabs {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-tabs .nav-link {
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary);
+      background: rgba(255, 62, 127, 0.1);
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .payment-method {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.1);
+    }
+
+    .payment-method.selected {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.2);
+      box-shadow: 0 0 15px rgba(255, 62, 127, 0.4);
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .bot-name-edit {
+      background: transparent !important;
+      border: none !important;
+      color: var(--text) !important;
+      font-size: 0.875rem;
+      padding: 0;
+      width: 100%;
+    }
+
+    .bot-name-edit:focus {
+      outline: 1px solid var(--primary);
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+  </style>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body class="text-slate-100 pb-16 md:pb-0">
+  <div id="particles-js"></div>
+  
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <div class="max-w-6xl mx-auto p-4 relative z-10">
+    <header class="flex items-center justify-between gap-4 mb-6 glass p-4 rounded-2xl header-glow">
+      <div class="flex items-center gap-3">
+        <div class="logo glow">
+          <i class="fas fa-gavel"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">Subastas y Tienda â€“ Demo Firebase</h1>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span class="text-xs bg-gradient-to-r from-pink-500/30 to-orange-500/30 px-2 py-1 rounded-full">Firebase</span>
+            <span class="text-xs bg-gradient-to-r from-pink-500/30 to-orange-500/30 px-2 py-1 rounded-full">MercadoPago</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+            <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
+          </button>
+          <span id="cartBadge" class="cart-badge hidden">0</span>
+        </div>
+        <div id="userInfo" class="text-sm text-slate-300 hidden md:block">No has iniciado sesiÃ³n</div>
+        <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+          <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesiÃ³n</span>
+        </button>
+        <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
+          <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesiÃ³n</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <main class="lg:col-span-2 space-y-6">
+        <div class="glass p-5 rounded-2xl fade-in">
+          <ul class="nav nav-pills mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="auctions-tab" data-bs-toggle="pill" data-bs-target="#auctions" type="button" role="tab">
+                <i class="fas fa-gavel mr-1"></i> Subastas
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="store-tab" data-bs-toggle="pill" data-bs-target="#store" type="button" role="tab">
+                <i class="fas fa-store mr-1"></i> Tienda Virtual
+              </button>
+            </li>
+          </ul>
+          
+          <div class="tab-content" id="mainTabContent">
+            <div class="tab-pane fade show active" id="auctions" role="tabpanel">
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                  <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-hourglass-half text-pink-400"></i> Subastas Activas
+                  </h2>
+                  <div class="text-sm text-slate-400">Ofertas rÃ¡pidas y compra directa</div>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                  <button id="btnCreateDemo" class="btn btn-outline-light btn-sm flex items-center gap-1 flex-1 md:flex-none glow">
+                    <i class="fas fa-magic"></i> <span>Crear demo</span>
+                  </button>
+                  <button id="openAdmin" class="btn btn-primary btn-sm flex items-center gap-1 flex-1 md:flex-none">
+                    <i class="fas fa-cog"></i> <span>Panel Admin</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-toggle md:hidden glass-light p-3 rounded-xl">
+                <span class="flex items-center gap-2">
+                  <i class="fas fa-filter text-pink-400"></i> Filtros de bÃºsqueda
+                </span>
+                <i class="fas fa-chevron-down transition-transform"></i>
+              </div>
+
+              <div class="filter-content md:!block mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-search"></i> Buscar
+                  </label>
+                  <input id="search" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buscar..." />
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-sort"></i> Ordenar
+                  </label>
+                  <select id="sortBy" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="ending">PrÃ³ximo a terminar</option>
+                    <option value="highest">Mayor puja</option>
+                    <option value="newest">MÃ¡s reciente</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-filter"></i> Estado
+                  </label>
+                  <select id="filterState" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="all">Todas</option>
+                    <option value="active">Activas</option>
+                    <option value="ended">Finalizadas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="auctionsList" class="mt-6 grid gap-4"></div>
+            </div>
+
+            <div class="tab-pane fade" id="store" role="tabpanel">
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                  <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-store text-blue-400"></i> Tienda Virtual
+                  </h2>
+                  <div class="text-sm text-slate-400">Productos para compra inmediata</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-search"></i> Buscar
+                  </label>
+                  <input id="searchProducts" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buscar..." />
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-tags"></i> CategorÃ­a
+                  </label>
+                  <select id="filterProductCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="all">Todas</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-sort"></i> Ordenar
+                  </label>
+                  <select id="sortProducts" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="newest">MÃ¡s recientes</option>
+                    <option value="price-asc">Precio menor</option>
+                    <option value="price-desc">Precio mayor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="productsList" class="grid gap-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="adminPanel" class="glass p-5 rounded-2xl hidden">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fas fa-user-shield text-pink-400"></i> Panel Admin
+            </h3>
+            <button id="exportCsv" class="btn btn-outline-light btn-sm">
+              <i class="fas fa-file-export"></i> Exportar
+            </button>
+          </div>
+          
+          <ul class="nav nav-tabs mb-4" id="adminTabs">
+            <li class="nav-item">
+              <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
+                <i class="fas fa-plus"></i> Crear
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage">
+                <i class="fas fa-edit"></i> Gestionar
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots">
+                <i class="fas fa-robot"></i> Bots
+              </button>
+            </li>
+          </ul>
+          
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="create">
+              <form id="createAuctionForm" class="space-y-4">
+                <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="TÃ­tulo" required />
+                <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="DescripciÃ³n"></textarea>
+                
+                <div id="imageUploadContainer" class="image-upload-container">
+                  <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+                  <div class="text-slate-400">Arrastra imagen aquÃ­</div>
+                  <input type="file" id="imageUpload" accept="image/*" class="hidden" />
+                  <img id="imagePreview" class="image-preview hidden" />
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                  <input id="a_start" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio" />
+                  <input id="a_buyNow" type="number" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buy Now" />
+                  <input id="a_end" type="datetime-local" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" />
+                </div>
+                
+                <button class="btn btn-primary btn-sm" type="submit">
+                  <i class="fas fa-plus"></i> Crear
+                </button>
+              </form>
+            </div>
+            
+            <div class="tab-pane fade" id="manage">
+              <div id="manageAuctionsList"></div>
+            </div>
+            
+            <div class="tab-pane fade" id="bots">
+              <div class="glass-light p-4 rounded-xl mb-4">
+                <input type="checkbox" id="botsEnabled" checked> Activar bots
+                <div id="botUsersList" class="mt-3"></div>
+              </div>
+              <button id="addBotUser" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-plus"></i> Agregar bot
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="space-y-6">
+        <div class="glass p-5 rounded-2xl sticky top-4">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <div class="text-sm text-slate-400">Saldo</div>
+              <div id="balance" class="text-2xl font-bold price-tag">$0</div>
+            </div>
+            <button id="topup" class="btn btn-outline-light btn-sm glow">
+              <i class="fas fa-plus"></i> Cargar
+            </button>
+          </div>
+          <div class="mt-4 text-sm">
+            <div class="mb-2 font-medium">Cuentas demo</div>
+            <div class="space-y-2">
+              <div class="p-2 rounded bg-slate-800/30">
+                <div>user@demo.com</div>
+                <div class="text-xs text-slate-400">Pass: user123</div>
+              </div>
+              <div class="p-2 rounded bg-slate-800/30">
+                <div>admin@demo.com</div>
+                <div class="text-xs text-slate-400">Pass: admin123</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-5 rounded-2xl">
+          <h4 class="font-semibold mb-4">Filtros</h4>
+          <div class="space-y-4">
+            <select id="filterCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Todas las categorÃ­as</option>
+            </select>
+            <select id="filterTime" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Cualquier tiempo</option>
+              <option value="short">< 10 min</option>
+              <option value="1hour">< 1 hora</option>
+            </select>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="mobile-menu md:hidden">
+    <div class="mobile-menu-item active" data-target="auctions">
+      <i class="fas fa-gavel"></i>
+      <span>Subastas</span>
+    </div>
+    <div class="mobile-menu-item" data-target="store">
+      <i class="fas fa-store"></i>
+      <span>Tienda</span>
+    </div>
+    <div class="mobile-menu-item" data-target="cart">
+      <i class="fas fa-shopping-cart"></i>
+      <span>Carrito</span>
+    </div>
+  </div>
+
+  <!-- Modales -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-sign-in-alt text-pink-400"></i> Login</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm">
+            <div class="mb-3">
+              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginEmail" value="user@demo.com">
+            </div>
+            <div class="mb-3">
+              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginPassword" value="user123">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl">Entrar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="bidModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-gavel text-pink-400"></i> Ofertar</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="bidAuctionInfo" class="mb-4"></div>
+          <form id="bidForm">
+            <input type="hidden" id="bidAuctionId">
+            <input type="number" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" id="bidAmount" placeholder="Tu puja" required>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-shopping-cart text-blue-400"></i> Carrito</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="cartItems" class="space-y-3 mb-4"></div>
+          <div id="cartEmpty" class="text-center py-4 text-slate-400 hidden">
+            <i class="fas fa-shopping-cart fa-2x mb-3 opacity-50"></i>
+            <div>Tu carrito estÃ¡ vacÃ­o</div>
+          </div>
+          <div id="cartSummary">
+            <div class="flex justify-between mb-3">
+              <span>Total:</span>
+              <span id="cartTotal" class="price-tag">$0</span>
+            </div>
+            <button id="checkoutBtn" class="btn btn-primary w-100 rounded-xl mb-2">Pagar con Saldo</button>
+            <button id="mercadopagoBtn" class="btn btn-outline-light w-100 rounded-xl">MercadoPago</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="topupModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-wallet text-pink-400"></i> Recargar</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="topupAmountSelection">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="500">$500</button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="1000">$1000</button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="2000">$2000</button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="5000">$5000</button>
+            </div>
+            <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto">
+            <button id="proceedToPayment" class="btn btn-primary w-100" disabled>Continuar</button>
+          </div>
+          <div id="topupPaymentMethods" class="hidden">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="payment-method" data-method="credit_card">
+                <i class="fas fa-credit-card fa-2x mb-2"></i>
+                <div>CrÃ©dito</div>
+              </div>
+              <div class="payment-method" data-method="debit_card">
+                <i class="fas fa-money-check fa-2x mb-2"></i>
+                <div>DÃ©bito</div>
+              </div>
+            </div>
+            <button id="confirmTopupPayment" class="btn btn-primary w-100" disabled>Pagar</button>
+          </div>
+          <div id="topupLoading" class="text-center py-4 hidden">
+            <div class="spinner mb-3"></div>
+            <div>Procesando...</div>
+          </div>
+          <div id="topupSuccess" class="text-center py-4 hidden">
+            <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
+            <h4 style="color: var(--success);">Â¡Ã‰xito!</h4>
+            <div id="topupDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="mpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-credit-card text-blue-400"></i> MercadoPago</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="paymentSummary" class="mb-4">
+            <h6 class="mb-3">Resumen</h6>
+            <div id="paymentItems"></div>
+            <div class="border-top pt-3 mt-3">
+              <div class="flex justify-between">
+                <span>Total:</span>
+                <span id="paymentTotal" class="price-tag">$0</span>
+              </div>
+            </div>
+          </div>
+          <div id="paymentMethods">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="payment-method" data-method="credit_card">
+                <i class="fas fa-credit-card fa-2x mb-2"></i>
+                <div>CrÃ©dito</div>
+              </div>
+              <div class="payment-method" data-method="debit_card">
+                <i class="fas fa-money-check fa-2x mb-2"></i>
+                <div>DÃ©bito</div>
+              </div>
+            </div>
+          </div>
+          <div id="paymentLoading" class="text-center py-4 hidden">
+            <div class="spinner mb-3"></div>
+            <div>Procesando...</div>
+          </div>
+          <div id="paymentSuccess" class="text-center py-4 hidden">
+            <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
+            <h4 style="color: var(--success);">Â¡Pago exitoso!</h4>
+            <div id="paymentDetails"></div>
+          </div>
+          <div id="paymentActions" class="mt-4 flex gap-2">
+            <button id="confirmPayment" class="btn btn-primary flex-1" disabled>Pagar</button>
+            <button id="cancelPayment" class="btn btn-outline-light">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ============================================
+    // JAVASCRIPT COMPLETO CON FIREBASE - CORREGIDO
+    // ============================================
+
+    // CONFIGURACIÃ“N DE FIREBASE - REEMPLAZA CON TUS CREDENCIALES
+    const firebaseConfig = {
+      apiKey: "AIzaSyAittwJ6haX6k4y8mtL3Q7JIU1LxwJIY-s",
+      authDomain: "tienda-virtual-b697f.firebaseapp.com",
+      projectId: "tienda-virtual-b697f",
+      storageBucket: "tienda-virtual-b697f.firebasestorage.app",
+      messagingSenderId: "604259849911",
+      appId: "1:604259849911:web:976e219543a4ad63f39f32"
+    };
+
+    // Inicializar Firebase
+    let db, auth, storage;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      storage = firebase.storage();
+      console.log("âœ… Firebase inicializado correctamente");
+    } catch (error) {
+      console.error("âŒ Error inicializando Firebase:", error);
+      alert("âš ï¸ Por favor configura Firebase en el cÃ³digo (lÃ­nea 10)");
+    }
+
+    // Estado de la aplicaciÃ³n
+    let state = {
+      currentUser: null,
+      auctions: [],
+      products: [],
+      users: [],
+      bids: [],
+      cart: [],
+      orders: [],
+      botUsers: [],
+      botSettings: { enabled: true, delay: 2, probability: 70 },
+      currentIncrement: 10,
+      imageUploaded: false,
+      uploadedImageUrl: null
+    };
+
+    let selectedPaymentMethod = null;
+    let topupAmount = 0;
+
+    // INICIALIZACIÃ“N
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('ðŸš€ Inicializando aplicaciÃ³n...');
+      await loadState();
+      initApp();
+      setupEventListeners();
+      renderAuctions();
+      renderProducts();
+      updateUI();
+      initParticles();
+      startBotActivity();
+      console.log('âœ… AplicaciÃ³n lista');
+    });
+
+    function initApp() {
+      setupMobileMenu();
+      const filterToggle = document.querySelector('.filter-toggle');
+      if (filterToggle) {
+        filterToggle.addEventListener('click', function() {
+          document.querySelector('.filter-content').classList.toggle('active');
+        });
+      }
+      setupImageUpload();
+      setupIncrementButtons();
+      updateBotSettingsUI();
+      updateCartUI();
+      setupTopupListeners();
+    }
+
+    // FIREBASE - CARGAR ESTADO
+    async function loadState() {
+      try {
+        const doc = await db.collection('appState').doc('mainState').get();
+        if (doc.exists) {
+          const data = doc.data();
+          state.auctions = data.auctions || [];
+          state.products = data.products || [];
+          state.bids = data.bids || [];
+          state.cart = data.cart || [];
+          state.orders = data.orders || [];
+          state.botUsers = data.botUsers || [];
+          state.botSettings = data.botSettings || state.botSettings;
+          console.log("âœ… Estado cargado desde Firebase");
+        } else {
+          loadDemoData();
+        }
+      } catch (error) {
+        console.error("Error cargando:", error);
+        loadDemoData();
+      }
+    }
+
+    // FIREBASE - GUARDAR ESTADO
+    async function saveState() {
+      if (!state.currentUser) return;
+      try {
+        await db.collection('appState').doc('mainState').set({
+          auctions: state.auctions,
+          products: state.products,
+          bids: state.bids,
+          cart: state.cart,
+          orders: state.orders,
+          botUsers: state.botUsers,
+          botSettings: state.botSettings,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("ðŸ’¾ Guardado en Firebase");
+      } catch (error) {
+        console.error("Error guardando:", error);
+      }
+    }
+
+    // DATOS DE DEMOSTRACIÃ“N
+    function loadDemoData() {
+      const now = new Date();
+      state.users = [
+        { id: 1, name: 'Usuario Demo', email: 'user@demo.com', password: 'user123', balance: 5000, role: 'user' },
+        { id: 2, name: 'Admin', email: 'admin@demo.com', password: 'admin123', balance: 10000, role: 'admin' }
+      ];
+      state.botUsers = [
+        { id: 101, name: 'Bot 1', balance: 8000, active: true },
+        { id: 102, name: 'Bot 2', balance: 7500, active: true }
+      ];
+      state.auctions = [
+        {
+          id: 1,
+          title: 'iPhone 14 Pro',
+          description: 'Nuevo',
+          image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?ixlib=rb-4.0.3&w=500&q=80',
+          category: 'ElectrÃ³nicos',
+          startPrice: 500,
+          currentBid: 500,
+          buyNowPrice: 1200,
+          endTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+          sellerId: 2,
+          bids: [],
+          lastBidTime: now.toISOString(),
+          status: 'active'
+        }
+      ];
+      state.products = [
+        {
+          id: 1,
+          title: 'Laptop Gaming',
+          description: 'Alto rendimiento',
+          image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=500',
+          category: 'ElectrÃ³nicos',
+          price: 1200,
+          stock: 5,
+          featured: true
+        }
+      ];
+      saveState();
+    }
+
+    // EVENT LISTENERS
+    function setupEventListeners() {
+      document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      document.getElementById('loginForm').addEventListener('submit', handleLogin);
+      document.getElementById('cartBtn').addEventListener('click', showCartModal);
+      document.getElementById('checkoutBtn').addEventListener('click', checkout);
+      document.getElementById('mercadopagoBtn').addEventListener('click', showMercadoPagoModal);
+      document.getElementById('btnCreateDemo').addEventListener('click', createDemoData);
+      document.getElementById('openAdmin').addEventListener('click', toggleAdminPanel);
+      document.getElementById('topup').addEventListener('click', addBalance);
+      document.getElementById('addBotUser').addEventListener('click', addBotUser);
+      document.getElementById('createAuctionForm').addEventListener('submit', createAuction);
+      document.getElementById('bidForm').addEventListener('submit', placeBid);
+      document.getElementById('search').addEventListener('input', filterAuctions);
+      document.getElementById('sortBy').addEventListener('change', filterAuctions);
+      document.getElementById('filterState').addEventListener('change', filterAuctions);
+      document.getElementById('searchProducts').addEventListener('input', filterProducts);
+      document.getElementById('filterProductCategory').addEventListener('change', filterProducts);
+      document.getElementById('sortProducts').addEventListener('change', filterProducts);
+      document.getElementById('exportCsv').addEventListener('click', exportToCsv);
+      document.getElementById('manage-tab').addEventListener('click', renderManageAuctions);
+      document.getElementById('bots-tab').addEventListener('click', renderBotUsers);
+    }
+
+    // AUTENTICACIÃ“N
+    function showLoginModal() {
+      new bootstrap.Modal(document.getElementById('loginModal')).show();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+        
+        if (userDoc.exists) {
+          state.currentUser = { id: userCredential.user.uid, ...userDoc.data() };
+        } else {
+          state.currentUser = {
+            id: userCredential.user.uid,
+            name: 'Usuario',
+            email: email,
+            balance: 5000,
+            role: 'user'
+          };
+          await db.collection('users').doc(userCredential.user.uid).set(state.currentUser);
+        }
+        
+        updateUI();
+        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+        showToast('âœ… SesiÃ³n iniciada', 'success');
+      } catch (error) {
+        console.error("Error login:", error);
+        showToast('âŒ Credenciales incorrectas', 'error');
+      }
+    }
+
+    function logout() {
+      state.currentUser = null;
+      updateUI();
+      saveState();
+      showToast('ðŸ‘‹ SesiÃ³n cerrada', 'info');
+    }
+
+    function updateUI() {
+      const userInfo = document.getElementById('userInfo');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const balance = document.getElementById('balance');
+      const adminPanel = document.getElementById('adminPanel');
+      
+      if (state.currentUser) {
+        userInfo.textContent = `${state.currentUser.name} (${state.currentUser.role})`;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        balance.textContent = `$${state.currentUser.balance}`;
+        if (state.currentUser.role === 'admin') {
+          adminPanel.classList.remove('hidden');
+        }
+      } else {
+        userInfo.textContent = 'No has iniciado sesiÃ³n';
+        loginBtn.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        balance.textContent = '$0';
+        adminPanel.classList.add('hidden');
+      }
+      updateCategoryFilter();
+      updateCartUI();
+    }
+
+    // SUBIDA DE IMÃGENES
+    function setupImageUpload() {
+      const container = document.getElementById('imageUploadContainer');
+      const input = document.getElementById('imageUpload');
+      const preview = document.getElementById('imagePreview');
+      
+      container.addEventListener('click', () => input.click());
+      container.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        container.classList.add('dragover');
+      });
+      container.addEventListener('dragleave', () => container.classList.remove('dragover'));
+      container.addEventListener('drop', (e) => {
+        e.preventDefault();
+        container.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleImageUpload(e.dataTransfer.files[0]);
+      });
+      input.addEventListener('change', (e) => {
+        if (e.target.files.length) handleImageUpload(e.target.files[0]);
+      });
+    }
+
+    async function handleImageUpload(file) {
+      if (!file.type.match('image.*')) {
+        showToast('âš ï¸ Selecciona una imagen vÃ¡lida', 'error');
+        return;
+      }
+      try {
+        const imageRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
+        showToast('â¬†ï¸ Subiendo imagen...', 'info');
+        const snapshot = await imageRef.put(file);
+        const downloadURL = await snapshot.ref.getDownloadURL();
+        
+        const preview = document.getElementById('imagePreview');
+        preview.src = downloadURL;
+        preview.classList.remove('hidden');
+        state.imageUploaded = true;
+        state.uploadedImageUrl = downloadURL;
+        showToast('âœ… Imagen subida', 'success');
+      } catch (error) {
+        console.error("Error:", error);
+        showToast('âŒ Error subiendo imagen', 'error');
+      }
+    }
+
+    // RENDERIZADO DE SUBASTAS
+    function renderAuctions(auctionsToRender = null) {
+      const list = document.getElementById('auctionsList');
+      const auctions = auctionsToRender || state.auctions;
+      
+      if (auctions.length === 0) {
+        list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay subastas</div>';
+        return;
+      }
+      
+      list.innerHTML = auctions.map(auction => `
+        <div class="auction-card glass p-4 rounded-xl">
+          <div class="flex gap-4">
+            <img src="${auction.image}" class="w-24 h-24 object-cover rounded-lg">
+            <div class="flex-grow">
+              <div class="flex justify-between">
+                <h3 class="font-semibold">${auction.title}</h3>
+                <span class="status-badge ${auction.status === 'active' ? 'status-active' : 'status-ended'}">
+                  ${auction.status === 'active' ? 'Activa' : 'Finalizada'}
+                </span>
+              </div>
+              <p class="text-sm text-slate-400 mt-1">${auction.description}</p>
+              <div class="flex justify-between items-center mt-4">
+                <div>
+                  <div class="text-xs text-slate-400">Puja actual</div>
+                  <div class="price-tag">$${auction.currentBid || auction.startPrice}</div>
+                </div>
+                <div class="countdown" data-end="${auction.endTime}">${formatTimeRemaining(auction.endTime)}</div>
+              </div>
+              <div class="flex gap-2 mt-4">
+                ${auction.status === 'active' ? `
+                  <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${auction.id}">
+                    <i class="fas fa-gavel"></i> Ofertar
+                  </button>
+                  ${auction.buyNowPrice ? `
+                    <button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${auction.id}">
+                      Comprar ($${auction.buyNowPrice})
+                    </button>
+                  ` : ''}
+                ` : '<button class="btn btn-secondary btn-sm flex-1" disabled>Finalizada</button>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.bid-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          openBidModal(parseInt(this.getAttribute('data-id')));
+        });
+      });
+      
+      document.querySelectorAll('.buynow-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          buyNow(parseInt(this.getAttribute('data-id')));
+        });
+      });
+      
+      updateCountdowns();
+    }
+
+    // RENDERIZADO DE PRODUCTOS
+    function renderProducts(productsToRender = null) {
+      const list = document.getElementById('productsList');
+      const products = productsToRender || state.products;
+      
+      if (products.length === 0) {
+        list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay productos</div>';
+        return;
+      }
+      
+      list.innerHTML = products.map(product => `
+        <div class="product-card glass p-4 rounded-xl">
+          <div class="flex gap-4">
+            <img src="${product.image}" class="w-24 h-24 object-cover rounded-lg">
+            <div class="flex-grow">
+              <h3 class="font-semibold">${product.title}</h3>
+              <p class="text-sm text-slate-400">${product.description}</p>
+              <div class="flex justify-between items-center mt-4">
+                <div class="price-tag">$${product.price}</div>
+                <span class="text-xs">Stock: ${product.stock}</span>
+              </div>
+              ${product.stock > 0 ? `
+                <button class="add-to-cart-btn btn btn-primary btn-sm w-full mt-3" data-id="${product.id}">
+                  <i class="fas fa-cart-plus"></i> Agregar
+                </button>
+              ` : '<button class="btn btn-secondary btn-sm w-full mt-3" disabled>Agotado</button>'}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          addToCart(parseInt(this.getAttribute('data-id')));
+        });
+      });
+    }
+
+    // CARRITO
+    function addToCart(productId) {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      
+      const product = state.products.find(p => p.id === productId);
+      if (!product || product.stock <= 0) {
+        showToast('âŒ Producto no disponible', 'error');
+        return;
+      }
+      
+      const existing = state.cart.find(item => item.productId === productId);
+      if (existing) {
+        if (existing.quantity < product.stock) {
+          existing.quantity++;
+          showToast('âœ… Cantidad actualizada', 'success');
+        } else {
+          showToast('âŒ No hay mÃ¡s stock', 'error');
+          return;
+        }
+      } else {
+        state.cart.push({
+          id: Date.now(),
+          productId: productId,
+          quantity: 1,
+          price: product.price
+        });
+        showToast('âœ… Agregado al carrito', 'success');
+      }
+      
+      updateCartUI();
+      saveState();
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadge');
+      const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+      if (total > 0) {
+        badge.textContent = total;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function showCartModal() {
+      renderCartItems();
+      new bootstrap.Modal(document.getElementById('cartModal')).show();
+    }
+
+    function renderCartItems() {
+      const items = document.getElementById('cartItems');
+      const empty = document.getElementById('cartEmpty');
+      const summary = document.getElementById('cartSummary');
+      const total = document.getElementById('cartTotal');
+      
+      if (state.cart.length === 0) {
+        items.innerHTML = '';
+        empty.classList.remove('hidden');
+        summary.style.display = 'none';
+        return;
+      }
+      
+      empty.classList.add('hidden');
+      summary.style.display = 'block';
+      
+      let totalAmount = 0;
+      items.innerHTML = state.cart.map(item => {
+        const product = state.products.find(p => p.id === item.productId);
+        if (!product) return '';
+        const itemTotal = item.quantity * item.price;
+        totalAmount += itemTotal;
+        
+        return `
+          <div class="cart-item">
+            <div class="flex gap-3">
+              <img src="${product.image}" class="w-16 h-16 object-cover rounded">
+              <div class="flex-grow">
+                <h6 class="font-semibold">${product.title}</h6>
+                <p class="text-sm text-slate-400">$${item.price} c/u</p>
+                <div class="quantity-controls mt-2">
+                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">-</button>
+                  <span class="px-3">${item.quantity}</span>
+                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
+                  <button class="quantity-btn ml-2" onclick="removeFromCart(${item.id})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="font-semibold">$${itemTotal}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      total.textContent = `$${totalAmount}`;
+    }
+
+    function updateCartQuantity(itemId, change) {
+      const item = state.cart.find(i => i.id === itemId);
+      if (!item) return;
+      
+      const product = state.products.find(p => p.id === item.productId);
+      const newQuantity = item.quantity + change;
+      
+      if (newQuantity <= 0) {
+        removeFromCart(itemId);
+        return;
+      }
+      
+      if (newQuantity > product.stock) {
+        showToast('âŒ No hay mÃ¡s stock', 'error');
+        return;
+      }
+      
+      item.quantity = newQuantity;
+      updateCartUI();
+      renderCartItems();
+      saveState();
+    }
+
+    function removeFromCart(itemId) {
+      state.cart = state.cart.filter(item => item.id !== itemId);
+      updateCartUI();
+      renderCartItems();
+      saveState();
+    }
+
+    function checkout() {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      
+      if (state.cart.length === 0) return;
+      
+      const total = state.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+      
+      if (state.currentUser.balance < total) {
+        showToast('âŒ Saldo insuficiente', 'error');
+        return;
+      }
+      
+      state.currentUser.balance -= total;
+      state.cart.forEach(item => {
+        const product = state.products.find(p => p.id === item.productId);
+        if (product) product.stock -= item.quantity;
+      });
+      
+      state.orders.push({
+        id: Date.now(),
+        userId: state.currentUser.id,
+        items: [...state.cart],
+        total: total,
+        timestamp: new Date().toISOString()
+      });
+      
+      state.cart = [];
+      bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+      createConfetti();
+      updateUI();
+      renderProducts();
+      saveState();
+      showToast('âœ… Compra exitosa', 'success');
+    }
+
+    // PUJAS
+    function openBidModal(auctionId) {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction || auction.status !== 'active') return;
+      
+      document.getElementById('bidAuctionId').value = auctionId;
+      document.getElementById('bidAuctionInfo').innerHTML = `
+        <div class="flex gap-3 p-3 bg-slate-800/30 rounded">
+          <img src="${auction.image}" class="w-12 h-12 object-cover rounded">
+          <div>
+            <div class="font-semibold">${auction.title}</div>
+            <div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div>
+          </div>
+        </div>
+      `;
+      
+      const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
+      document.getElementById('bidAmount').value = minBid;
+      document.getElementById('bidAmount').min = minBid;
+      
+      new bootstrap.Modal(document.getElementById('bidModal')).show();
+    }
+
+    function placeBid(e) {
+      e.preventDefault();
+      const auctionId = parseInt(document.getElementById('bidAuctionId').value);
+      const amount = parseFloat(document.getElementById('bidAmount').value);
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) return;
+      
+      const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
+      if (amount < minBid) {
+        showToast(`âŒ MÃ­nimo: $${minBid}`, 'error');
+        return;
+      }
+      
+      if (state.currentUser.balance < amount) {
+        showToast('âŒ Saldo insuficiente', 'error');
+        return;
+      }
+      
+      state.bids.push({
+        id: state.bids.length + 1,
+        auctionId: auctionId,
+        userId: state.currentUser.id,
+        amount: amount,
+        timestamp: new Date().toISOString()
+      });
+      
+      auction.bids.push(state.currentUser.id);
+      auction.currentBid = amount;
+      auction.lastBidTime = new Date().toISOString();
+      
+      bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+      createConfetti();
+      saveState();
+      renderAuctions();
+      updateUI();
+      showToast('âœ… Puja realizada', 'success');
+    }
+
+    function buyNow(auctionId) {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
+      
+      if (state.currentUser.balance < auction.buyNowPrice) {
+        showToast('âŒ Saldo insuficiente', 'error');
+        return;
+      }
+      
+      if (confirm(`Â¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
+        state.currentUser.balance -= auction.buyNowPrice;
+        auction.status = 'ended';
+        auction.currentBid = auction.buyNowPrice;
+        createConfetti();
+        saveState();
+        renderAuctions();
+        updateUI();
+        showToast('âœ… Compra realizada', 'success');
+      }
+    }
+
+    // CREAR SUBASTA
+    function createAuction(e) {
+      e.preventDefault();
+      if (!state.currentUser || state.currentUser.role !== 'admin') {
+        showToast('âŒ Solo admins', 'error');
+        return;
+      }
+      
+      const title = document.getElementById('a_title').value;
+      const desc = document.getElementById('a_desc').value;
+      const start = parseFloat(document.getElementById('a_start').value) || 0;
+      const buyNow = document.getElementById('a_buyNow').value ? parseFloat(document.getElementById('a_buyNow').value) : null;
+      const image = state.uploadedImageUrl || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
+      
+      let endTime = document.getElementById('a_end').value;
+      if (!endTime) {
+        const defaultEnd = new Date();
+        defaultEnd.setDate(defaultEnd.getDate() + 1);
+        endTime = defaultEnd.toISOString();
+      }
+      
+      state.auctions.push({
+        id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
+        title: title,
+        description: desc,
+        image: image,
+        category: 'General',
+        startPrice: start,
+        currentBid: start,
+        buyNowPrice: buyNow,
+        endTime: new Date(endTime).toISOString(),
+        sellerId: state.currentUser.id,
+        bids: [],
+        lastBidTime: new Date().toISOString(),
+        status: 'active'
+      });
+      
+      document.getElementById('createAuctionForm').reset();
+      document.getElementById('imagePreview').classList.add('hidden');
+      state.imageUploaded = false;
+      saveState();
+      renderAuctions();
+      showToast('âœ… Subasta creada', 'success');
+    }
+
+    // ADMIN
+    function toggleAdminPanel() {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      if (state.currentUser.role !== 'admin') {
+        showToast('âŒ Solo admins', 'error');
+        return;
+      }
+      document.getElementById('adminPanel').classList.toggle('hidden');
+    }
+
+    function renderManageAuctions() {
+      const list = document.getElementById('manageAuctionsList');
+      list.innerHTML = state.auctions.map(a => `
+        <div class="flex justify-between items-center p-3 glass-light rounded mb-2">
+          <div>
+            <div class="font-medium">${a.title}</div>
+            <div class="text-xs text-slate-400">$${a.currentBid || a.startPrice}</div>
+          </div>
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteAuction(${a.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function deleteAuction(id) {
+      if (confirm('Â¿Eliminar subasta?')) {
+        state.auctions = state.auctions.filter(a => a.id !== id);
+        saveState();
+        renderAuctions();
+        renderManageAuctions();
+        showToast('ðŸ—‘ï¸ Eliminada', 'info');
+      }
+    }
+
+    // BOTS
+    function renderBotUsers() {
+      const list = document.getElementById('botUsersList');
+      list.innerHTML = state.botUsers.map(bot => `
+        <div class="flex justify-between items-center p-2 glass-light rounded">
+          <input type="text" class="bot-name-edit" value="${bot.name}" onchange="updateBotName(${bot.id}, this.value)">
+          <div class="flex gap-2">
+            <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+            <input type="checkbox" ${bot.active ? 'checked' : ''} onchange="toggleBotUser(${bot.id}, this.checked)">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addBotUser() {
+      const id = Math.max(100, ...state.botUsers.map(b => b.id)) + 1;
+      state.botUsers.push({
+        id: id,
+        name: `Bot ${state.botUsers.length + 1}`,
+        balance: 5000 + Math.random() * 5000,
+        active: true
+      });
+      saveState();
+      renderBotUsers();
+      showToast('âœ… Bot agregado', 'success');
+    }
+
+    function updateBotName(id, name) {
+      const bot = state.botUsers.find(b => b.id === id);
+      if (bot && name.trim()) {
+        bot.name = name.trim();
+        saveState();
+      }
+    }
+
+    function toggleBotUser(id, active) {
+      const bot = state.botUsers.find(b => b.id === id);
+      if (bot) {
+        bot.active = active;
+        saveState();
+      }
+    }
+
+    function deleteBotUser(id) {
+      if (confirm('Â¿Eliminar bot?')) {
+        state.botUsers = state.botUsers.filter(b => b.id !== id);
+        saveState();
+        renderBotUsers();
+      }
+    }
+
+    function updateBotSettingsUI() {
+      document.getElementById('botsEnabled').checked = state.botSettings.enabled;
+    }
+
+    function startBotActivity() {
+      setInterval(() => {
+        if (!state.botSettings.enabled) return;
+        const active = state.auctions.filter(a => a.status === 'active');
+        active.forEach(auction => {
+          const timeSince = new Date() - new Date(auction.lastBidTime);
+          if (timeSince >= state.botSettings.delay * 60000) {
+            if (Math.random() * 100 <= state.botSettings.probability) {
+              makeBotBid(auction.id);
+            }
+          }
+        });
+      }, 30000);
+    }
+
+    function makeBotBid(auctionId) {
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) return;
+      
+      const activeBots = state.botUsers.filter(b => b.active && b.balance > auction.currentBid + 50);
+      if (activeBots.length === 0) return;
+      
+      const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
+      const bidAmount = (auction.currentBid || auction.startPrice) + state.currentIncrement + Math.floor(Math.random() * 50);
+      
+      state.bids.push({
+        id: state.bids.length + 1,
+        auctionId: auctionId,
+        userId: bot.id,
+        amount: bidAmount,
+        timestamp: new Date().toISOString()
+      });
+      
+      auction.bids.push(bot.id);
+      auction.currentBid = bidAmount;
+      auction.lastBidTime = new Date().toISOString();
+      
+      saveState();
+      renderAuctions();
+    }
+
+    // FILTROS
+    function filterAuctions() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const sortBy = document.getElementById('sortBy').value;
+      const filterState = document.getElementById('filterState').value;
+      
+      let filtered = state.auctions.filter(a => {
+        const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
+        const matchState = filterState === 'all' || a.status === filterState;
+        return matchSearch && matchState;
+      });
+      
+      if (sortBy === 'highest') {
+        filtered.sort((a, b) => (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice));
+      } else if (sortBy === 'newest') {
+        filtered.sort((a, b) => new Date(b.lastBidTime) - new Date(a.lastBidTime));
+      } else {
+        filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+      }
+      
+      renderAuctions(filtered);
+    }
+
+    function filterProducts() {
+      const search = document.getElementById('searchProducts').value.toLowerCase();
+      const category = document.getElementById('filterProductCategory').value;
+      const sortBy = document.getElementById('sortProducts').value;
+      
+      let filtered = state.products.filter(p => {
+        const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+        const matchCategory = category === 'all' || p.category === category;
+        return matchSearch && matchCategory;
+      });
+      
+      if (sortBy === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (sortBy === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+      } else {
+        filtered.sort((a, b) => b.id - a.id);
+      }
+      
+      renderProducts(filtered);
+    }
+
+    function updateCategoryFilter() {
+      const categories = [...new Set(state.auctions.map(a => a.category))];
+      const filter = document.getElementById('filterCategory');
+      filter.innerHTML = '<option value="all">Todas</option>' + 
+        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      
+      const productCategories = [...new Set(state.products.map(p => p.category))];
+      const productFilter = document.getElementById('filterProductCategory');
+      productFilter.innerHTML = '<option value="all">Todas</option>' + 
+        productCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    // MERCADOPAGO - RECARGA
+    function setupTopupListeners() {
+      document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          topupAmount = parseInt(this.getAttribute('data-amount'));
+          document.getElementById('customTopupAmount').value = '';
+          document.getElementById('proceedToPayment').disabled = false;
+        });
+      });
+      
+      document.getElementById('customTopupAmount').addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value >= 100) {
+          topupAmount = value;
+          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+          document.getElementById('proceedToPayment').disabled = false;
+        }
+      });
+      
+      document.getElementById('proceedToPayment').addEventListener('click', function() {
+        document.getElementById('topupAmountSelection').classList.add('hidden');
+        document.getElementById('topupPaymentMethods').classList.remove('hidden');
+        setupTopupPaymentMethods();
+      });
+      
+      document.getElementById('confirmTopupPayment').addEventListener('click', processTopupPayment);
+    }
+
+    function setupTopupPaymentMethods() {
+      const methods = document.querySelectorAll('#topupModal .payment-method');
+      const confirmBtn = document.getElementById('confirmTopupPayment');
+      
+      methods.forEach(method => {
+        method.addEventListener('click', function() {
+          methods.forEach(m => m.classList.remove('selected'));
+          this.classList.add('selected');
+          selectedPaymentMethod = this.getAttribute('data-method');
+          confirmBtn.disabled = false;
+        });
+      });
+    }
+
+    function processTopupPayment() {
+      document.getElementById('topupPaymentMethods').classList.add('hidden');
+      document.getElementById('topupLoading').classList.remove('hidden');
+      
+      setTimeout(() => {
+        const success = Math.random() > 0.1;
+        if (success) {
+          state.currentUser.balance += topupAmount;
+          document.getElementById('topupLoading').classList.add('hidden');
+          document.getElementById('topupSuccess').classList.remove('hidden');
+          document.getElementById('topupDetails').innerHTML = `
+            <div class="glass-light p-3 rounded mt-3">
+              <div><strong>Monto:</strong> ${topupAmount}</div>
+              <div><strong>Nuevo saldo:</strong> ${state.currentUser.balance}</div>
+            </div>
+          `;
+          updateUI();
+          saveState();
+          createConfetti();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+          }, 2000);
+        }
+      }, 2000);
+    }
+
+    function addBalance() {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      resetTopupModal();
+      new bootstrap.Modal(document.getElementById('topupModal')).show();
+    }
+
+    function resetTopupModal() {
+      document.getElementById('topupAmountSelection').classList.remove('hidden');
+      document.getElementById('topupPaymentMethods').classList.add('hidden');
+      document.getElementById('topupLoading').classList.add('hidden');
+      document.getElementById('topupSuccess').classList.add('hidden');
+      document.getElementById('customTopupAmount').value = '';
+      document.getElementById('proceedToPayment').disabled = true;
+      topupAmount = 0;
+      selectedPaymentMethod = null;
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#topupModal .payment-method').forEach(m => m.classList.remove('selected'));
+    }
+
+    // MERCADOPAGO - CARRITO
+    function showMercadoPagoModal() {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      if (state.cart.length === 0) return;
+      
+      renderPaymentSummary();
+      resetPaymentModal();
+      new bootstrap.Modal(document.getElementById('mpModal')).show();
+      setupCartPaymentMethods();
+    }
+
+    function renderPaymentSummary() {
+      const items = document.getElementById('paymentItems');
+      const total = document.getElementById('paymentTotal');
+      let totalAmount = 0;
+      
+      items.innerHTML = state.cart.map(item => {
+        const product = state.products.find(p => p.id === item.productId);
+        const itemTotal = item.quantity * item.price;
+        totalAmount += itemTotal;
+        return `
+          <div class="flex justify-between py-2 border-bottom border-slate-700">
+            <div>
+              <div class="font-medium">${product?.title}</div>
+              <small>${item.quantity}x ${item.price}</small>
+            </div>
+            <div>${itemTotal}</div>
+          </div>
+        `;
+      }).join('');
+      
+      total.textContent = `${totalAmount}`;
+    }
+
+    function setupCartPaymentMethods() {
+      const methods = document.querySelectorAll('#mpModal .payment-method');
+      const confirmBtn = document.getElementById('confirmPayment');
+      
+      methods.forEach(method => {
+        method.addEventListener('click', function() {
+          methods.forEach(m => m.classList.remove('selected'));
+          this.classList.add('selected');
+          selectedPaymentMethod = this.getAttribute('data-method');
+          confirmBtn.disabled = false;
+        });
+      });
+      
+      document.getElementById('confirmPayment').addEventListener('click', processCartPayment);
+      document.getElementById('cancelPayment').addEventListener('click', () => {
+        bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+      });
+    }
+
+    function processCartPayment() {
+      if (!selectedPaymentMethod) return;
+      
+      document.getElementById('paymentSummary').style.display = 'none';
+      document.getElementById('paymentMethods').style.display = 'none';
+      document.getElementById('paymentActions').style.display = 'none';
+      document.getElementById('paymentLoading').classList.remove('hidden');
+      
+      setTimeout(() => {
+        const success = Math.random() > 0.1;
+        if (success) {
+          const total = state.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+          
+          state.cart.forEach(item => {
+            const product = state.products.find(p => p.id === item.productId);
+            if (product) product.stock -= item.quantity;
+          });
+          
+          state.orders.push({
+            id: Date.now(),
+            userId: state.currentUser.id,
+            items: [...state.cart],
+            total: total,
+            paymentMethod: selectedPaymentMethod,
+            timestamp: new Date().toISOString()
+          });
+          
+          state.cart = [];
+          
+          document.getElementById('paymentLoading').classList.add('hidden');
+          document.getElementById('paymentSuccess').classList.remove('hidden');
+          document.getElementById('paymentDetails').innerHTML = `
+            <div class="glass-light p-3 rounded mt-3">
+              <div><strong>Total pagado:</strong> ${total}</div>
+            </div>
+          `;
+          
+          updateCartUI();
+          renderProducts();
+          saveState();
+          
+          const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+          if (cartModal) cartModal.hide();
+          
+          setTimeout(() => {
+            createConfetti();
+            bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+          }, 2000);
+        }
+      }, 2000);
+    }
+
+    function resetPaymentModal() {
+      selectedPaymentMethod = null;
+      document.getElementById('paymentSummary').style.display = 'block';
+      document.getElementById('paymentMethods').style.display = 'block';
+      document.getElementById('paymentActions').style.display = 'flex';
+      document.getElementById('paymentLoading').classList.add('hidden');
+      document.getElementById('paymentSuccess').classList.add('hidden');
+      document.getElementById('confirmPayment').disabled = true;
+      document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
+    }
+
+    // UTILIDADES
+    function formatTimeRemaining(endTime) {
+      const now = new Date();
+      const end = new Date(endTime);
+      const diff = end - now;
+      
+      if (diff <= 0) return 'Finalizada';
+      
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    }
+
+    function isEndingSoon(endTime) {
+      const diff = new Date(endTime) - new Date();
+      return diff > 0 && diff <= 600000;
+    }
+
+    function updateCountdowns() {
+      document.querySelectorAll('.countdown').forEach(el => {
+        const endTime = el.getAttribute('data-end');
+        el.textContent = formatTimeRemaining(endTime);
+        if (isEndingSoon(endTime)) {
+          el.classList.add('pulse');
+        }
+      });
+    }
+
+    function createConfetti() {
+      const colors = ['#ff3e7f', '#ff9d00', '#00d4ff', '#00ff88'];
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        document.body.appendChild(confetti);
+        
+        const animation = confetti.animate([
+          { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+          { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+        ], {
+          duration: Math.random() * 3000 + 2000,
+          easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+        });
+        
+        animation.onfinish = () => confetti.remove();
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast show toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-body d-flex justify-content-between align-items-center">
+          <span>${message}</span>
+          <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function exportToCsv() {
+      const data = [
+        ['ID', 'TÃ­tulo', 'Precio', 'Estado'],
+        ...state.auctions.map(a => [a.id, a.title, a.currentBid || a.startPrice, a.status])
+      ];
+      const csv = data.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'subastas.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function createDemoData() {
+      loadDemoData();
+      renderAuctions();
+      renderProducts();
+      updateUI();
+      showToast('Datos demo cargados', 'success');
+    }
+
+    function setupIncrementButtons() {
+      document.querySelectorAll('.increment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (!this.classList.contains('quick-bid-btn')) {
+            document.querySelectorAll('.increment-btn:not(.quick-bid-btn)').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const increment = this.getAttribute('data-increment');
+            state.currentIncrement = parseInt(increment) || 10;
+          }
+        });
+      });
+    }
+
+    function setupMobileMenu() {
+      document.querySelectorAll('.mobile-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.mobile-menu-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          const target = this.getAttribute('data-target');
+          if (target === 'auctions') document.getElementById('auctions-tab').click();
+          else if (target === 'store') document.getElementById('store-tab').click();
+          else if (target === 'cart') showCartModal();
+        });
+      });
+    }
+
+    function initParticles() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('particles-js');
+      
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      container.appendChild(canvas);
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          size: Math.random() * 3 + 1,
+          opacity: Math.random() * 0.5 + 0.3
+        });
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x <= 0 || p.x >= canvas.width) p.vx *= -1;
+          if (p.y <= 0 || p.y >= canvas.height) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 62, 127, ${p.opacity})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // Funciones globales
+    window.updateCartQuantity = updateCartQuantity;
+    window.removeFromCart = removeFromCart;
+    window.toggleBotUser = toggleBotUser;
+    window.updateBotName = updateBotName;
+    window.deleteBotUser = deleteBotUser;
+    window.deleteAuction = deleteAuction;
+
+    setInterval(updateCountdowns, 1000);
+  
+    const mp = new MercadoPago('TEST-tu-public-key', {locale:'es-AR'});
+    let selectedCreditPackage = null;
+    window.selectCreditPackage = function(credits, price) {
+      if (!currentUser) return showToast('Inicia sesión', 'error');
+      selectedCreditPackage = {credits, price};
+      document.querySelectorAll('.credit-package').forEach(el => el.style.border = '2px solid rgba(255,255,255,0.2)');
+      if (event?.currentTarget) event.currentTarget.style.border = '2px solid var(--primary)';
+      const btn = document.getElementById('mpBuyCreditsBtn');
+      if (btn) btn.disabled = false;
+      showToast(`${credits} créditos x $${price}`, 'success');
+    }
+    window.purchaseCreditsMP = async function() {
+      if (!currentUser || !selectedCreditPackage) return showToast('Selecciona paquete', 'error');
+      showToast('Procesando...', 'info');
+      setTimeout(async () => {
+        await db.collection('users').doc(currentUser.uid).update({credits: firebase.firestore.FieldValue.increment(selectedCreditPackage.credits)});
+        await db.collection('transactions').add({userId: currentUser.uid, type: 'credit_purchase', credits: selectedCreditPackage.credits, amount: selectedCreditPackage.price, paymentMethod: 'mercadopago', status: 'completed', timestamp: firebase.firestore.FieldValue.serverTimestamp()});
+        showToast(`+${selectedCreditPackage.credits} créditos!`, 'success');
+        loadUserData();
+        selectedCreditPackage = null;
+        if (document.getElementById('mpBuyCreditsBtn')) document.getElementById('mpBuyCreditsBtn').disabled = true;
+      }, 2000);
+    }
+    window.purchaseProductMP = async function(product) {
+      if (!currentUser) return showToast('Inicia sesión', 'error');
+      showToast('Procesando...', 'info');
+      setTimeout(async () => {
+        await db.collection('purchases').add({userId: currentUser.uid, productId: product.id, productName: product.name, price: product.price, paymentMethod: 'mercadopago', status: 'completed', timestamp: firebase.firestore.FieldValue.serverTimestamp()});
+        showToast(`¡${product.name} comprado!`, 'success');
+      }, 2000);
+    }
+
+  </script>
+</body>
+</html>
