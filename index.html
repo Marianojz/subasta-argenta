@@ -1270,14 +1270,14 @@
     // JAVASCRIPT COMPLETO OPTIMIZADO CON FIREBASE
     // ============================================
 
-    // CONFIGURACIÓN DE FIREBASE
+    // CONFIGURACIÓN DE FIREBASE - SUBASTA ARGENTA
     const firebaseConfig = {
-      apiKey: "AIzaSyD-Np6TWWMqjV85eOaM0zkRobPUJJ6uc-8", // ⚠️ CAMBIAR EN PRODUCCIÓN
-      authDomain: "subasta-argenta.firebaseapp.com",
-      projectId: "Subasta-argenta",
-      storageBucket: "subasta-argenta.firebasestorage.app",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abc123"
+      apiKey: "AIzaSyD-Np6TWWMqjV85eOaM0zkRobPUJJ6uc-8",
+      authDomain: "subasta-argenta-474019.firebaseapp.com",
+      projectId: "subasta-argenta-474019",
+      storageBucket: "subasta-argenta-474019.firebasestorage.app",
+      messagingSenderId: "1002319635937",
+      appId: "1:1002319635937:web:subasta-argenta"
     };
 
     // Inicializar Firebase
@@ -1287,7 +1287,7 @@
       db = firebase.firestore();
       auth = firebase.auth();
       storage = firebase.storage();
-      console.log("✅ Firebase inicializado");
+      console.log("✅ Firebase inicializado - Subasta Argenta");
     } catch (error) {
       console.error("❌ Error Firebase:", error);
     }
@@ -1318,7 +1318,7 @@
     let botActivityInterval = null;
 
     // ============================================
-    // UTILIDADES (MOVERLAS AL PRINCIPIO)
+    // UTILIDADES
     // ============================================
     
     function sanitizeHTML(str) {
@@ -1398,7 +1398,7 @@
 
     // INICIALIZACIÓN
     document.addEventListener('DOMContentLoaded', async function() {
-      console.log('🚀 Inicializando aplicación...');
+      console.log('🚀 Inicializando Subasta Argenta...');
       showLoading('Cargando datos...');
       try {
         await loadState();
@@ -1535,7 +1535,7 @@
           document.getElementById('topupSuccess').classList.remove('hidden');
           document.getElementById('topupDetails').innerHTML = `
             <div class="glass-light p-3 rounded mt-3">
-              <div><strong>Monto:</strong> ${topupAmount}</div>
+              <div><strong>Monto:</strong> $${topupAmount}</div>
               <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
               <div><strong>Nuevo saldo:</strong> <span class="price-tag">${state.currentUser.balance}</span></div>
             </div>
@@ -1672,15 +1672,14 @@
         }
         
         // Backup local
-        const backup = localStorage.getItem('auctionStoreAppState_backup');
+        const backup = localStorage.getItem('subastaArgenta_backup');
         if (backup && state.auctions.length === 0) {
           const parsed = JSON.parse(backup);
           Object.assign(state, parsed);
         }
       } catch (error) {
         console.error("Error cargando:", error);
-        // Intentar cargar desde localStorage
-        const backup = localStorage.getItem('auctionStoreAppState_backup');
+        const backup = localStorage.getItem('subastaArgenta_backup');
         if (backup) {
           Object.assign(state, JSON.parse(backup));
         } else {
@@ -1692,10 +1691,8 @@
     // FIREBASE - GUARDAR ESTADO
     async function saveState() {
       try {
-        // Guardar backup local siempre
-        localStorage.setItem('auctionStoreAppState_backup', JSON.stringify(state));
+        localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
         
-        // Guardar en Firebase si hay usuario
         if (state.currentUser && db) {
           await db.collection('appState').doc('mainState').set({
             auctions: state.auctions,
@@ -1773,7 +1770,6 @@
       document.getElementById('createAuctionForm').addEventListener('submit', createAuction);
       document.getElementById('bidForm').addEventListener('submit', placeBid);
       
-      // Filtros con debounce
       document.getElementById('search').addEventListener('input', debounce(filterAuctions, 300));
       document.getElementById('sortBy').addEventListener('change', filterAuctions);
       document.getElementById('filterState').addEventListener('change', filterAuctions);
@@ -1784,7 +1780,6 @@
       document.getElementById('manage-tab').addEventListener('click', renderManageAuctions);
       document.getElementById('bots-tab').addEventListener('click', renderBotUsers);
       
-      // Bot settings
       document.getElementById('botsEnabled').addEventListener('change', updateBotSettings);
       document.getElementById('botDelayGlobal').addEventListener('change', updateBotSettings);
       document.getElementById('botProbability').addEventListener('change', updateBotSettings);
@@ -1900,7 +1895,6 @@
       try {
         showLoading('Subiendo imagen...');
         
-        // Comprimir imagen
         const compressed = await compressImage(file);
         
         const imageRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
@@ -2226,11 +2220,7 @@
       saveState();
       showToast('✅ Compra exitosa', 'success');
     }
-
-    // Continuaré en el siguiente mensaje con el resto del código...
-  </script>
-</body>
-</html>// PUJAS
+  </script>// PUJAS
     function openBidModal(auctionId) {
       if (!state.currentUser) {
         showLoginModal();
@@ -2472,7 +2462,7 @@
                    onchange="updateBotDelay(${bot.id}, this.value)">
             <small class="text-slate-400">Específico para este bot</small>
           </div>
-          <div class="text-xs text-slate-400 mt-2">Saldo: ${bot.balance}</div>
+          <div class="text-xs text-slate-400 mt-2">Saldo: $${bot.balance}</div>
         </div>
         `;
       }).join('');
@@ -2528,17 +2518,13 @@
     }
 
     function updateBotSettings() {
-  const enabledCheckbox = document.getElementById('botsEnabled');
-  const delayInput = document.getElementById('botDelayGlobal');
-  const probabilityInput = document.getElementById('botProbability');
-  
-  if (enabledCheckbox) state.botSettings.enabled = enabledCheckbox.checked;
-  if (delayInput) state.botSettings.delayGlobal = parseInt(delayInput.value) || 2;
-  if (probabilityInput) state.botSettings.probability = parseInt(probabilityInput.value) || 70;
-  
-  saveState();
-  showToast('⚙️ Configuración actualizada', 'success');
-}
+      state.botSettings.enabled = document.getElementById('botsEnabled').checked;
+      state.botSettings.delayGlobal = parseInt(document.getElementById('botDelayGlobal').value) || 2;
+      state.botSettings.probability = parseInt(document.getElementById('botProbability').value) || 70;
+      
+      saveState();
+      showToast('⚙️ Configuración actualizada', 'success');
+    }
 
     function startBotActivity() {
       if (botActivityInterval) clearInterval(botActivityInterval);
@@ -2636,27 +2622,8 @@
       }
       
       renderProducts(filtered);
-    }
-
-    // MERCADOPAGO - RECARGA (ya está en Parte 3, eliminar de aquí)
-    // Las funciones de topup están ahora en Parte 3
-
-    // Continuaré con MercadoPago carrito en Parte 5...// MERCADOPAGO - CARRITO
+    }// MERCADOPAGO - CARRITO
     function showMercadoPagoModal() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      if (state.cart.length === 0) {
-        showToast('❌ Carrito vacío', 'error');
-        return;
-      }
-      
-      renderPaymentSummary();
-      resetPaymentModal();
-      new bootstrap.Modal(document.getElementById('mpModal')).show();
-      setupCartPaymentMethods();
-    }
       if (!state.currentUser) {
         showLoginModal();
         return;
@@ -2790,16 +2757,6 @@
       document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
     }
 
-    function getPaymentMethodName(method) {
-      const names = {
-        'credit_card': 'Tarjeta de Crédito',
-        'debit_card': 'Tarjeta de Débito',
-        'mercadopago': 'Saldo MP',
-        'cash': 'Efectivo'
-      };
-      return names[method] || 'Método seleccionado';
-    }
-
     // UTILIDADES
     function formatTimeRemaining(endTime) {
       const now = new Date();
@@ -2862,53 +2819,6 @@
       }
     }
 
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast show toast-${type}`;
-      toast.innerHTML = `
-        <div class="toast-body d-flex justify-content-between align-items-center">
-          <span>${sanitizeHTML(message)}</span>
-          <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
-        </div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
-    }
-
-    function showLoading(message = 'Cargando...') {
-      const existing = document.getElementById('globalLoader');
-      if (existing) return;
-      
-      const loader = document.createElement('div');
-      loader.id = 'globalLoader';
-      loader.innerHTML = `
-        <div class="glass p-6 rounded-2xl text-center">
-          <div class="spinner mb-3"></div>
-          <div>${sanitizeHTML(message)}</div>
-        </div>
-      `;
-      document.body.appendChild(loader);
-    }
-
-    function hideLoading() {
-      const loader = document.getElementById('globalLoader');
-      if (loader) loader.remove();
-    }
-
-    function handleError(error, context) {
-      const messages = {
-        'auth/user-not-found': 'Usuario no encontrado',
-        'auth/wrong-password': 'Contraseña incorrecta',
-        'permission-denied': 'No tienes permisos',
-        'storage/unauthorized': 'Error de autorización en almacenamiento'
-      };
-      
-      const message = messages[error.code] || `Error en ${context}: ${error.message}`;
-      showToast(message, 'error');
-      console.error(`[${context}]`, error);
-    }
-
     function exportToCsv() {
       const data = [
         ['ID', 'Título', 'Precio', 'Estado', 'Categoría'],
@@ -2952,4 +2862,3 @@
   </script>
 </body>
 </html>
-
