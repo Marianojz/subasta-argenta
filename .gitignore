@@ -1,0 +1,12 @@
+# Firebase config (seguridad)
+firebase-config.js
+
+# Dependencias
+node_modules/
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
