@@ -1265,1600 +1265,1260 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script><script>
-    // ============================================
-    // JAVASCRIPT COMPLETO OPTIMIZADO CON FIREBASE
-    // ============================================
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script><!-- Pega este código después del script de Bootstrap y antes de </body> -->
 
-    // CONFIGURACIÓN DE FIREBASE - SUBASTA ARGENTA
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-Np6TWWMqjV85eOaM0zkRobPUJJ6uc-8",
-      authDomain: "subasta-argenta-474019.firebaseapp.com",
-      projectId: "subasta-argenta-474019",
-      storageBucket: "subasta-argenta-474019.firebasestorage.app",
-      messagingSenderId: "1002319635937",
-      appId: "1:1002319635937:web:subasta-argenta"
-    };
+<script>
+// ============================================
+// SUBASTA ARGENTA - JAVASCRIPT COMPLETO
+// ============================================
 
-    // Inicializar Firebase
-    let db, auth, storage;
+// CONFIGURACIÓN FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyD-Np6TWWMqjV85eOaM0zkRobPUJJ6uc-8",
+  authDomain: "subasta-argenta-474019.firebaseapp.com",
+  projectId: "subasta-argenta-474019",
+  storageBucket: "subasta-argenta-474019.firebasestorage.app",
+  messagingSenderId: "1002319635937",
+  appId: "1:1002319635937:web:abc123"
+};
+
+let db, auth, storage;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  auth = firebase.auth();
+  storage = firebase.storage();
+  console.log("✅ Firebase OK");
+} catch (error) {
+  console.error("❌ Firebase Error:", error);
+  db = null;
+  auth = null;
+  storage = null;
+}
+
+// ESTADO GLOBAL
+let state = {
+  currentUser: null,
+  auctions: [],
+  products: [],
+  bids: [],
+  cart: [],
+  orders: [],
+  botUsers: [],
+  botSettings: { enabled: true, delayGlobal: 2, probability: 70 },
+  currentIncrement: 10,
+  imageUploaded: false,
+  uploadedImageUrl: null
+};
+
+let selectedPaymentMethod = null;
+let topupAmount = 0;
+let countdownInterval = null;
+let botActivityInterval = null;
+
+// ======================
+// UTILIDADES
+// ======================
+
+function sanitizeHTML(str) {
+  const temp = document.createElement('div');
+  temp.textContent = str;
+  return temp.innerHTML;
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+const rateLimiter = {
+  attempts: {},
+  limit: 5,
+  window: 60000,
+  check(action) {
+    const now = Date.now();
+    if (!this.attempts[action]) this.attempts[action] = [];
+    this.attempts[action] = this.attempts[action].filter(t => now - t < this.window);
+    if (this.attempts[action].length >= this.limit) return false;
+    this.attempts[action].push(now);
+    return true;
+  }
+};
+
+function showLoading(msg = 'Cargando...') {
+  if (document.getElementById('globalLoader')) return;
+  const loader = document.createElement('div');
+  loader.id = 'globalLoader';
+  loader.innerHTML = `<div class="glass p-6 rounded-2xl text-center"><div class="spinner mb-3"></div><div>${sanitizeHTML(msg)}</div></div>`;
+  document.body.appendChild(loader);
+}
+
+function hideLoading() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) loader.remove();
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast show toast-${type}`;
+  toast.innerHTML = `<div class="toast-body d-flex justify-content-between align-items-center"><span>${sanitizeHTML(msg)}</span><button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+function handleError(error, context) {
+  const messages = {
+    'auth/user-not-found': 'Usuario no encontrado',
+    'auth/wrong-password': 'Contraseña incorrecta',
+    'auth/configuration-not-found': 'Configura Firebase Authentication primero',
+    'permission-denied': 'Sin permisos'
+  };
+  const msg = messages[error.code] || `Error: ${error.message}`;
+  showToast(msg, 'error');
+  console.error(`[${context}]`, error);
+}
+
+function createConfetti() {
+  const colors = ['#ff3e7f', '#ff9d00', '#00d4ff', '#00ff88'];
+  for (let i = 0; i < 100; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.backgroundColor = colors[Math.floor(Math.random() * 4)];
+    c.style.width = c.style.height = Math.random() * 10 + 5 + 'px';
+    document.body.appendChild(c);
+    c.animate([
+      { transform: 'translateY(0) rotate(0)', opacity: 1 },
+      { transform: `translateY(${window.innerHeight}px) rotate(${Math.random()*360}deg)`, opacity: 0 }
+    ], { duration: Math.random() * 3000 + 2000, easing: 'ease-out' }).onfinish = () => c.remove();
+  }
+}
+
+function formatTimeRemaining(endTime) {
+  const diff = new Date(endTime) - new Date();
+  if (diff <= 0) return 'Finalizada';
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function getPaymentMethodName(method) {
+  const names = {
+    'credit_card': 'Tarjeta de Crédito',
+    'debit_card': 'Tarjeta de Débito',
+    'mercadopago': 'MercadoPago',
+    'cash': 'Efectivo'
+  };
+  return names[method] || 'Método';
+}
+
+// ======================
+// FIREBASE
+// ======================
+
+async function loadState() {
+  try {
+    if (db) {
+      const doc = await db.collection('appState').doc('mainState').get();
+      if (doc.exists) {
+        const data = doc.data();
+        Object.assign(state, {
+          auctions: data.auctions || [],
+          products: data.products || [],
+          bids: data.bids || [],
+          cart: data.cart || [],
+          orders: data.orders || [],
+          botUsers: data.botUsers || [],
+          botSettings: data.botSettings || state.botSettings
+        });
+        console.log("✅ Datos de Firebase");
+        return;
+      }
+    }
+  } catch (e) {
+    console.error("Error Firebase:", e);
+  }
+  
+  const backup = localStorage.getItem('subastaArgenta_backup');
+  if (backup) {
+    Object.assign(state, JSON.parse(backup));
+    console.log("✅ Datos del backup");
+  } else {
+    loadDemoData();
+  }
+}
+
+async function saveState() {
+  localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
+  if (state.currentUser && db) {
     try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      auth = firebase.auth();
-      storage = firebase.storage();
-      console.log("✅ Firebase inicializado - Subasta Argenta");
-    } catch (error) {
-      console.error("❌ Error Firebase:", error);
+      await db.collection('appState').doc('mainState').set({
+        auctions: state.auctions,
+        products: state.products,
+        bids: state.bids,
+        cart: state.cart,
+        orders: state.orders,
+        botUsers: state.botUsers,
+        botSettings: state.botSettings,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Error guardando:", e);
     }
+  }
+}
 
-    // Estado de la aplicación
-    let state = {
-      currentUser: null,
-      auctions: [],
-      products: [],
-      users: [],
-      bids: [],
-      cart: [],
-      orders: [],
-      botUsers: [],
-      botSettings: { 
-        enabled: true, 
-        delayGlobal: 2, 
-        probability: 70 
-      },
-      currentIncrement: 10,
-      imageUploaded: false,
-      uploadedImageUrl: null
-    };
+function loadDemoData() {
+  const now = new Date();
+  state.botUsers = [
+    { id: 101, name: 'Bot 1', balance: 8000, active: true, delay: 2 },
+    { id: 102, name: 'Bot 2', balance: 7500, active: true, delay: 3 }
+  ];
+  state.auctions = [{
+    id: 1,
+    title: 'iPhone 14 Pro',
+    description: 'Nuevo en caja',
+    image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+    category: 'Electrónicos',
+    startPrice: 500,
+    currentBid: 500,
+    buyNowPrice: 1200,
+    endTime: new Date(now.getTime() + 24*60*60*1000).toISOString(),
+    sellerId: 2,
+    bids: [],
+    lastBidTime: now.toISOString(),
+    status: 'active'
+  }];
+  state.products = [{
+    id: 1,
+    title: 'Laptop Gaming',
+    description: 'Alto rendimiento',
+    image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=500',
+    category: 'Electrónicos',
+    price: 1200,
+    stock: 5,
+    featured: true
+  }];
+  saveState();
+  console.log("✅ Demo data cargada");
+}
 
-    let selectedPaymentMethod = null;
-    let topupAmount = 0;
-    let countdownInterval = null;
-    let botActivityInterval = null;
+// ======================
+// UI Y RENDER
+// ======================
 
-    // ============================================
-    // UTILIDADES
-    // ============================================
+function updateUI() {
+  const userInfo = document.getElementById('userInfo');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const balance = document.getElementById('balance');
+  const adminPanel = document.getElementById('adminPanel');
+  
+  if (state.currentUser) {
+    userInfo.textContent = `${state.currentUser.name}`;
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'block';
+    balance.textContent = `$${state.currentUser.balance}`;
+    if (state.currentUser.role === 'admin') {
+      adminPanel.classList.remove('hidden');
+    }
+  } else {
+    userInfo.textContent = 'No iniciado';
+    loginBtn.style.display = 'block';
+    logoutBtn.style.display = 'none';
+    balance.textContent = '$0';
+    adminPanel.classList.add('hidden');
+  }
+  updateCategoryFilter();
+  updateCartUI();
+}
+
+function updateCategoryFilter() {
+  const cats = [...new Set(state.auctions.map(a => a.category))];
+  const filter = document.getElementById('filterCategory');
+  if (filter) {
+    filter.innerHTML = '<option value="all">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+  const pCats = [...new Set(state.products.map(p => p.category))];
+  const pFilter = document.getElementById('filterProductCategory');
+  if (pFilter) {
+    pFilter.innerHTML = '<option value="all">Todas</option>' + pCats.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+function renderAuctions(auctions = null) {
+  const list = document.getElementById('auctionsList');
+  const items = auctions || state.auctions;
+  
+  if (!items.length) {
+    list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay subastas</div>';
+    return;
+  }
+  
+  list.innerHTML = items.map(a => `
+    <div class="auction-card glass p-4 rounded-xl">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <img src="${a.image}" loading="lazy" alt="${sanitizeHTML(a.title)}" class="w-full sm:w-24 h-24 object-cover rounded-lg">
+        <div class="flex-grow">
+          <div class="flex justify-between">
+            <h3 class="font-semibold">${sanitizeHTML(a.title)}</h3>
+            <span class="status-badge ${a.status === 'active' ? 'status-active' : 'status-ended'}">${a.status === 'active' ? 'Activa' : 'Finalizada'}</span>
+          </div>
+          <p class="text-sm text-slate-400 mt-1">${sanitizeHTML(a.description)}</p>
+          <div class="flex justify-between items-center mt-4">
+            <div><div class="text-xs text-slate-400">Puja actual</div><div class="price-tag">$${a.currentBid || a.startPrice}</div></div>
+            <div class="countdown" data-end="${a.endTime}">${formatTimeRemaining(a.endTime)}</div>
+          </div>
+          <div class="flex gap-2 mt-4">
+            ${a.status === 'active' ? `
+              <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${a.id}"><i class="fas fa-gavel"></i> Ofertar</button>
+              ${a.buyNowPrice ? `<button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${a.id}">Comprar ($${a.buyNowPrice})</button>` : ''}
+            ` : '<button class="btn btn-secondary btn-sm" disabled>Finalizada</button>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.querySelectorAll('.bid-btn').forEach(btn => {
+    btn.onclick = () => openBidModal(parseInt(btn.dataset.id));
+  });
+  document.querySelectorAll('.buynow-btn').forEach(btn => {
+    btn.onclick = () => buyNow(parseInt(btn.dataset.id));
+  });
+  
+  startCountdown();
+}
+
+function renderProducts(products = null) {
+  const list = document.getElementById('productsList');
+  const items = products || state.products;
+  
+  if (!items.length) {
+    list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay productos</div>';
+    return;
+  }
+  
+  list.innerHTML = items.map(p => `
+    <div class="product-card glass p-4 rounded-xl">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <img src="${p.image}" loading="lazy" alt="${sanitizeHTML(p.title)}" class="w-full sm:w-24 h-24 object-cover rounded-lg">
+        <div class="flex-grow">
+          <h3 class="font-semibold">${sanitizeHTML(p.title)}</h3>
+          <p class="text-sm text-slate-400">${sanitizeHTML(p.description)}</p>
+          <div class="flex justify-between items-center mt-4">
+            <div class="price-tag">$${p.price}</div>
+            <span class="text-xs">Stock: ${p.stock}</span>
+          </div>
+          ${p.stock > 0 ? `<button class="add-cart-btn btn btn-primary btn-sm w-full mt-3" data-id="${p.id}"><i class="fas fa-cart-plus"></i> Agregar</button>` : '<button class="btn btn-secondary btn-sm w-full mt-3" disabled>Agotado</button>'}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.querySelectorAll('.add-cart-btn').forEach(btn => {
+    btn.onclick = () => addToCart(parseInt(btn.dataset.id));
+  });
+}
+
+function startCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    document.querySelectorAll('.countdown').forEach(el => {
+      el.textContent = formatTimeRemaining(el.dataset.end);
+    });
+  }, 1000);
+}
+
+// ======================
+// AUTH
+// ======================
+
+function showLoginModal() {
+  new bootstrap.Modal(document.getElementById('loginModal')).show();
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  showLoading('Iniciando...');
+  
+  try {
+    if (!auth) throw new Error('Firebase Auth no disponible');
     
-    function sanitizeHTML(str) {
-      const temp = document.createElement('div');
-      temp.textContent = str;
-      return temp.innerHTML;
-    }
-
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const userDoc = await db.collection('users').doc(cred.user.uid).get();
+    
+    if (userDoc.exists) {
+      state.currentUser = { id: cred.user.uid, ...userDoc.data() };
+    } else {
+      state.currentUser = {
+        id: cred.user.uid,
+        name: 'Usuario',
+        email,
+        balance: 5000,
+        role: 'user'
       };
+      await db.collection('users').doc(cred.user.uid).set(state.currentUser);
     }
+    
+    updateUI();
+    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    showToast('✅ Sesión iniciada', 'success');
+  } catch (error) {
+    handleError(error, 'Login');
+  } finally {
+    hideLoading();
+  }
+}
 
-    const rateLimiter = {
-      attempts: {},
-      limit: 5,
-      window: 60000,
-      check(action) {
-        const now = Date.now();
-        if (!this.attempts[action]) this.attempts[action] = [];
-        this.attempts[action] = this.attempts[action].filter(time => now - time < this.window);
-        if (this.attempts[action].length >= this.limit) return false;
-        this.attempts[action].push(now);
-        return true;
+function logout() {
+  state.currentUser = null;
+  updateUI();
+  showToast('👋 Sesión cerrada', 'info');
+}
+
+// ======================
+// CARRITO
+// ======================
+
+function addToCart(productId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const product = state.products.find(p => p.id === productId);
+  if (!product || product.stock <= 0) {
+    showToast('❌ No disponible', 'error');
+    return;
+  }
+  
+  const existing = state.cart.find(i => i.productId === productId);
+  if (existing) {
+    if (existing.quantity < product.stock) {
+      existing.quantity++;
+      showToast('✅ Actualizado', 'success');
+    } else {
+      showToast('❌ Sin stock', 'error');
+      return;
+    }
+  } else {
+    state.cart.push({ id: Date.now(), productId, quantity: 1, price: product.price });
+    showToast('✅ Agregado', 'success');
+  }
+  
+  updateCartUI();
+  saveState();
+}
+
+function updateCartUI() {
+  const badge = document.getElementById('cartBadge');
+  const total = state.cart.reduce((sum, i) => sum + i.quantity, 0);
+  if (total > 0) {
+    badge.textContent = total;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function showCartModal() {
+  renderCartItems();
+  new bootstrap.Modal(document.getElementById('cartModal')).show();
+}
+
+function renderCartItems() {
+  const items = document.getElementById('cartItems');
+  const empty = document.getElementById('cartEmpty');
+  const summary = document.getElementById('cartSummary');
+  const total = document.getElementById('cartTotal');
+  
+  if (!state.cart.length) {
+    items.innerHTML = '';
+    empty.classList.remove('hidden');
+    summary.style.display = 'none';
+    return;
+  }
+  
+  empty.classList.add('hidden');
+  summary.style.display = 'block';
+  
+  let totalAmount = 0;
+  items.innerHTML = state.cart.map(item => {
+    const p = state.products.find(pr => pr.id === item.productId);
+    if (!p) return '';
+    const itemTotal = item.quantity * item.price;
+    totalAmount += itemTotal;
+    return `
+      <div class="cart-item">
+        <div class="flex gap-3">
+          <img src="${p.image}" loading="lazy" alt="${sanitizeHTML(p.title)}" class="w-16 h-16 object-cover rounded">
+          <div class="flex-grow">
+            <h6 class="font-semibold">${sanitizeHTML(p.title)}</h6>
+            <p class="text-sm text-slate-400">$${item.price} c/u</p>
+            <div class="quantity-controls mt-2">
+              <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
+              <span class="px-3">${item.quantity}</span>
+              <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)" ${item.quantity >= p.stock ? 'disabled' : ''}><i class="fas fa-plus"></i></button>
+              <button class="quantity-btn ml-2" onclick="removeFromCart(${item.id})"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="font-semibold">$${itemTotal}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  total.textContent = `$${totalAmount}`;
+}
+
+function updateCartQuantity(itemId, change) {
+  const item = state.cart.find(i => i.id === itemId);
+  if (!item) return;
+  
+  const product = state.products.find(p => p.id === item.productId);
+  const newQty = item.quantity + change;
+  
+  if (newQty <= 0) {
+    removeFromCart(itemId);
+    return;
+  }
+  
+  if (newQty > product.stock) {
+    showToast('❌ Sin stock', 'error');
+    return;
+  }
+  
+  item.quantity = newQty;
+  updateCartUI();
+  renderCartItems();
+  saveState();
+}
+
+function removeFromCart(itemId) {
+  state.cart = state.cart.filter(i => i.id !== itemId);
+  updateCartUI();
+  renderCartItems();
+  saveState();
+  showToast('🗑️ Removido', 'info');
+}
+
+function checkout() {
+  if (!state.currentUser || !state.cart.length) return;
+  
+  const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+  
+  if (state.currentUser.balance < total) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  state.currentUser.balance -= total;
+  state.cart.forEach(item => {
+    const p = state.products.find(pr => pr.id === item.productId);
+    if (p) p.stock -= item.quantity;
+  });
+  
+  state.orders.push({
+    id: Date.now(),
+    userId: state.currentUser.id,
+    items: [...state.cart],
+    total,
+    timestamp: new Date().toISOString()
+  });
+  
+  state.cart = [];
+  bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+  createConfetti();
+  updateUI();
+  renderProducts();
+  saveState();
+  showToast('✅ Compra exitosa', 'success');
+}
+
+// ======================
+// MERCADOPAGO
+// ======================
+
+function showMercadoPagoModal() {
+  if (!state.currentUser || !state.cart.length) {
+    showToast('❌ Carrito vacío', 'error');
+    return;
+  }
+  renderPaymentSummary();
+  resetPaymentModal();
+  new bootstrap.Modal(document.getElementById('mpModal')).show();
+  setupPaymentMethods();
+}
+
+function renderPaymentSummary() {
+  const items = document.getElementById('paymentItems');
+  const total = document.getElementById('paymentTotal');
+  let totalAmount = 0;
+  
+  items.innerHTML = state.cart.map(item => {
+    const p = state.products.find(pr => pr.id === item.productId);
+    const itemTotal = item.quantity * item.price;
+    totalAmount += itemTotal;
+    return `<div class="flex justify-between py-2 border-bottom border-slate-700"><div><div class="font-medium">${sanitizeHTML(p?.title)}</div><small>${item.quantity}x $${item.price}</small></div><div>$${itemTotal}</div></div>`;
+  }).join('');
+  
+  total.textContent = `$${totalAmount}`;
+}
+
+function setupPaymentMethods() {
+  const methods = document.querySelectorAll('#mpModal .payment-method');
+  const confirmBtn = document.getElementById('confirmPayment');
+  
+  methods.forEach(m => {
+    m.onclick = function() {
+      methods.forEach(x => x.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedPaymentMethod = this.dataset.method;
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = `<i class="fas fa-lock"></i> Pagar con ${getPaymentMethodName(selectedPaymentMethod)}`;
+    };
+  });
+  
+  document.getElementById('confirmPayment').onclick = processCartPayment;
+  document.getElementById('cancelPayment').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+  };
+}
+
+function processCartPayment() {
+  if (!selectedPaymentMethod) {
+    showToast('⚠️ Selecciona método', 'error');
+    return;
+  }
+  
+  document.getElementById('paymentSummary').style.display = 'none';
+  document.getElementById('paymentMethods').style.display = 'none';
+  document.getElementById('paymentActions').style.display = 'none';
+  document.getElementById('paymentLoading').classList.remove('hidden');
+  
+  setTimeout(() => {
+    const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+    
+    state.cart.forEach(item => {
+      const p = state.products.find(pr => pr.id === item.productId);
+      if (p) p.stock -= item.quantity;
+    });
+    
+    state.orders.push({
+      id: Date.now(),
+      userId: state.currentUser.id,
+      items: [...state.cart],
+      total,
+      paymentMethod: selectedPaymentMethod,
+      timestamp: new Date().toISOString()
+    });
+    
+    state.cart = [];
+    
+    document.getElementById('paymentLoading').classList.add('hidden');
+    document.getElementById('paymentSuccess').classList.remove('hidden');
+    document.getElementById('paymentDetails').innerHTML = `<div class="glass-light p-3 rounded mt-3"><div><strong>ID:</strong> #${Date.now()}</div><div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div><div><strong>Total:</strong> $${total}</div></div>`;
+    
+    updateCartUI();
+    renderProducts();
+    saveState();
+    
+    const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+    if (cartModal) cartModal.hide();
+    
+    setTimeout(() => {
+      createConfetti();
+      bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+      resetPaymentModal();
+      showToast('✅ Pago exitoso', 'success');
+    }, 2500);
+  }, 2000);
+}
+
+function resetPaymentModal() {
+  selectedPaymentMethod = null;
+  document.getElementById('paymentSummary').style.display = 'block';
+  document.getElementById('paymentMethods').style.display = 'block';
+  document.getElementById('paymentActions').style.display = 'flex';
+  document.getElementById('paymentLoading').classList.add('hidden');
+  document.getElementById('paymentSuccess').classList.add('hidden');
+  document.getElementById('confirmPayment').disabled = true;
+  document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar';
+  document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
+}
+
+// ======================
+// PUJAS
+// ======================
+
+function openBidModal(auctionId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction || auction.status !== 'active') return;
+  
+  document.getElementById('bidAuctionId').value = auctionId;
+  document.getElementById('bidAuctionInfo').innerHTML = `<div class="flex gap-3 p-3 bg-slate-800/30 rounded"><img src="${auction.image}" loading="lazy" alt="${sanitizeHTML(auction.title)}" class="w-12 h-12 object-cover rounded"><div><div class="font-semibold">${sanitizeHTML(auction.title)}</div><div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div></div></div>`;
+  
+  const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
+  document.getElementById('bidAmount').value = minBid;
+  document.getElementById('bidAmount').min = minBid;
+  
+  new bootstrap.Modal(document.getElementById('bidModal')).show();
+}
+
+async function placeBid(e) {
+  e.preventDefault();
+  
+  if (!rateLimiter.check('placeBid')) {
+    showToast('⚠️ Espera un momento', 'error');
+    return;
+  }
+  
+  const auctionId = parseInt(document.getElementById('bidAuctionId').value);
+  const amount = parseFloat(document.getElementById('bidAmount').value);
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction) return;
+  
+  const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
+  if (amount < minBid) {
+    showToast(`❌ Mínimo: $${minBid}`, 'error');
+    return;
+  }
+  
+  if (state.currentUser.balance < amount) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  showLoading('Procesando...');
+  
+  try {
+    state.bids.push({
+      id: state.bids.length + 1,
+      auctionId,
+      userId: state.currentUser.id,
+      amount,
+      timestamp: new Date().toISOString()
+    });
+    
+    auction.bids.push(state.currentUser.id);
+    auction.currentBid = amount;
+    auction.lastBidTime = new Date().toISOString();
+    
+    bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+    createConfetti();
+    await saveState();
+    renderAuctions();
+    updateUI();
+    showToast('✅ Puja realizada', 'success');
+  } catch (error) {
+    handleError(error, 'Puja');
+  } finally {
+    hideLoading();
+  }
+}
+
+function buyNow(auctionId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
+  
+  if (state.currentUser.balance < auction.buyNowPrice) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  if (confirm(`¿Comprar por $${auction.buyNowPrice}?`)) {
+    state.currentUser.balance -= auction.buyNowPrice;
+    auction.status = 'ended';
+    auction.currentBid = auction.buyNowPrice;
+    createConfetti();
+    saveState();
+    renderAuctions();
+    updateUI();
+    showToast('✅ Comprado', 'success');
+  }
+}
+
+// ======================
+// FILTROS
+// ======================
+
+function filterAuctions() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const sortBy = document.getElementById('sortBy').value;
+  const filterState = document.getElementById('filterState').value;
+  
+  let filtered = state.auctions.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
+    const matchState = filterState === 'all' || a.status === filterState;
+    return matchSearch && matchState;
+  });
+  
+  if (sortBy === 'highest') {
+    filtered.sort((a, b) => (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice));
+  } else if (sortBy === 'newest') {
+    filtered.sort((a, b) => new Date(b.lastBidTime) - new Date(a.lastBidTime));
+  } else {
+    filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+  }
+  
+  renderAuctions(filtered);
+}
+
+function filterProducts() {
+  const search = document.getElementById('searchProducts').value.toLowerCase();
+  const category = document.getElementById('filterProductCategory').value;
+  const sortBy = document.getElementById('sortProducts').value;
+  
+  let filtered = state.products.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+    const matchCategory = category === 'all' || p.category === category;
+    return matchSearch && matchCategory;
+  });
+  
+  if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+  else if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+  else filtered.sort((a, b) => b.id - a.id);
+  
+  renderProducts(filtered);
+}
+
+// ======================
+// ADMIN & BOTS
+// ======================
+
+function toggleAdminPanel() {
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('❌ Solo admins', 'error');
+    return;
+  }
+  document.getElementById('adminPanel').classList.toggle('hidden');
+}
+
+async function createAuction(e) {
+  e.preventDefault();
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('❌ Solo admins', 'error');
+    return;
+  }
+  
+  const title = document.getElementById('a_title').value;
+  const desc = document.getElementById('a_desc').value;
+  const start = parseFloat(document.getElementById('a_start').value) || 0;
+  const buyNow = document.getElementById('a_buyNow').value ? parseFloat(document.getElementById('a_buyNow').value) : null;
+  const image = state.uploadedImageUrl || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
+  
+  let endTime = document.getElementById('a_end').value;
+  if (!endTime) {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    endTime = d.toISOString();
+  }
+  
+  showLoading('Creando...');
+  
+  try {
+    state.auctions.push({
+      id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
+      title,
+      description: desc,
+      image,
+      category: 'General',
+      startPrice: start,
+      currentBid: start,
+      buyNowPrice: buyNow,
+      endTime: new Date(endTime).toISOString(),
+      sellerId: state.currentUser.id,
+      bids: [],
+      lastBidTime: new Date().toISOString(),
+      status: 'active'
+    });
+    
+    document.getElementById('createAuctionForm').reset();
+    document.getElementById('imagePreview').classList.add('hidden');
+    state.imageUploaded = false;
+    state.uploadedImageUrl = null;
+    
+    await saveState();
+    renderAuctions();
+    showToast('✅ Creada', 'success');
+  } catch (error) {
+    handleError(error, 'Crear');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderManageAuctions() {
+  const list = document.getElementById('manageAuctionsList');
+  list.innerHTML = state.auctions.map(a => `<div class="flex justify-between items-center p-3 glass-light rounded mb-2"><div><div class="font-medium">${sanitizeHTML(a.title)}</div><div class="text-xs text-slate-400">$${a.currentBid || a.startPrice} • ${a.status}</div></div><button class="btn btn-outline-danger btn-sm" onclick="deleteAuction(${a.id})"><i class="fas fa-trash"></i></button></div>`).join('');
+}
+
+function deleteAuction(id) {
+  if (confirm('¿Eliminar?')) {
+    state.auctions = state.auctions.filter(a => a.id !== id);
+    saveState();
+    renderAuctions();
+    renderManageAuctions();
+    showToast('🗑️ Eliminada', 'info');
+  }
+}
+
+function renderBotUsers() {
+  const list = document.getElementById('botUsersList');
+  if (!state.botUsers.length) {
+    list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay bots</div>';
+    return;
+  }
+  
+  list.innerHTML = state.botUsers.map(bot => `
+    <div class="glass-light p-3 rounded mb-2">
+      <div class="flex justify-between items-center mb-2">
+        <input type="text" class="bot-name-edit flex-grow mr-2" value="${sanitizeHTML(bot.name)}" onchange="updateBotName(${bot.id}, this.value)">
+        <div class="flex gap-2 items-center">
+          <div class="form-check form-switch"><input type="checkbox" class="form-check-input" ${bot.active ? 'checked' : ''} onchange="toggleBotUser(${bot.id}, this.checked)"></div>
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="bot-settings-row">
+        <label>Delay (min):</label>
+        <input type="number" min="1" max="60" value="${bot.delay || state.botSettings.delayGlobal}" onchange="updateBotDelay(${bot.id}, parseInt(this.value))">
+      </div>
+      <div class="text-xs text-slate-400 mt-2">Saldo: $${Math.round(bot.balance)}</div>
+    </div>
+  `).join('');
+}
+
+function addBotUser() {
+  const id = Math.max(100, ...state.botUsers.map(b => b.id)) + 1;
+  state.botUsers.push({
+    id,
+    name: `Bot ${state.botUsers.length + 1}`,
+    balance: Math.round(5000 + Math.random() * 5000),
+    active: true,
+    delay: state.botSettings.delayGlobal
+  });
+  saveState();
+  renderBotUsers();
+  showToast('✅ Bot agregado', 'success');
+}
+
+function updateBotName(id, name) {
+  const bot = state.botUsers.find(b => b.id === id);
+  if (bot && name.trim()) {
+    bot.name = name.trim();
+    saveState();
+  }
+}
+
+function updateBotDelay(id, delay) {
+  const bot = state.botUsers.find(b => b.id === id);
+  if (bot) {
+    bot.delay = delay || state.botSettings.delayGlobal;
+    saveState();
+    showToast(`⏱️ Delay: ${bot.delay}min`, 'info');
+  }
+}
+
+function toggleBotUser(id, active) {
+  const bot = state.botUsers.find(b => b.id === id);
+  if (bot) {
+    bot.active = active;
+    saveState();
+    showToast(`${bot.name} ${active ? '✅' : '⏸️'}`, 'info');
+  }
+}
+
+function deleteBotUser(id) {
+  if (confirm('¿Eliminar?')) {
+    state.botUsers = state.botUsers.filter(b => b.id !== id);
+    saveState();
+    renderBotUsers();
+    showToast('🗑️ Eliminado', 'info');
+  }
+}
+
+function updateBotSettings() {
+  state.botSettings.enabled = document.getElementById('botsEnabled').checked;
+  state.botSettings.delayGlobal = parseInt(document.getElementById('botDelayGlobal').value) || 2;
+  state.botSettings.probability = parseInt(document.getElementById('botProbability').value) || 70;
+  saveState();
+  showToast('⚙️ Actualizado', 'success');
+}
+
+function startBotActivity() {
+  if (botActivityInterval) clearInterval(botActivityInterval);
+  botActivityInterval = setInterval(() => {
+    if (!state.botSettings.enabled || !state.currentUser) return;
+    const active = state.auctions.filter(a => a.status === 'active');
+    active.forEach(auction => {
+      const activeBots = state.botUsers.filter(b => {
+        if (!b.active || b.balance <= (auction.currentBid || auction.startPrice) + 50) return false;
+        const botDelay = (b.delay || state.botSettings.delayGlobal) * 60000;
+        const timeSince = new Date() - new Date(auction.lastBidTime);
+        return timeSince >= botDelay;
+      });
+      if (!activeBots.length) return;
+      if (Math.random() * 100 <= state.botSettings.probability) {
+        const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
+        const bidAmount = (auction.currentBid || auction.startPrice) + state.currentIncrement + Math.floor(Math.random() * 50);
+        if (bot.balance >= bidAmount) {
+          state.bids.push({ id: state.bids.length + 1, auctionId: auction.id, userId: bot.id, amount: bidAmount, timestamp: new Date().toISOString() });
+          auction.bids.push(bot.id);
+          auction.currentBid = bidAmount;
+          auction.lastBidTime = new Date().toISOString();
+          saveState();
+          renderAuctions();
+          showToast(`🤖 ${bot.name} pujó $${bidAmount}`, 'info');
+        }
+      }
+    });
+  }, 30000);
+}
+
+// ======================
+// IMÁGENES
+// ======================
+
+function setupImageUpload() {
+  const container = document.getElementById('imageUploadContainer');
+  const input = document.getElementById('imageUpload');
+  
+  container.onclick = () => input.click();
+  container.ondragover = (e) => { e.preventDefault(); container.classList.add('dragover'); };
+  container.ondragleave = () => container.classList.remove('dragover');
+  container.ondrop = (e) => {
+    e.preventDefault();
+    container.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleImageUpload(e.dataTransfer.files[0]);
+  };
+  input.onchange = (e) => {
+    if (e.target.files.length) handleImageUpload(e.target.files[0]);
+  };
+}
+
+async function handleImageUpload(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showToast('⚠️ Solo JPG/PNG/WebP', 'error');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('⚠️ Máx 5MB', 'error');
+    return;
+  }
+  
+  try {
+    showLoading('Subiendo...');
+    if (!storage) throw new Error('Storage no disponible');
+    
+    const imageRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
+    const snapshot = await imageRef.put(file);
+    const url = await snapshot.ref.getDownloadURL();
+    
+    const preview = document.getElementById('imagePreview');
+    preview.src = url;
+    preview.classList.remove('hidden');
+    state.imageUploaded = true;
+    state.uploadedImageUrl = url;
+    showToast('✅ Subida', 'success');
+  } catch (error) {
+    handleError(error, 'Subida');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ======================
+// MISC
+// ======================
+
+function exportToCsv() {
+  const data = [
+    ['ID', 'Título', 'Precio', 'Estado'],
+    ...state.auctions.map(a => [a.id, a.title, a.currentBid || a.startPrice, a.status])
+  ];
+  const csv = data.map(row => row.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `subastas_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📄 Exportado', 'success');
+}
+
+function createDemoData() {
+  if (confirm('¿Recargar demo?')) {
+    loadDemoData();
+    renderAuctions();
+    renderProducts();
+    updateUI();
+    showToast('✅ Demo cargada', 'success');
+  }
+}
+
+function initParticles() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.getElementById('particles-js');
+  canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%';
+  container.appendChild(canvas);
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.onresize = resize;
+  
+  const particles = [];
+  for (let i = 0; i < 50; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      size: Math.random() * 3 + 1,
+      opacity: Math.random() * 0.5 + 0.3
+    });
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x <= 0 || p.x >= canvas.width) p.vx *= -1;
+      if (p.y <= 0 || p.y >= canvas.height) p.vy *= -1;
+      p.x = Math.max(0, Math.min(canvas.width, p.x));
+      p.y = Math.max(0, Math.min(canvas.height, p.y));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,62,127,${p.opacity})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+function setupMobileMenu() {
+  document.querySelectorAll('.mobile-menu-item').forEach(item => {
+    item.onclick = function() {
+      document.querySelectorAll('.mobile-menu-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      const target = this.dataset.target;
+      if (target === 'auctions') {
+        document.getElementById('auctions-tab').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (target === 'store') {
+        document.getElementById('store-tab').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (target === 'cart') {
+        showCartModal();
       }
     };
-
-    function showLoading(message = 'Cargando...') {
-      const existing = document.getElementById('globalLoader');
-      if (existing) return;
-      
-      const loader = document.createElement('div');
-      loader.id = 'globalLoader';
-      loader.innerHTML = `
-        <div class="glass p-6 rounded-2xl text-center">
-          <div class="spinner mb-3"></div>
-          <div>${sanitizeHTML(message)}</div>
-        </div>
-      `;
-      document.body.appendChild(loader);
-    }
-
-    function hideLoading() {
-      const loader = document.getElementById('globalLoader');
-      if (loader) loader.remove();
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast show toast-${type}`;
-      toast.innerHTML = `
-        <div class="toast-body d-flex justify-content-between align-items-center">
-          <span>${sanitizeHTML(message)}</span>
-          <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
-        </div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
-    }
-
-    function handleError(error, context) {
-      const messages = {
-        'auth/user-not-found': 'Usuario no encontrado',
-        'auth/wrong-password': 'Contraseña incorrecta',
-        'permission-denied': 'No tienes permisos',
-        'storage/unauthorized': 'Error de autorización en almacenamiento'
-      };
-      
-      const message = messages[error.code] || `Error en ${context}: ${error.message}`;
-      showToast(message, 'error');
-      console.error(`[${context}]`, error);
-    }
-
-    // INICIALIZACIÓN
-    document.addEventListener('DOMContentLoaded', async function() {
-      console.log('🚀 Inicializando Subasta Argenta...');
-      showLoading('Cargando datos...');
-      try {
-        await loadState();
-        initApp();
-        setupEventListeners();
-        renderAuctions();
-        renderProducts();
-        updateUI();
-        initParticles();
-        startBotActivity();
-        console.log('✅ Aplicación lista');
-      } catch (error) {
-        console.error('Error inicializando:', error);
-        handleError(error, 'Inicialización');
-      } finally {
-        hideLoading();
-      }
-    });
-
-    function initApp() {
-      setupMobileMenu();
-      const filterToggle = document.querySelector('.filter-toggle');
-      if (filterToggle) {
-        filterToggle.addEventListener('click', function() {
-          const content = document.querySelector('.filter-content');
-          const icon = this.querySelector('.fa-chevron-down');
-          content.classList.toggle('active');
-          icon.classList.toggle('fa-rotate-180');
-        });
-      }
-      setupImageUpload();
-      setupIncrementButtons();
-      updateBotSettingsUI();
-      updateCartUI();
-      setupTopupListeners();
-    }
-
-    function setupMobileMenu() {
-      document.querySelectorAll('.mobile-menu-item').forEach(item => {
-        item.addEventListener('click', function() {
-          document.querySelectorAll('.mobile-menu-item').forEach(i => i.classList.remove('active'));
-          this.classList.add('active');
-          const target = this.getAttribute('data-target');
-          if (target === 'auctions') {
-            document.getElementById('auctions-tab').click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else if (target === 'store') {
-            document.getElementById('store-tab').click();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else if (target === 'cart') {
-            showCartModal();
-          }
-        });
-      });
-    }
-
-    function setupIncrementButtons() {
-      document.querySelectorAll('.increment-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          if (!this.classList.contains('quick-bid-btn')) {
-            document.querySelectorAll('.increment-btn:not(.quick-bid-btn)').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const increment = this.getAttribute('data-increment');
-            state.currentIncrement = parseInt(increment) || 10;
-          }
-        });
-      });
-    }
-
-    function updateBotSettingsUI() {
-      const enabledCheckbox = document.getElementById('botsEnabled');
-      const delayInput = document.getElementById('botDelayGlobal');
-      const probabilityInput = document.getElementById('botProbability');
-      
-      if (enabledCheckbox) enabledCheckbox.checked = state.botSettings.enabled;
-      if (delayInput) delayInput.value = state.botSettings.delayGlobal;
-      if (probabilityInput) probabilityInput.value = state.botSettings.probability;
-    }
-
-    function setupTopupListeners() {
-      document.querySelectorAll('.topup-amount-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          topupAmount = parseInt(this.getAttribute('data-amount'));
-          document.getElementById('customTopupAmount').value = '';
-          document.getElementById('proceedToPayment').disabled = false;
-        });
-      });
-      
-      document.getElementById('customTopupAmount').addEventListener('input', function() {
-        const value = parseInt(this.value);
-        if (value >= 100) {
-          topupAmount = value;
-          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-          document.getElementById('proceedToPayment').disabled = false;
-        } else {
-          document.getElementById('proceedToPayment').disabled = true;
-        }
-      });
-      
-      document.getElementById('proceedToPayment').addEventListener('click', function() {
-        document.getElementById('topupAmountSelection').classList.add('hidden');
-        document.getElementById('topupPaymentMethods').classList.remove('hidden');
-        setupTopupPaymentMethods();
-      });
-      
-      document.getElementById('confirmTopupPayment').addEventListener('click', processTopupPayment);
-    }
-
-    function setupTopupPaymentMethods() {
-      const methods = document.querySelectorAll('#topupModal .payment-method');
-      const confirmBtn = document.getElementById('confirmTopupPayment');
-      
-      methods.forEach(method => {
-        method.addEventListener('click', function() {
-          methods.forEach(m => m.classList.remove('selected'));
-          this.classList.add('selected');
-          selectedPaymentMethod = this.getAttribute('data-method');
-          confirmBtn.disabled = false;
-        });
-      });
-    }
-
-    function processTopupPayment() {
-      document.getElementById('topupPaymentMethods').classList.add('hidden');
-      document.getElementById('topupLoading').classList.remove('hidden');
-      
-      setTimeout(() => {
-        const success = Math.random() > 0.1;
-        if (success) {
-          state.currentUser.balance += topupAmount;
-          document.getElementById('topupLoading').classList.add('hidden');
-          document.getElementById('topupSuccess').classList.remove('hidden');
-          document.getElementById('topupDetails').innerHTML = `
-            <div class="glass-light p-3 rounded mt-3">
-              <div><strong>Monto:</strong> $${topupAmount}</div>
-              <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
-              <div><strong>Nuevo saldo:</strong> <span class="price-tag">${state.currentUser.balance}</span></div>
-            </div>
-          `;
-          updateUI();
-          saveState();
-          createConfetti();
-          setTimeout(() => {
-            bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
-            resetTopupModal();
-          }, 2500);
-        } else {
-          document.getElementById('topupLoading').classList.add('hidden');
-          alert('Error en el pago. Intenta nuevamente.');
-          resetTopupModal();
-        }
-      }, 2000);
-    }
-
-    function addBalance() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      resetTopupModal();
-      new bootstrap.Modal(document.getElementById('topupModal')).show();
-    }
-
-    function resetTopupModal() {
-      document.getElementById('topupAmountSelection').classList.remove('hidden');
-      document.getElementById('topupPaymentMethods').classList.add('hidden');
-      document.getElementById('topupLoading').classList.add('hidden');
-      document.getElementById('topupSuccess').classList.add('hidden');
-      document.getElementById('customTopupAmount').value = '';
-      document.getElementById('proceedToPayment').disabled = true;
-      topupAmount = 0;
-      selectedPaymentMethod = null;
-      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('#topupModal .payment-method').forEach(m => m.classList.remove('selected'));
-    }
-
-    function getPaymentMethodName(method) {
-      const names = {
-        'credit_card': 'Tarjeta de Crédito',
-        'debit_card': 'Tarjeta de Débito',
-        'mercadopago': 'Saldo MP',
-        'cash': 'Efectivo'
-      };
-      return names[method] || 'Método seleccionado';
-    }
-
-    function updateCategoryFilter() {
-      const categories = [...new Set(state.auctions.map(a => a.category))];
-      const filter = document.getElementById('filterCategory');
-      if (filter) {
-        filter.innerHTML = '<option value="all">Todas</option>' + 
-          categories.map(c => `<option value="${c}">${c}</option>`).join('');
-      }
-      
-      const productCategories = [...new Set(state.products.map(p => p.category))];
-      const productFilter = document.getElementById('filterProductCategory');
-      if (productFilter) {
-        productFilter.innerHTML = '<option value="all">Todas</option>' + 
-          productCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-      }
-    }
-
-    function initParticles() {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const container = document.getElementById('particles-js');
-      
-      canvas.style.position = 'absolute';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      container.appendChild(canvas);
-      
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-      resize();
-      window.addEventListener('resize', resize);
-      
-      const particles = [];
-      for (let i = 0; i < 50; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          size: Math.random() * 3 + 1,
-          opacity: Math.random() * 0.5 + 0.3
-        });
-      }
-      
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x <= 0 || p.x >= canvas.width) p.vx *= -1;
-          if (p.y <= 0 || p.y >= canvas.height) p.vy *= -1;
-          p.x = Math.max(0, Math.min(canvas.width, p.x));
-          p.y = Math.max(0, Math.min(canvas.height, p.y));
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 62, 127, ${p.opacity})`;
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
-      }
-      animate();
-    }
-
-    // FIREBASE - CARGAR ESTADO
-    async function loadState() {
-      try {
-        const doc = await db.collection('appState').doc('mainState').get();
-        if (doc.exists) {
-          const data = doc.data();
-          state.auctions = data.auctions || [];
-          state.products = data.products || [];
-          state.bids = data.bids || [];
-          state.cart = data.cart || [];
-          state.orders = data.orders || [];
-          state.botUsers = data.botUsers || [];
-          state.botSettings = data.botSettings || state.botSettings;
-          console.log("✅ Estado cargado desde Firebase");
-        } else {
-          loadDemoData();
-        }
-        
-        // Backup local
-        const backup = localStorage.getItem('subastaArgenta_backup');
-        if (backup && state.auctions.length === 0) {
-          const parsed = JSON.parse(backup);
-          Object.assign(state, parsed);
-        }
-      } catch (error) {
-        console.error("Error cargando:", error);
-        const backup = localStorage.getItem('subastaArgenta_backup');
-        if (backup) {
-          Object.assign(state, JSON.parse(backup));
-        } else {
-          loadDemoData();
-        }
-      }
-    }
-
-    // FIREBASE - GUARDAR ESTADO
-    async function saveState() {
-      try {
-        localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
-        
-        if (state.currentUser && db) {
-          await db.collection('appState').doc('mainState').set({
-            auctions: state.auctions,
-            products: state.products,
-            bids: state.bids,
-            cart: state.cart,
-            orders: state.orders,
-            botUsers: state.botUsers,
-            botSettings: state.botSettings,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          console.log("💾 Guardado en Firebase");
-        }
-      } catch (error) {
-        console.error("Error guardando:", error);
-        showToast('Error guardando cambios', 'error');
-      }
-    }
-
-    // DATOS DE DEMOSTRACIÓN
-    function loadDemoData() {
-      const now = new Date();
-      state.users = [
-        { id: 1, name: 'Usuario Demo', email: 'user@demo.com', password: 'user123', balance: 5000, role: 'user' },
-        { id: 2, name: 'Admin', email: 'admin@demo.com', password: 'admin123', balance: 10000, role: 'admin' }
-      ];
-      state.botUsers = [
-        { id: 101, name: 'Bot Ofertante 1', balance: 8000, active: true, delay: 2 },
-        { id: 102, name: 'Bot Ofertante 2', balance: 7500, active: true, delay: 3 }
-      ];
-      state.auctions = [
-        {
-          id: 1,
-          title: 'iPhone 14 Pro',
-          description: 'Nuevo',
-          image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?ixlib=rb-4.0.3&w=500&q=80',
-          category: 'Electrónicos',
-          startPrice: 500,
-          currentBid: 500,
-          buyNowPrice: 1200,
-          endTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-          sellerId: 2,
-          bids: [],
-          lastBidTime: now.toISOString(),
-          status: 'active'
-        }
-      ];
-      state.products = [
-        {
-          id: 1,
-          title: 'Laptop Gaming',
-          description: 'Alto rendimiento',
-          image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=500',
-          category: 'Electrónicos',
-          price: 1200,
-          stock: 5,
-          featured: true
-        }
-      ];
-      saveState();
-    }
-
-    // EVENT LISTENERS
-    function setupEventListeners() {
-      document.getElementById('loginBtn').addEventListener('click', showLoginModal);
-      document.getElementById('logoutBtn').addEventListener('click', logout);
-      document.getElementById('loginForm').addEventListener('submit', handleLogin);
-      document.getElementById('cartBtn').addEventListener('click', showCartModal);
-      document.getElementById('checkoutBtn').addEventListener('click', checkout);
-      document.getElementById('mercadopagoBtn').addEventListener('click', showMercadoPagoModal);
-      document.getElementById('btnCreateDemo').addEventListener('click', createDemoData);
-      document.getElementById('openAdmin').addEventListener('click', toggleAdminPanel);
-      document.getElementById('topup').addEventListener('click', addBalance);
-      document.getElementById('addBotUser').addEventListener('click', addBotUser);
-      document.getElementById('createAuctionForm').addEventListener('submit', createAuction);
-      document.getElementById('bidForm').addEventListener('submit', placeBid);
-      
-      document.getElementById('search').addEventListener('input', debounce(filterAuctions, 300));
-      document.getElementById('sortBy').addEventListener('change', filterAuctions);
-      document.getElementById('filterState').addEventListener('change', filterAuctions);
-      document.getElementById('searchProducts').addEventListener('input', debounce(filterProducts, 300));
-      document.getElementById('filterProductCategory').addEventListener('change', filterProducts);
-      document.getElementById('sortProducts').addEventListener('change', filterProducts);
-      document.getElementById('exportCsv').addEventListener('click', exportToCsv);
-      document.getElementById('manage-tab').addEventListener('click', renderManageAuctions);
-      document.getElementById('bots-tab').addEventListener('click', renderBotUsers);
-      
-      document.getElementById('botsEnabled').addEventListener('change', updateBotSettings);
-      document.getElementById('botDelayGlobal').addEventListener('change', updateBotSettings);
-      document.getElementById('botProbability').addEventListener('change', updateBotSettings);
-    }
-
-    // AUTENTICACIÓN
-    function showLoginModal() {
-      new bootstrap.Modal(document.getElementById('loginModal')).show();
-    }
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-      
-      showLoading('Iniciando sesión...');
-      
-      try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-        
-        if (userDoc.exists) {
-          state.currentUser = { id: userCredential.user.uid, ...userDoc.data() };
-        } else {
-          state.currentUser = {
-            id: userCredential.user.uid,
-            name: 'Usuario',
-            email: email,
-            balance: 5000,
-            role: 'user'
-          };
-          await db.collection('users').doc(userCredential.user.uid).set(state.currentUser);
-        }
-        
-        updateUI();
-        bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-        showToast('✅ Sesión iniciada', 'success');
-      } catch (error) {
-        console.error("Error login:", error);
-        handleError(error, 'Login');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function logout() {
-      state.currentUser = null;
-      updateUI();
-      saveState();
-      showToast('👋 Sesión cerrada', 'info');
-    }
-
-    function updateUI() {
-      const userInfo = document.getElementById('userInfo');
-      const loginBtn = document.getElementById('loginBtn');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const balance = document.getElementById('balance');
-      const adminPanel = document.getElementById('adminPanel');
-      
-      if (state.currentUser) {
-        userInfo.textContent = `${state.currentUser.name} (${state.currentUser.role})`;
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        balance.textContent = `$${state.currentUser.balance}`;
-        if (state.currentUser.role === 'admin') {
-          adminPanel.classList.remove('hidden');
-        }
-      } else {
-        userInfo.textContent = 'No has iniciado sesión';
-        loginBtn.style.display = 'block';
-        logoutBtn.style.display = 'none';
-        balance.textContent = '$0';
-        adminPanel.classList.add('hidden');
-      }
-      updateCategoryFilter();
-      updateCartUI();
-    }
-
-    // SUBIDA DE IMÁGENES
-    function setupImageUpload() {
-      const container = document.getElementById('imageUploadContainer');
-      const input = document.getElementById('imageUpload');
-      const preview = document.getElementById('imagePreview');
-      
-      container.addEventListener('click', () => input.click());
-      container.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        container.classList.add('dragover');
-      });
-      container.addEventListener('dragleave', () => container.classList.remove('dragover'));
-      container.addEventListener('drop', (e) => {
-        e.preventDefault();
-        container.classList.remove('dragover');
-        if (e.dataTransfer.files.length) handleImageUpload(e.dataTransfer.files[0]);
-      });
-      input.addEventListener('change', (e) => {
-        if (e.target.files.length) handleImageUpload(e.target.files[0]);
-      });
-    }
-
-    async function handleImageUpload(file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        showToast('⚠️ Solo JPG, PNG o WebP', 'error');
-        return;
-      }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('⚠️ Imagen muy grande (máx 5MB)', 'error');
-        return;
-      }
-      
-      try {
-        showLoading('Subiendo imagen...');
-        
-        const compressed = await compressImage(file);
-        
-        const imageRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
-        const snapshot = await imageRef.put(compressed);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        
-        const preview = document.getElementById('imagePreview');
-        preview.src = downloadURL;
-        preview.classList.remove('hidden');
-        state.imageUploaded = true;
-        state.uploadedImageUrl = downloadURL;
-        showToast('✅ Imagen subida', 'success');
-      } catch (error) {
-        console.error("Error:", error);
-        handleError(error, 'Subida de imagen');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function compressImage(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const scaleSize = MAX_WIDTH / img.width;
-            canvas.width = MAX_WIDTH;
-            canvas.height = img.height * scaleSize;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // RENDERIZADO DE SUBASTAS
-    function renderAuctions(auctionsToRender = null) {
-      const list = document.getElementById('auctionsList');
-      const auctions = auctionsToRender || state.auctions;
-      
-      if (auctions.length === 0) {
-        list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay subastas</div>';
-        return;
-      }
-      
-      list.innerHTML = auctions.map(auction => `
-        <div class="auction-card glass p-4 rounded-xl">
-          <div class="flex flex-col sm:flex-row gap-4">
-            <img src="${auction.image}" 
-                 loading="lazy" 
-                 decoding="async"
-                 alt="${sanitizeHTML(auction.title)}"
-                 class="w-full sm:w-24 h-24 object-cover rounded-lg">
-            <div class="flex-grow">
-              <div class="flex justify-between">
-                <h3 class="font-semibold">${sanitizeHTML(auction.title)}</h3>
-                <span class="status-badge ${auction.status === 'active' ? 'status-active' : 'status-ended'}">
-                  ${auction.status === 'active' ? 'Activa' : 'Finalizada'}
-                </span>
-              </div>
-              <p class="text-sm text-slate-400 mt-1">${sanitizeHTML(auction.description)}</p>
-              <div class="flex justify-between items-center mt-4">
-                <div>
-                  <div class="text-xs text-slate-400">Puja actual</div>
-                  <div class="price-tag">$${auction.currentBid || auction.startPrice}</div>
-                </div>
-                <div class="countdown" data-end="${auction.endTime}">${formatTimeRemaining(auction.endTime)}</div>
-              </div>
-              <div class="flex flex-col sm:flex-row gap-2 mt-4">
-                ${auction.status === 'active' ? `
-                  <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${auction.id}">
-                    <i class="fas fa-gavel"></i> Ofertar
-                  </button>
-                  ${auction.buyNowPrice ? `
-                    <button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${auction.id}">
-                      Comprar ($${auction.buyNowPrice})
-                    </button>
-                  ` : ''}
-                ` : '<button class="btn btn-secondary btn-sm flex-1" disabled>Finalizada</button>'}
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-      
-      document.querySelectorAll('.bid-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          openBidModal(parseInt(this.getAttribute('data-id')));
-        });
-      });
-      
-      document.querySelectorAll('.buynow-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          buyNow(parseInt(this.getAttribute('data-id')));
-        });
-      });
-      
-      startCountdown();
-    }
-
-    // RENDERIZADO DE PRODUCTOS
-    function renderProducts(productsToRender = null) {
-      const list = document.getElementById('productsList');
-      const products = productsToRender || state.products;
-      
-      if (products.length === 0) {
-        list.innerHTML = '<div class="text-center py-10 text-slate-400">No hay productos</div>';
-        return;
-      }
-      
-      list.innerHTML = products.map(product => `
-        <div class="product-card glass p-4 rounded-xl">
-          <div class="flex flex-col sm:flex-row gap-4">
-            <img src="${product.image}" 
-                 loading="lazy"
-                 decoding="async"
-                 alt="${sanitizeHTML(product.title)}"
-                 class="w-full sm:w-24 h-24 object-cover rounded-lg">
-            <div class="flex-grow">
-              <h3 class="font-semibold">${sanitizeHTML(product.title)}</h3>
-              <p class="text-sm text-slate-400">${sanitizeHTML(product.description)}</p>
-              <div class="flex justify-between items-center mt-4">
-                <div class="price-tag">$${product.price}</div>
-                <span class="text-xs">Stock: ${product.stock}</span>
-              </div>
-              ${product.stock > 0 ? `
-                <button class="add-to-cart-btn btn btn-primary btn-sm w-full mt-3" data-id="${product.id}">
-                  <i class="fas fa-cart-plus"></i> Agregar
-                </button>
-              ` : '<button class="btn btn-secondary btn-sm w-full mt-3" disabled>Agotado</button>'}
-            </div>
-          </div>
-        </div>
-      `).join('');
-      
-      document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          addToCart(parseInt(this.getAttribute('data-id')));
-        });
-      });
-    }
-
-    // CARRITO
-    function addToCart(productId) {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      
-      const product = state.products.find(p => p.id === productId);
-      if (!product || product.stock <= 0) {
-        showToast('❌ Producto no disponible', 'error');
-        return;
-      }
-      
-      const existing = state.cart.find(item => item.productId === productId);
-      if (existing) {
-        if (existing.quantity < product.stock) {
-          existing.quantity++;
-          showToast('✅ Cantidad actualizada', 'success');
-        } else {
-          showToast('❌ No hay más stock', 'error');
-          return;
-        }
-      } else {
-        state.cart.push({
-          id: Date.now(),
-          productId: productId,
-          quantity: 1,
-          price: product.price
-        });
-        showToast('✅ Agregado al carrito', 'success');
-      }
-      
-      updateCartUI();
-      saveState();
-    }
-
-    function updateCartUI() {
-      const badge = document.getElementById('cartBadge');
-      const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-      if (total > 0) {
-        badge.textContent = total;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
-
-    function showCartModal() {
-      renderCartItems();
-      new bootstrap.Modal(document.getElementById('cartModal')).show();
-    }
-
-    function renderCartItems() {
-      const items = document.getElementById('cartItems');
-      const empty = document.getElementById('cartEmpty');
-      const summary = document.getElementById('cartSummary');
-      const total = document.getElementById('cartTotal');
-      
-      if (state.cart.length === 0) {
-        items.innerHTML = '';
-        empty.classList.remove('hidden');
-        summary.style.display = 'none';
-        return;
-      }
-      
-      empty.classList.add('hidden');
-      summary.style.display = 'block';
-      
-      let totalAmount = 0;
-      items.innerHTML = state.cart.map(item => {
-        const product = state.products.find(p => p.id === item.productId);
-        if (!product) return '';
-        const itemTotal = item.quantity * item.price;
-        totalAmount += itemTotal;
-        
-        return `
-          <div class="cart-item">
-            <div class="flex gap-3">
-              <img src="${product.image}" 
-                   loading="lazy"
-                   alt="${sanitizeHTML(product.title)}"
-                   class="w-16 h-16 object-cover rounded">
-              <div class="flex-grow">
-                <h6 class="font-semibold">${sanitizeHTML(product.title)}</h6>
-                <p class="text-sm text-slate-400">$${item.price} c/u</p>
-                <div class="quantity-controls mt-2">
-                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <span class="px-3">${item.quantity}</span>
-                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)" ${item.quantity >= product.stock ? 'disabled' : ''}>
-                    <i class="fas fa-plus"></i>
-                  </button>
-                  <button class="quantity-btn ml-2" onclick="removeFromCart(${item.id})">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="font-semibold">$${itemTotal}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-      
-      total.textContent = `$${totalAmount}`;
-    }
-
-    function updateCartQuantity(itemId, change) {
-      const item = state.cart.find(i => i.id === itemId);
-      if (!item) return;
-      
-      const product = state.products.find(p => p.id === item.productId);
-      const newQuantity = item.quantity + change;
-      
-      if (newQuantity <= 0) {
-        removeFromCart(itemId);
-        return;
-      }
-      
-      if (newQuantity > product.stock) {
-        showToast('❌ No hay más stock', 'error');
-        return;
-      }
-      
-      item.quantity = newQuantity;
-      updateCartUI();
-      renderCartItems();
-      saveState();
-    }
-
-    function removeFromCart(itemId) {
-      state.cart = state.cart.filter(item => item.id !== itemId);
-      updateCartUI();
-      renderCartItems();
-      saveState();
-      showToast('🗑️ Producto removido', 'info');
-    }
-
-    function checkout() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      
-      if (state.cart.length === 0) return;
-      
-      const total = state.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-      
-      if (state.currentUser.balance < total) {
-        showToast('❌ Saldo insuficiente', 'error');
-        return;
-      }
-      
-      state.currentUser.balance -= total;
-      state.cart.forEach(item => {
-        const product = state.products.find(p => p.id === item.productId);
-        if (product) product.stock -= item.quantity;
-      });
-      
-      state.orders.push({
-        id: Date.now(),
-        userId: state.currentUser.id,
-        items: [...state.cart],
-        total: total,
-        timestamp: new Date().toISOString()
-      });
-      
-      state.cart = [];
-      bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
-      createConfetti();
-      updateUI();
-      renderProducts();
-      saveState();
-      showToast('✅ Compra exitosa', 'success');
-    }
-  </script>// PUJAS
-    function openBidModal(auctionId) {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      
-      const auction = state.auctions.find(a => a.id === auctionId);
-      if (!auction || auction.status !== 'active') return;
-      
-      document.getElementById('bidAuctionId').value = auctionId;
-      document.getElementById('bidAuctionInfo').innerHTML = `
-        <div class="flex gap-3 p-3 bg-slate-800/30 rounded">
-          <img src="${auction.image}" loading="lazy" alt="${sanitizeHTML(auction.title)}" class="w-12 h-12 object-cover rounded">
-          <div>
-            <div class="font-semibold">${sanitizeHTML(auction.title)}</div>
-            <div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div>
-          </div>
-        </div>
-      `;
-      
-      const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
-      document.getElementById('bidAmount').value = minBid;
-      document.getElementById('bidAmount').min = minBid;
-      
-      new bootstrap.Modal(document.getElementById('bidModal')).show();
-    }
-
-    async function placeBid(e) {
-      e.preventDefault();
-      
-      if (!rateLimiter.check('placeBid')) {
-        showToast('⚠️ Espera un momento antes de ofertar nuevamente', 'error');
-        return;
-      }
-      
-      const auctionId = parseInt(document.getElementById('bidAuctionId').value);
-      const amount = parseFloat(document.getElementById('bidAmount').value);
-      
-      const auction = state.auctions.find(a => a.id === auctionId);
-      if (!auction) return;
-      
-      const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
-      if (amount < minBid) {
-        showToast(`❌ Mínimo: $${minBid}`, 'error');
-        return;
-      }
-      
-      if (state.currentUser.balance < amount) {
-        showToast('❌ Saldo insuficiente', 'error');
-        return;
-      }
-      
-      showLoading('Procesando puja...');
-      
-      try {
-        state.bids.push({
-          id: state.bids.length + 1,
-          auctionId: auctionId,
-          userId: state.currentUser.id,
-          amount: amount,
-          timestamp: new Date().toISOString()
-        });
-        
-        auction.bids.push(state.currentUser.id);
-        auction.currentBid = amount;
-        auction.lastBidTime = new Date().toISOString();
-        
-        bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
-        createConfetti();
-        await saveState();
-        renderAuctions();
-        updateUI();
-        showToast('✅ Puja realizada', 'success');
-      } catch (error) {
-        handleError(error, 'Realizar puja');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function buyNow(auctionId) {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      
-      const auction = state.auctions.find(a => a.id === auctionId);
-      if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
-      
-      if (state.currentUser.balance < auction.buyNowPrice) {
-        showToast('❌ Saldo insuficiente', 'error');
-        return;
-      }
-      
-      if (confirm(`¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
-        state.currentUser.balance -= auction.buyNowPrice;
-        auction.status = 'ended';
-        auction.currentBid = auction.buyNowPrice;
-        createConfetti();
-        saveState();
-        renderAuctions();
-        updateUI();
-        showToast('✅ Compra realizada', 'success');
-      }
-    }
-
-    // CREAR SUBASTA
-    async function createAuction(e) {
-      e.preventDefault();
-      if (!state.currentUser || state.currentUser.role !== 'admin') {
-        showToast('❌ Solo admins', 'error');
-        return;
-      }
-      
-      const title = document.getElementById('a_title').value;
-      const desc = document.getElementById('a_desc').value;
-      const start = parseFloat(document.getElementById('a_start').value) || 0;
-      const buyNow = document.getElementById('a_buyNow').value ? parseFloat(document.getElementById('a_buyNow').value) : null;
-      const image = state.uploadedImageUrl || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
-      
-      let endTime = document.getElementById('a_end').value;
-      if (!endTime) {
-        const defaultEnd = new Date();
-        defaultEnd.setDate(defaultEnd.getDate() + 1);
-        endTime = defaultEnd.toISOString();
-      }
-      
-      showLoading('Creando subasta...');
-      
-      try {
-        state.auctions.push({
-          id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
-          title: title,
-          description: desc,
-          image: image,
-          category: 'General',
-          startPrice: start,
-          currentBid: start,
-          buyNowPrice: buyNow,
-          endTime: new Date(endTime).toISOString(),
-          sellerId: state.currentUser.id,
-          bids: [],
-          lastBidTime: new Date().toISOString(),
-          status: 'active'
-        });
-        
-        document.getElementById('createAuctionForm').reset();
-        document.getElementById('imagePreview').classList.add('hidden');
-        state.imageUploaded = false;
-        state.uploadedImageUrl = null;
-        
-        await saveState();
-        renderAuctions();
-        showToast('✅ Subasta creada', 'success');
-      } catch (error) {
-        handleError(error, 'Crear subasta');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    // ADMIN
-    function toggleAdminPanel() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      if (state.currentUser.role !== 'admin') {
-        showToast('❌ Solo admins', 'error');
-        return;
-      }
-      const panel = document.getElementById('adminPanel');
-      panel.classList.toggle('hidden');
-      if (!panel.classList.contains('hidden')) {
-        panel.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-
-    function renderManageAuctions() {
-      const list = document.getElementById('manageAuctionsList');
-      list.innerHTML = state.auctions.map(a => `
-        <div class="flex justify-between items-center p-3 glass-light rounded mb-2">
-          <div>
-            <div class="font-medium">${sanitizeHTML(a.title)}</div>
-            <div class="text-xs text-slate-400">$${a.currentBid || a.startPrice} • ${a.status}</div>
-          </div>
-          <button class="btn btn-outline-danger btn-sm" onclick="deleteAuction(${a.id})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `).join('');
-    }
-
-    function deleteAuction(id) {
-      if (confirm('¿Eliminar subasta?')) {
-        state.auctions = state.auctions.filter(a => a.id !== id);
-        saveState();
-        renderAuctions();
-        renderManageAuctions();
-        showToast('🗑️ Eliminada', 'info');
-      }
-    }
-
-    // BOTS CON CONFIGURACIÓN INDIVIDUAL
-    function renderBotUsers() {
-      const list = document.getElementById('botUsersList');
-      if (state.botUsers.length === 0) {
-        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay bots configurados</div>';
-        return;
-      }
-      
-      list.innerHTML = state.botUsers.map(bot => {
-        const botDelayValue = bot.delay !== undefined ? bot.delay : state.botSettings.delayGlobal;
-        return `
-        <div class="glass-light p-3 rounded mb-2">
-          <div class="flex justify-between items-center mb-2">
-            <input type="text" 
-                   class="bot-name-edit flex-grow mr-2" 
-                   value="${sanitizeHTML(bot.name)}" 
-                   onchange="updateBotName(${bot.id}, this.value)">
-            <div class="flex gap-2 items-center">
-              <div class="form-check form-switch">
-                <input type="checkbox" 
-                       class="form-check-input" 
-                       ${bot.active ? 'checked' : ''} 
-                       onchange="toggleBotUser(${bot.id}, this.checked)">
-              </div>
-              <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="bot-settings-row">
-            <label>Tiempo espera (min):</label>
-            <input type="number" 
-                   min="1" 
-                   max="60" 
-                   value="${botDelayValue}" 
-                   onchange="updateBotDelay(${bot.id}, parseInt(this.value))">
-            <small class="text-slate-400">Específico para este bot</small>
-          </div>
-          <div class="text-xs text-slate-400 mt-2">Saldo: $${Math.round(bot.balance)}</div>
-        </div>
-        `;
-      }).join('');
-    }
-
-    function addBotUser() {
-      const id = Math.max(100, ...state.botUsers.map(b => b.id)) + 1;
-      state.botUsers.push({
-        id: id,
-        name: `Bot ${state.botUsers.length + 1}`,
-        balance: Math.round(5000 + Math.random() * 5000),
-        active: true,
-        delay: state.botSettings.delayGlobal
-      });
-      saveState();
-      renderBotUsers();
-      showToast('✅ Bot agregado', 'success');
-    }
-
-    function updateBotName(id, name) {
-      const bot = state.botUsers.find(b => b.id === id);
-      if (bot && name.trim()) {
-        bot.name = name.trim();
-        saveState();
-      }
-    }
-
-    function updateBotDelay(id, delay) {
-      const bot = state.botUsers.find(b => b.id === id);
-      if (bot) {
-        bot.delay = parseInt(delay) || state.botSettings.delayGlobal;
-        saveState();
-        showToast(`⏱️ Delay actualizado: ${bot.delay} min`, 'info');
-      }
-    }
-
-    function toggleBotUser(id, active) {
-      const bot = state.botUsers.find(b => b.id === id);
-      if (bot) {
-        bot.active = active;
-        saveState();
-        showToast(`${bot.name} ${active ? '✅ activado' : '⏸️ desactivado'}`, 'info');
-      }
-    }
-
-    function deleteBotUser(id) {
-      if (confirm('¿Eliminar bot?')) {
-        state.botUsers = state.botUsers.filter(b => b.id !== id);
-        saveState();
-        renderBotUsers();
-        showToast('🗑️ Bot eliminado', 'info');
-      }
-    }
-
-    function updateBotSettings() {
-      state.botSettings.enabled = document.getElementById('botsEnabled').checked;
-      state.botSettings.delayGlobal = parseInt(document.getElementById('botDelayGlobal').value) || 2;
-      state.botSettings.probability = parseInt(document.getElementById('botProbability').value) || 70;
-      
-      saveState();
-      showToast('⚙️ Configuración actualizada', 'success');
-    }
-
-    function startBotActivity() {
-      if (botActivityInterval) clearInterval(botActivityInterval);
-      
-      botActivityInterval = setInterval(() => {
-        if (!state.botSettings.enabled || !state.currentUser) return;
-        
-        const active = state.auctions.filter(a => a.status === 'active');
-        active.forEach(auction => {
-          const activeBots = state.botUsers.filter(b => {
-            if (!b.active || b.balance <= (auction.currentBid || auction.startPrice) + 50) return false;
-            
-            const botDelay = (b.delay || state.botSettings.delayGlobal) * 60000;
-            const timeSince = new Date() - new Date(auction.lastBidTime);
-            
-            return timeSince >= botDelay;
-          });
-          
-          if (activeBots.length === 0) return;
-          
-          if (Math.random() * 100 <= state.botSettings.probability) {
-            const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
-            makeBotBid(auction.id, bot);
-          }
-        });
-      }, 30000);
-    }
-
-    function makeBotBid(auctionId, bot) {
-      const auction = state.auctions.find(a => a.id === auctionId);
-      if (!auction) return;
-      
-      const bidAmount = (auction.currentBid || auction.startPrice) + state.currentIncrement + Math.floor(Math.random() * 50);
-      
-      if (bot.balance < bidAmount) return;
-      
-      state.bids.push({
-        id: state.bids.length + 1,
-        auctionId: auctionId,
-        userId: bot.id,
-        amount: bidAmount,
-        timestamp: new Date().toISOString()
-      });
-      
-      auction.bids.push(bot.id);
-      auction.currentBid = bidAmount;
-      auction.lastBidTime = new Date().toISOString();
-      
-      saveState();
-      renderAuctions();
-      
-      showToast(`🤖 ${bot.name} pujó $${bidAmount}`, 'info');
-    }
-
-    // FILTROS
-    function filterAuctions() {
-      const search = document.getElementById('search').value.toLowerCase();
-      const sortBy = document.getElementById('sortBy').value;
-      const filterState = document.getElementById('filterState').value;
-      
-      let filtered = state.auctions.filter(a => {
-        const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
-        const matchState = filterState === 'all' || a.status === filterState;
-        return matchSearch && matchState;
-      });
-      
-      if (sortBy === 'highest') {
-        filtered.sort((a, b) => (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice));
-      } else if (sortBy === 'newest') {
-        filtered.sort((a, b) => new Date(b.lastBidTime) - new Date(a.lastBidTime));
-      } else {
-        filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
-      }
-      
-      renderAuctions(filtered);
-    }
-
-    function filterProducts() {
-      const search = document.getElementById('searchProducts').value.toLowerCase();
-      const category = document.getElementById('filterProductCategory').value;
-      const sortBy = document.getElementById('sortProducts').value;
-      
-      let filtered = state.products.filter(p => {
-        const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
-        const matchCategory = category === 'all' || p.category === category;
-        return matchSearch && matchCategory;
-      });
-      
-      if (sortBy === 'price-asc') {
-        filtered.sort((a, b) => a.price - b.price);
-      } else if (sortBy === 'price-desc') {
-        filtered.sort((a, b) => b.price - a.price);
-      } else {
-        filtered.sort((a, b) => b.id - a.id);
-      }
-      
-      renderProducts(filtered);
-    }// MERCADOPAGO - CARRITO
-    function showMercadoPagoModal() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      if (state.cart.length === 0) {
-        showToast('❌ Carrito vacío', 'error');
-        return;
-      }
-      
-      renderPaymentSummary();
-      resetPaymentModal();
-      new bootstrap.Modal(document.getElementById('mpModal')).show();
-      setupCartPaymentMethods();
-    }
-
-    function renderPaymentSummary() {
-      const items = document.getElementById('paymentItems');
-      const total = document.getElementById('paymentTotal');
-      let totalAmount = 0;
-      
-      items.innerHTML = state.cart.map(item => {
-        const product = state.products.find(p => p.id === item.productId);
-        const itemTotal = item.quantity * item.price;
-        totalAmount += itemTotal;
-        return `
-          <div class="flex justify-between py-2 border-bottom border-slate-700">
-            <div>
-              <div class="font-medium">${sanitizeHTML(product?.title || 'Producto')}</div>
-              <small>${item.quantity}x $${item.price}</small>
-            </div>
-            <div>$${itemTotal}</div>
-          </div>
-        `;
-      }).join('');
-      
-      total.textContent = `$${totalAmount}`;
-    }
-
-    function setupCartPaymentMethods() {
-      const methods = document.querySelectorAll('#mpModal .payment-method');
-      const confirmBtn = document.getElementById('confirmPayment');
-      
-      methods.forEach(method => {
-        method.addEventListener('click', function() {
-          methods.forEach(m => m.classList.remove('selected'));
-          this.classList.add('selected');
-          selectedPaymentMethod = this.getAttribute('data-method');
-          confirmBtn.disabled = false;
-          confirmBtn.innerHTML = `<i class="fas fa-lock"></i> Pagar con ${getPaymentMethodName(selectedPaymentMethod)}`;
-        });
-      });
-      
-      document.getElementById('confirmPayment').addEventListener('click', processCartPayment);
-      document.getElementById('cancelPayment').addEventListener('click', () => {
-        bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
-      });
-    }
-
-    function processCartPayment() {
-      if (!selectedPaymentMethod) {
-        showToast('⚠️ Selecciona método de pago', 'error');
-        return;
-      }
-      
-      document.getElementById('paymentSummary').style.display = 'none';
-      document.getElementById('paymentMethods').style.display = 'none';
-      document.getElementById('paymentActions').style.display = 'none';
-      document.getElementById('paymentLoading').classList.remove('hidden');
-      
-      setTimeout(() => {
-        const success = Math.random() > 0.1;
-        if (success) {
-          const total = state.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-          
-          state.cart.forEach(item => {
-            const product = state.products.find(p => p.id === item.productId);
-            if (product) product.stock -= item.quantity;
-          });
-          
-          state.orders.push({
-            id: Date.now(),
-            userId: state.currentUser.id,
-            items: [...state.cart],
-            total: total,
-            paymentMethod: selectedPaymentMethod,
-            timestamp: new Date().toISOString()
-          });
-          
-          state.cart = [];
-          
-          document.getElementById('paymentLoading').classList.add('hidden');
-          document.getElementById('paymentSuccess').classList.remove('hidden');
-          document.getElementById('paymentDetails').innerHTML = `
-            <div class="glass-light p-3 rounded mt-3">
-              <div><strong>ID:</strong> #${Date.now()}</div>
-              <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
-              <div><strong>Total:</strong> <span class="price-tag">$${total}</span></div>
-            </div>
-          `;
-          
-          updateCartUI();
-          renderProducts();
-          saveState();
-          
-          const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-          if (cartModal) cartModal.hide();
-          
-          setTimeout(() => {
-            createConfetti();
-            bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
-            resetPaymentModal();
-            showToast('✅ ¡Pago exitoso!', 'success');
-          }, 2500);
-        } else {
-          document.getElementById('paymentLoading').classList.add('hidden');
-          alert('Error en el pago. Intenta nuevamente.');
-          resetPaymentModal();
-        }
-      }, 2000);
-    }
-
-    function resetPaymentModal() {
-      selectedPaymentMethod = null;
-      document.getElementById('paymentSummary').style.display = 'block';
-      document.getElementById('paymentMethods').style.display = 'block';
-      document.getElementById('paymentActions').style.display = 'flex';
-      document.getElementById('paymentLoading').classList.add('hidden');
-      document.getElementById('paymentSuccess').classList.add('hidden');
-      document.getElementById('confirmPayment').disabled = true;
-      document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar';
-      document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
-    }
-
-    // UTILIDADES
-    function formatTimeRemaining(endTime) {
-      const now = new Date();
-      const end = new Date(endTime);
-      const diff = end - now;
-      
-      if (diff <= 0) return 'Finalizada';
-      
-      const days = Math.floor(diff / 86400000);
-      const hours = Math.floor((diff % 86400000) / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      
-      if (days > 0) return `${days}d ${hours}h`;
-      if (hours > 0) return `${hours}h ${minutes}m`;
-      return `${minutes}m`;
-    }
-
-    function isEndingSoon(endTime) {
-      const diff = new Date(endTime) - new Date();
-      return diff > 0 && diff <= 600000;
-    }
-
-    function startCountdown() {
-      if (countdownInterval) clearInterval(countdownInterval);
-      countdownInterval = setInterval(updateCountdowns, 1000);
-    }
-
-    function updateCountdowns() {
-      document.querySelectorAll('.countdown').forEach(el => {
-        const endTime = el.getAttribute('data-end');
-        el.textContent = formatTimeRemaining(endTime);
-        if (isEndingSoon(endTime)) {
-          el.classList.add('pulse');
-        } else {
-          el.classList.remove('pulse');
-        }
-      });
-    }
-
-    function createConfetti() {
-      const colors = ['#ff3e7f', '#ff9d00', '#00d4ff', '#00ff88'];
-      for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.width = Math.random() * 10 + 5 + 'px';
-        confetti.style.height = Math.random() * 10 + 5 + 'px';
-        document.body.appendChild(confetti);
-        
-        const animation = confetti.animate([
-          { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-          { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
-        ], {
-          duration: Math.random() * 3000 + 2000,
-          easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
-        });
-        
-        animation.onfinish = () => confetti.remove();
-      }
-    }
-
-    function exportToCsv() {
-      const data = [
-        ['ID', 'Título', 'Precio', 'Estado', 'Categoría'],
-        ...state.auctions.map(a => [a.id, a.title, a.currentBid || a.startPrice, a.status, a.category])
-      ];
-      const csv = data.map(row => row.join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `subastas_${Date.now()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('📄 CSV exportado', 'success');
-    }
-
-    function createDemoData() {
-      if (confirm('¿Recargar datos de demostración?')) {
-        loadDemoData();
-        renderAuctions();
-        renderProducts();
-        updateUI();
-        showToast('✅ Datos demo cargados', 'success');
-      }
-    }
-
-    // FUNCIONES GLOBALES PARA EVENTOS ONCLICK
-    window.updateCartQuantity = updateCartQuantity;
-    window.removeFromCart = removeFromCart;
-    window.toggleBotUser = toggleBotUser;
-    window.updateBotName = updateBotName;
-    window.updateBotDelay = updateBotDelay;
-    window.deleteBotUser = deleteBotUser;
-    window.deleteAuction = deleteAuction;
-
-    // Limpiar intervalos al cerrar
-    window.addEventListener('beforeunload', () => {
-      if (countdownInterval) clearInterval(countdownInterval);
-      if (botActivityInterval) clearInterval(botActivityInterval);
-    });
-  </script>
-</body>
-</html>
+  });
+}
+
+function setupListeners() {
+  document.getElementById('loginBtn').onclick = showLoginModal;
+  document.getElementById('logoutBtn').onclick = logout;
+  document.getElementById('loginForm').onsubmit = handleLogin;
+  document.getElementById('cartBtn').onclick = showCartModal;
+  document.getElementById('checkoutBtn').onclick = checkout;
+  document.getElementById('mercadopagoBtn').onclick = showMercadoPagoModal;
+  document.getElementById('btnCreateDemo').onclick = createDemoData;
+  document.getElementById('openAdmin').onclick = toggleAdminPanel;
+  document.getElementById('topup').onclick = () => showToast('Función en desarrollo', 'info');
+  document.getElementById('addBotUser').onclick = addBotUser;
+  document.getElementById('createAuctionForm').onsubmit = createAuction;
+  document.getElementById('bidForm').onsubmit = placeBid;
+  document.getElementById('search').oninput = debounce(filterAuctions, 300);
+  document.getElementById('sortBy').onchange = filterAuctions;
+  document.getElementById('filterState').onchange = filterAuctions;
+  document.getElementById('searchProducts').oninput = debounce(filterProducts, 300);
+  document.getElementById('filterProductCategory').onchange = filterProducts;
+  document.getElementById('sortProducts').onchange = filterProducts;
+  document.getElementById('exportCsv').onclick = exportToCsv;
+  document.getElementById('manage-tab').onclick = renderManageAuctions;
+  document.getElementById('bots-tab').onclick = renderBotUsers;
+  document.getElementById('botsEnabled').onchange = updateBotSettings;
+  document.getElementById('botDelayGlobal').onchange = updateBotSettings;
+  document.getElementById('botProbability').onchange = updateBotSettings;
+  
+  const filterToggle = document.querySelector('.filter-toggle');
+  if (filterToggle) {
+    filterToggle.onclick = function() {
+      const content = document.querySelector('.filter-content');
+      const icon = this.querySelector('.fa-chevron-down');
+      content.classList.toggle('active');
+      icon.classList.toggle('fa-rotate-180');
+    };
+  }
+}
+
+// ======================
+// INICIALIZACIÓN
+// ======================
+
+document.addEventListener('DOMContentLoaded', async function() {
+  console.log('🚀 Subasta Argenta iniciando...');
+  showLoading('Cargando...');
+  try {
+    await loadState();
+    setupListeners();
+    setupMobileMenu();
+    setupImageUpload();
+    renderAuctions();
+    renderProducts();
+    updateUI();
+    initParticles();
+    startBotActivity();
+    console.log('✅ App lista');
+  } catch (error) {
+    console.error('Error:', error);
+    handleError(error, 'Init');
+  } finally {
+    hideLoading();
+  }
+});
+
+// Funciones globales para onclick
+window.updateCartQuantity = updateCartQuantity;
+window.removeFromCart = removeFromCart;
+window.toggleBotUser = toggleBotUser;
+window.updateBotName = updateBotName;
+window.updateBotDelay = updateBotDelay;
+window.deleteBotUser = deleteBotUser;
+window.deleteAuction = deleteAuction;
+
+window.onbeforeunload = () => {
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (botActivityInterval) clearInterval(botActivityInterval);
+};
+
+console.log('✅ JavaScript cargado');
+</script>
