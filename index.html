@@ -2459,10 +2459,10 @@
                    min="1" 
                    max="60" 
                    value="${botDelayValue}" 
-                   onchange="updateBotDelay(${bot.id}, this.value)">
+                   onchange="updateBotDelay(${bot.id}, parseInt(this.value))">
             <small class="text-slate-400">Específico para este bot</small>
           </div>
-          <div class="text-xs text-slate-400 mt-2">Saldo: $${bot.balance}</div>
+          <div class="text-xs text-slate-400 mt-2">Saldo: $${Math.round(bot.balance)}</div>
         </div>
         `;
       }).join('');
@@ -2473,7 +2473,7 @@
       state.botUsers.push({
         id: id,
         name: `Bot ${state.botUsers.length + 1}`,
-        balance: 5000 + Math.random() * 5000,
+        balance: Math.round(5000 + Math.random() * 5000),
         active: true,
         delay: state.botSettings.delayGlobal
       });
