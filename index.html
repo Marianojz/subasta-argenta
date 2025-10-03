@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="description" content="Plataforma de subastas online con tienda virtual integrada">
+  <meta name="theme-color" content="#ff3e7f">
+  
   <title>Subastas y Tienda - Demo Avanzado Completo</title>
+  
+  <!-- Preconnect para optimizar carga -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://www.gstatic.com">
+  
+  <!-- Estilos -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Firebase SDK -->
@@ -14,6 +25,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  
+  <!-- MercadoPago SDK -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
   
   <style>
     :root {
@@ -28,6 +42,10 @@
       --dark-light: #1a1a2e;
       --text: #f0f0f5;
       --text-light: #a0a0b0;
+    }
+    
+    * {
+      -webkit-tap-highlight-color: rgba(255, 62, 127, 0.3);
     }
     
     body {
@@ -113,6 +131,7 @@
       border-left: 4px solid transparent;
       position: relative;
       overflow: hidden;
+      touch-action: manipulation;
     }
     
     .auction-card::before, .product-card::before {
@@ -143,6 +162,7 @@
       position: relative;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(255, 62, 127, 0.4);
+      touch-action: manipulation;
     }
     
     .btn-primary::before {
@@ -160,6 +180,10 @@
       left: 100%;
     }
     
+    .btn-primary:active {
+      transform: scale(0.95);
+    }
+    
     .btn-primary:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 25px rgba(255, 62, 127, 0.6);
@@ -169,6 +193,7 @@
       border-color: rgba(255, 255, 255, 0.3);
       color: var(--text);
       transition: all 0.3s ease;
+      touch-action: manipulation;
     }
     
     .btn-outline-light:hover {
@@ -176,6 +201,10 @@
       border-color: rgba(255, 255, 255, 0.5);
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-outline-light:active {
+      transform: scale(0.95);
     }
     
     .badge {
@@ -192,6 +221,10 @@
     }
     
     @media (max-width: 768px) {
+      body {
+        padding-bottom: 5rem !important;
+      }
+      
       .filter-toggle {
         display: flex;
         align-items: center;
@@ -201,6 +234,7 @@
         border-radius: 0.5rem;
         margin-bottom: 1rem;
         cursor: pointer;
+        touch-action: manipulation;
       }
       
       .filter-content {
@@ -216,6 +250,34 @@
         from { opacity: 0; max-height: 0; }
         to { opacity: 1; max-height: 500px; }
       }
+      
+      .text-xs {
+        font-size: 0.875rem !important;
+      }
+      
+      .badge {
+        font-size: 0.8rem !important;
+      }
+      
+      .category-tag {
+        font-size: 0.85rem !important;
+      }
+      
+      .btn-sm {
+        padding: 0.5rem 1rem !important;
+        min-height: 44px;
+      }
+      
+      .auction-card, .product-card {
+        flex-direction: column !important;
+      }
+      
+      .auction-card img,
+      .product-card img {
+        width: 100% !important;
+        height: 200px !important;
+        object-fit: cover;
+      }
     }
     
     .mobile-menu {
@@ -227,9 +289,10 @@
       backdrop-filter: blur(10px);
       display: flex;
       justify-content: space-around;
-      padding: 0.75rem;
+      padding: 1rem 0.75rem;
       z-index: 100;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
     }
     
     .mobile-menu-item {
@@ -242,6 +305,10 @@
       color: var(--text-light);
       font-size: 0.75rem;
       cursor: pointer;
+      touch-action: manipulation;
+      min-width: 60px;
+      min-height: 60px;
+      justify-content: center;
     }
     
     .mobile-menu-item.active {
@@ -249,8 +316,12 @@
       background: rgba(255, 62, 127, 0.1);
     }
     
+    .mobile-menu-item:active {
+      transform: scale(0.9);
+    }
+    
     .mobile-menu-item i {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       margin-bottom: 0.25rem;
     }
     
@@ -313,6 +384,7 @@
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary) !important;
       box-shadow: 0 0 0 3px rgba(255, 62, 127, 0.3) !important;
+      outline: none;
     }
     
     input::placeholder, textarea::placeholder {
@@ -424,6 +496,7 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      touch-action: manipulation;
     }
     
     .image-upload-container:hover {
@@ -447,21 +520,29 @@
       display: flex;
       gap: 5px;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
     
     .increment-btn {
       flex: 1;
-      padding: 5px 10px;
+      min-width: 60px;
+      padding: 8px 12px;
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 5px;
       color: var(--text);
       cursor: pointer;
       transition: all 0.2s ease;
+      touch-action: manipulation;
+      font-size: 0.875rem;
     }
     
     .increment-btn:hover {
       background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .increment-btn:active {
+      transform: scale(0.95);
     }
     
     .increment-btn.active {
@@ -493,12 +574,15 @@
       top: 20px;
       right: 20px;
       z-index: 1050;
+      max-width: 350px;
     }
 
     .toast {
       background: var(--dark-light);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: var(--text);
+      margin-bottom: 10px;
+      border-radius: 8px;
     }
 
     .toast-success {
@@ -520,13 +604,14 @@
       background: var(--danger);
       color: white;
       border-radius: 50%;
-      width: 20px;
+      min-width: 20px;
       height: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.7rem;
       font-weight: bold;
+      padding: 0 4px;
     }
 
     .cart-item {
@@ -545,8 +630,8 @@
     }
 
     .quantity-btn {
-      width: 30px;
-      height: 30px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -556,11 +641,16 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
+      touch-action: manipulation;
     }
 
     .quantity-btn:hover {
       background: var(--primary);
       border-color: var(--primary);
+    }
+
+    .quantity-btn:active {
+      transform: scale(0.9);
     }
 
     .quantity-btn:disabled {
@@ -603,11 +693,16 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      touch-action: manipulation;
     }
 
     .payment-method:hover {
       border-color: var(--primary);
       background: rgba(255, 62, 127, 0.1);
+    }
+
+    .payment-method:active {
+      transform: scale(0.95);
     }
 
     .payment-method.selected {
@@ -636,19 +731,73 @@
       border: none !important;
       color: var(--text) !important;
       font-size: 0.875rem;
-      padding: 0;
+      padding: 4px 8px;
       width: 100%;
+      border-radius: 4px;
     }
 
     .bot-name-edit:focus {
       outline: 1px solid var(--primary);
-      border-radius: 4px;
-      padding: 2px 4px;
+      background: rgba(255, 255, 255, 0.05) !important;
+      padding: 4px 8px;
+    }
+    
+    .bot-settings-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .bot-settings-row label {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      margin-bottom: 0;
+      min-width: 120px;
+    }
+    
+    .bot-settings-row input[type="number"] {
+      flex: 1;
+      max-width: 120px;
+      padding: 0.5rem;
+      border-radius: 6px;
+    }
+    
+    #globalLoader {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    
+    @media (max-width: 640px) {
+      .toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+      
+      .modal-dialog {
+        margin: 1rem;
+      }
+      
+      .increment-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .increment-btn {
+        min-width: calc(50% - 5px);
+      }
     }
   </style>
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
-</head>
-<body class="text-slate-100 pb-16 md:pb-0">
+</head><body class="text-slate-100 pb-16 md:pb-0">
   <div id="particles-js"></div>
   
   <div class="toast-container" id="toastContainer"></div>
@@ -660,7 +809,7 @@
           <i class="fas fa-gavel"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">Subastas y Tienda y Demo Firebase</h1>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">Subastas y Tienda — Demo Firebase</h1>
           <div class="flex flex-wrap gap-1 mt-1">
             <span class="text-xs bg-gradient-to-r from-pink-500/30 to-orange-500/30 px-2 py-1 rounded-full">Firebase</span>
             <span class="text-xs bg-gradient-to-r from-pink-500/30 to-orange-500/30 px-2 py-1 rounded-full">MercadoPago</span>
@@ -674,12 +823,12 @@
           </button>
           <span id="cartBadge" class="cart-badge hidden">0</span>
         </div>
-        <div id="userInfo" class="text-sm text-slate-300 hidden md:block">No has iniciado sesiÃ³n</div>
+        <div id="userInfo" class="text-sm text-slate-300 hidden md:block">No has iniciado sesión</div>
         <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
-          <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesiÃ³n</span>
+          <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
         </button>
         <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
-          <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesiÃ³n</span>
+          <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesión</span>
         </button>
       </div>
     </header>
@@ -707,7 +856,7 @@
                   <h2 class="text-lg font-bold flex items-center gap-2">
                     <i class="fas fa-hourglass-half text-pink-400"></i> Subastas Activas
                   </h2>
-                  <div class="text-sm text-slate-400">Ofertas rÃ¡pidas y compra directa</div>
+                  <div class="text-sm text-slate-400">Ofertas rápidas y compra directa</div>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
                   <button id="btnCreateDemo" class="btn btn-outline-light btn-sm flex items-center gap-1 flex-1 md:flex-none glow">
@@ -721,7 +870,7 @@
 
               <div class="filter-toggle md:hidden glass-light p-3 rounded-xl">
                 <span class="flex items-center gap-2">
-                  <i class="fas fa-filter text-pink-400"></i> Filtros de bÃºsqueda
+                  <i class="fas fa-filter text-pink-400"></i> Filtros de búsqueda
                 </span>
                 <i class="fas fa-chevron-down transition-transform"></i>
               </div>
@@ -738,9 +887,9 @@
                     <i class="fas fa-sort"></i> Ordenar
                   </label>
                   <select id="sortBy" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
-                    <option value="ending">PrÃ³ximo a terminar</option>
+                    <option value="ending">Próximo a terminar</option>
                     <option value="highest">Mayor puja</option>
-                    <option value="newest">MÃ¡s reciente</option>
+                    <option value="newest">Más reciente</option>
                   </select>
                 </div>
                 <div>
@@ -777,7 +926,7 @@
                 </div>
                 <div>
                   <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
-                    <i class="fas fa-tags"></i> CategorÃ­a
+                    <i class="fas fa-tags"></i> Categoría
                   </label>
                   <select id="filterProductCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
                     <option value="all">Todas</option>
@@ -788,7 +937,7 @@
                     <i class="fas fa-sort"></i> Ordenar
                   </label>
                   <select id="sortProducts" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
-                    <option value="newest">MÃ¡s recientes</option>
+                    <option value="newest">Más recientes</option>
                     <option value="price-asc">Precio menor</option>
                     <option value="price-desc">Precio mayor</option>
                   </select>
@@ -831,17 +980,17 @@
           <div class="tab-content">
             <div class="tab-pane fade show active" id="create">
               <form id="createAuctionForm" class="space-y-4">
-                <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="TÃ­tulo" required />
-                <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="DescripciÃ³n"></textarea>
+                <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título" required />
+                <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
                 
                 <div id="imageUploadContainer" class="image-upload-container">
                   <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
-                  <div class="text-slate-400">Arrastra imagen aquÃ­</div>
-                  <input type="file" id="imageUpload" accept="image/*" class="hidden" />
-                  <img id="imagePreview" class="image-preview hidden" />
+                  <div class="text-slate-400">Arrastra imagen aquí</div>
+                  <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
+                  <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
                 </div>
                 
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <input id="a_start" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio" />
                   <input id="a_buyNow" type="number" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buy Now" />
                   <input id="a_end" type="datetime-local" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" />
@@ -859,8 +1008,35 @@
             
             <div class="tab-pane fade" id="bots">
               <div class="glass-light p-4 rounded-xl mb-4">
-                <input type="checkbox" id="botsEnabled" checked> Activar bots
-                <div id="botUsersList" class="mt-3"></div>
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <div class="font-medium">Usuarios ficticios activos</div>
+                    <div class="text-sm text-slate-400">Pujan automáticamente en subastas</div>
+                  </div>
+                  <div class="form-check form-switch">
+                    <input type="checkbox" id="botsEnabled" checked class="form-check-input">
+                    <label for="botsEnabled" class="form-check-label">Activar</label>
+                  </div>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                  <div class="bot-settings-row">
+                    <label for="botDelayGlobal">Tiempo de espera (min):</label>
+                    <input type="number" id="botDelayGlobal" min="1" max="60" value="2" />
+                    <small class="text-slate-400">Global para todos los bots</small>
+                  </div>
+                  
+                  <div class="bot-settings-row">
+                    <label for="botProbability">Probabilidad (%):</label>
+                    <input type="number" id="botProbability" min="1" max="100" value="70" />
+                    <small class="text-slate-400">Chance de ofertar</small>
+                  </div>
+                </div>
+                
+                <div class="border-t border-slate-600 pt-3">
+                  <label class="text-sm font-medium mb-2 block">Lista de Bots (con configuración individual):</label>
+                  <div id="botUsersList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                </div>
               </div>
               <button id="addBotUser" class="btn btn-outline-light btn-sm">
                 <i class="fas fa-plus"></i> Agregar bot
@@ -900,7 +1076,7 @@
           <h4 class="font-semibold mb-4">Filtros</h4>
           <div class="space-y-4">
             <select id="filterCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
-              <option value="all">Todas las categorÃ­as</option>
+              <option value="all">Todas las categorías</option>
             </select>
             <select id="filterTime" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
               <option value="all">Cualquier tiempo</option>
@@ -928,7 +1104,7 @@
     </div>
   </div>
 
-  <!-- Modales -->
+  <!-- MODALES -->
   <div class="modal fade" id="loginModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
       <div class="modal-content glass border-0 rounded-2xl">
@@ -939,10 +1115,10 @@
         <div class="modal-body">
           <form id="loginForm">
             <div class="mb-3">
-              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginEmail" value="user@demo.com">
+              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginEmail" value="user@demo.com" placeholder="Email">
             </div>
             <div class="mb-3">
-              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginPassword" value="user123">
+              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginPassword" value="user123" placeholder="Contraseña">
             </div>
             <button type="submit" class="btn btn-primary w-100 rounded-xl">Entrar</button>
           </form>
@@ -981,7 +1157,7 @@
           <div id="cartItems" class="space-y-3 mb-4"></div>
           <div id="cartEmpty" class="text-center py-4 text-slate-400 hidden">
             <i class="fas fa-shopping-cart fa-2x mb-3 opacity-50"></i>
-            <div>Tu carrito estÃ¡ vacÃ­o</div>
+            <div>Tu carrito está vacío</div>
           </div>
           <div id="cartSummary">
             <div class="flex justify-between mb-3">
@@ -1018,11 +1194,11 @@
             <div class="grid grid-cols-2 gap-3 mb-4">
               <div class="payment-method" data-method="credit_card">
                 <i class="fas fa-credit-card fa-2x mb-2"></i>
-                <div>CrÃ©dito</div>
+                <div>Crédito</div>
               </div>
               <div class="payment-method" data-method="debit_card">
                 <i class="fas fa-money-check fa-2x mb-2"></i>
-                <div>DÃ©bito</div>
+                <div>Débito</div>
               </div>
             </div>
             <button id="confirmTopupPayment" class="btn btn-primary w-100" disabled>Pagar</button>
@@ -1033,7 +1209,7 @@
           </div>
           <div id="topupSuccess" class="text-center py-4 hidden">
             <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
-            <h4 style="color: var(--success);">Â¡Ã‰xito!</h4>
+            <h4 style="color: var(--success);">¡Éxito!</h4>
             <div id="topupDetails"></div>
           </div>
         </div>
@@ -1063,11 +1239,11 @@
             <div class="grid grid-cols-2 gap-3">
               <div class="payment-method" data-method="credit_card">
                 <i class="fas fa-credit-card fa-2x mb-2"></i>
-                <div>CrÃ©dito</div>
+                <div>Crédito</div>
               </div>
               <div class="payment-method" data-method="debit_card">
                 <i class="fas fa-money-check fa-2x mb-2"></i>
-                <div>DÃ©bito</div>
+                <div>Débito</div>
               </div>
             </div>
           </div>
@@ -1077,7 +1253,7 @@
           </div>
           <div id="paymentSuccess" class="text-center py-4 hidden">
             <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
-            <h4 style="color: var(--success);">Â¡Pago exitoso!</h4>
+            <h4 style="color: var(--success);">¡Pago exitoso!</h4>
             <div id="paymentDetails"></div>
           </div>
           <div id="paymentActions" class="mt-4 flex gap-2">
@@ -1089,20 +1265,19 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script><script>
     // ============================================
-    // JAVASCRIPT COMPLETO CON FIREBASE - CORREGIDO
+    // JAVASCRIPT COMPLETO OPTIMIZADO CON FIREBASE
     // ============================================
 
-    // CONFIGURACIÃ“N DE FIREBASE - REEMPLAZA CON TUS CREDENCIALES
+    // CONFIGURACIÓN DE FIREBASE
     const firebaseConfig = {
-      apiKey: "AIzaSyAittwJ6haX6k4y8mtL3Q7JIU1LxwJIY-s",
-      authDomain: "tienda-virtual-b697f.firebaseapp.com",
-      projectId: "tienda-virtual-b697f",
-      storageBucket: "tienda-virtual-b697f.firebasestorage.app",
-      messagingSenderId: "604259849911",
-      appId: "1:604259849911:web:976e219543a4ad63f39f32"
+      apiKey: "TU_API_KEY_AQUI", // ⚠️ CAMBIAR EN PRODUCCIÓN
+      authDomain: "tu-proyecto.firebaseapp.com",
+      projectId: "tu-proyecto",
+      storageBucket: "tu-proyecto.firebasestorage.app",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abc123"
     };
 
     // Inicializar Firebase
@@ -1112,13 +1287,12 @@
       db = firebase.firestore();
       auth = firebase.auth();
       storage = firebase.storage();
-      console.log("âœ… Firebase inicializado correctamente");
+      console.log("✅ Firebase inicializado");
     } catch (error) {
-      console.error("âŒ Error inicializando Firebase:", error);
-      alert("âš ï¸ Por favor configura Firebase en el cÃ³digo (lÃ­nea 10)");
+      console.error("❌ Error Firebase:", error);
     }
 
-    // Estado de la aplicaciÃ³n
+    // Estado de la aplicación
     let state = {
       currentUser: null,
       auctions: [],
@@ -1128,7 +1302,11 @@
       cart: [],
       orders: [],
       botUsers: [],
-      botSettings: { enabled: true, delay: 2, probability: 70 },
+      botSettings: { 
+        enabled: true, 
+        delayGlobal: 2, 
+        probability: 70 
+      },
       currentIncrement: 10,
       imageUploaded: false,
       uploadedImageUrl: null
@@ -1136,19 +1314,108 @@
 
     let selectedPaymentMethod = null;
     let topupAmount = 0;
+    let countdownInterval = null;
+    let botActivityInterval = null;
 
-    // INICIALIZACIÃ“N
+    // ============================================
+    // UTILIDADES (MOVERLAS AL PRINCIPIO)
+    // ============================================
+    
+    function sanitizeHTML(str) {
+      const temp = document.createElement('div');
+      temp.textContent = str;
+      return temp.innerHTML;
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    const rateLimiter = {
+      attempts: {},
+      limit: 5,
+      window: 60000,
+      check(action) {
+        const now = Date.now();
+        if (!this.attempts[action]) this.attempts[action] = [];
+        this.attempts[action] = this.attempts[action].filter(time => now - time < this.window);
+        if (this.attempts[action].length >= this.limit) return false;
+        this.attempts[action].push(now);
+        return true;
+      }
+    };
+
+    function showLoading(message = 'Cargando...') {
+      const existing = document.getElementById('globalLoader');
+      if (existing) return;
+      
+      const loader = document.createElement('div');
+      loader.id = 'globalLoader';
+      loader.innerHTML = `
+        <div class="glass p-6 rounded-2xl text-center">
+          <div class="spinner mb-3"></div>
+          <div>${sanitizeHTML(message)}</div>
+        </div>
+      `;
+      document.body.appendChild(loader);
+    }
+
+    function hideLoading() {
+      const loader = document.getElementById('globalLoader');
+      if (loader) loader.remove();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast show toast-${type}`;
+      toast.innerHTML = `
+        <div class="toast-body d-flex justify-content-between align-items-center">
+          <span>${sanitizeHTML(message)}</span>
+          <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function handleError(error, context) {
+      const messages = {
+        'auth/user-not-found': 'Usuario no encontrado',
+        'auth/wrong-password': 'Contraseña incorrecta',
+        'permission-denied': 'No tienes permisos',
+        'storage/unauthorized': 'Error de autorización en almacenamiento'
+      };
+      
+      const message = messages[error.code] || `Error en ${context}: ${error.message}`;
+      showToast(message, 'error');
+      console.error(`[${context}]`, error);
+    }
+
+    // INICIALIZACIÓN
     document.addEventListener('DOMContentLoaded', async function() {
-      console.log('ðŸš€ Inicializando aplicaciÃ³n...');
-      await loadState();
-      initApp();
-      setupEventListeners();
-      renderAuctions();
-      renderProducts();
-      updateUI();
-      initParticles();
-      startBotActivity();
-      console.log('âœ… AplicaciÃ³n lista');
+      console.log('🚀 Inicializando aplicación...');
+      showLoading('Cargando datos...');
+      try {
+        await loadState();
+        initApp();
+        setupEventListeners();
+        renderAuctions();
+        renderProducts();
+        updateUI();
+        initParticles();
+        startBotActivity();
+        console.log('✅ Aplicación lista');
+      } catch (error) {
+        console.error('Error inicializando:', error);
+        handleError(error, 'Inicialización');
+      } finally {
+        hideLoading();
+      }
     });
 
     function initApp() {
@@ -1156,7 +1423,10 @@
       const filterToggle = document.querySelector('.filter-toggle');
       if (filterToggle) {
         filterToggle.addEventListener('click', function() {
-          document.querySelector('.filter-content').classList.toggle('active');
+          const content = document.querySelector('.filter-content');
+          const icon = this.querySelector('.fa-chevron-down');
+          content.classList.toggle('active');
+          icon.classList.toggle('fa-rotate-180');
         });
       }
       setupImageUpload();
@@ -1164,6 +1434,223 @@
       updateBotSettingsUI();
       updateCartUI();
       setupTopupListeners();
+    }
+
+    function setupMobileMenu() {
+      document.querySelectorAll('.mobile-menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.mobile-menu-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          const target = this.getAttribute('data-target');
+          if (target === 'auctions') {
+            document.getElementById('auctions-tab').click();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (target === 'store') {
+            document.getElementById('store-tab').click();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (target === 'cart') {
+            showCartModal();
+          }
+        });
+      });
+    }
+
+    function setupIncrementButtons() {
+      document.querySelectorAll('.increment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (!this.classList.contains('quick-bid-btn')) {
+            document.querySelectorAll('.increment-btn:not(.quick-bid-btn)').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const increment = this.getAttribute('data-increment');
+            state.currentIncrement = parseInt(increment) || 10;
+          }
+        });
+      });
+    }
+
+    function updateBotSettingsUI() {
+      const enabledCheckbox = document.getElementById('botsEnabled');
+      const delayInput = document.getElementById('botDelayGlobal');
+      const probabilityInput = document.getElementById('botProbability');
+      
+      if (enabledCheckbox) enabledCheckbox.checked = state.botSettings.enabled;
+      if (delayInput) delayInput.value = state.botSettings.delayGlobal;
+      if (probabilityInput) probabilityInput.value = state.botSettings.probability;
+    }
+
+    function setupTopupListeners() {
+      document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          topupAmount = parseInt(this.getAttribute('data-amount'));
+          document.getElementById('customTopupAmount').value = '';
+          document.getElementById('proceedToPayment').disabled = false;
+        });
+      });
+      
+      document.getElementById('customTopupAmount').addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value >= 100) {
+          topupAmount = value;
+          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+          document.getElementById('proceedToPayment').disabled = false;
+        } else {
+          document.getElementById('proceedToPayment').disabled = true;
+        }
+      });
+      
+      document.getElementById('proceedToPayment').addEventListener('click', function() {
+        document.getElementById('topupAmountSelection').classList.add('hidden');
+        document.getElementById('topupPaymentMethods').classList.remove('hidden');
+        setupTopupPaymentMethods();
+      });
+      
+      document.getElementById('confirmTopupPayment').addEventListener('click', processTopupPayment);
+    }
+
+    function setupTopupPaymentMethods() {
+      const methods = document.querySelectorAll('#topupModal .payment-method');
+      const confirmBtn = document.getElementById('confirmTopupPayment');
+      
+      methods.forEach(method => {
+        method.addEventListener('click', function() {
+          methods.forEach(m => m.classList.remove('selected'));
+          this.classList.add('selected');
+          selectedPaymentMethod = this.getAttribute('data-method');
+          confirmBtn.disabled = false;
+        });
+      });
+    }
+
+    function processTopupPayment() {
+      document.getElementById('topupPaymentMethods').classList.add('hidden');
+      document.getElementById('topupLoading').classList.remove('hidden');
+      
+      setTimeout(() => {
+        const success = Math.random() > 0.1;
+        if (success) {
+          state.currentUser.balance += topupAmount;
+          document.getElementById('topupLoading').classList.add('hidden');
+          document.getElementById('topupSuccess').classList.remove('hidden');
+          document.getElementById('topupDetails').innerHTML = `
+            <div class="glass-light p-3 rounded mt-3">
+              <div><strong>Monto:</strong> ${topupAmount}</div>
+              <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
+              <div><strong>Nuevo saldo:</strong> <span class="price-tag">${state.currentUser.balance}</span></div>
+            </div>
+          `;
+          updateUI();
+          saveState();
+          createConfetti();
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+            resetTopupModal();
+          }, 2500);
+        } else {
+          document.getElementById('topupLoading').classList.add('hidden');
+          alert('Error en el pago. Intenta nuevamente.');
+          resetTopupModal();
+        }
+      }, 2000);
+    }
+
+    function addBalance() {
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      resetTopupModal();
+      new bootstrap.Modal(document.getElementById('topupModal')).show();
+    }
+
+    function resetTopupModal() {
+      document.getElementById('topupAmountSelection').classList.remove('hidden');
+      document.getElementById('topupPaymentMethods').classList.add('hidden');
+      document.getElementById('topupLoading').classList.add('hidden');
+      document.getElementById('topupSuccess').classList.add('hidden');
+      document.getElementById('customTopupAmount').value = '';
+      document.getElementById('proceedToPayment').disabled = true;
+      topupAmount = 0;
+      selectedPaymentMethod = null;
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#topupModal .payment-method').forEach(m => m.classList.remove('selected'));
+    }
+
+    function getPaymentMethodName(method) {
+      const names = {
+        'credit_card': 'Tarjeta de Crédito',
+        'debit_card': 'Tarjeta de Débito',
+        'mercadopago': 'Saldo MP',
+        'cash': 'Efectivo'
+      };
+      return names[method] || 'Método seleccionado';
+    }
+
+    function updateCategoryFilter() {
+      const categories = [...new Set(state.auctions.map(a => a.category))];
+      const filter = document.getElementById('filterCategory');
+      if (filter) {
+        filter.innerHTML = '<option value="all">Todas</option>' + 
+          categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+      
+      const productCategories = [...new Set(state.products.map(p => p.category))];
+      const productFilter = document.getElementById('filterProductCategory');
+      if (productFilter) {
+        productFilter.innerHTML = '<option value="all">Todas</option>' + 
+          productCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+    }
+
+    function initParticles() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('particles-js');
+      
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      container.appendChild(canvas);
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          size: Math.random() * 3 + 1,
+          opacity: Math.random() * 0.5 + 0.3
+        });
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x <= 0 || p.x >= canvas.width) p.vx *= -1;
+          if (p.y <= 0 || p.y >= canvas.height) p.vy *= -1;
+          p.x = Math.max(0, Math.min(canvas.width, p.x));
+          p.y = Math.max(0, Math.min(canvas.height, p.y));
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 62, 127, ${p.opacity})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
     }
 
     // FIREBASE - CARGAR ESTADO
@@ -1179,37 +1666,56 @@
           state.orders = data.orders || [];
           state.botUsers = data.botUsers || [];
           state.botSettings = data.botSettings || state.botSettings;
-          console.log("âœ… Estado cargado desde Firebase");
+          console.log("✅ Estado cargado desde Firebase");
         } else {
           loadDemoData();
         }
+        
+        // Backup local
+        const backup = localStorage.getItem('auctionStoreAppState_backup');
+        if (backup && state.auctions.length === 0) {
+          const parsed = JSON.parse(backup);
+          Object.assign(state, parsed);
+        }
       } catch (error) {
         console.error("Error cargando:", error);
-        loadDemoData();
+        // Intentar cargar desde localStorage
+        const backup = localStorage.getItem('auctionStoreAppState_backup');
+        if (backup) {
+          Object.assign(state, JSON.parse(backup));
+        } else {
+          loadDemoData();
+        }
       }
     }
 
     // FIREBASE - GUARDAR ESTADO
     async function saveState() {
-      if (!state.currentUser) return;
       try {
-        await db.collection('appState').doc('mainState').set({
-          auctions: state.auctions,
-          products: state.products,
-          bids: state.bids,
-          cart: state.cart,
-          orders: state.orders,
-          botUsers: state.botUsers,
-          botSettings: state.botSettings,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("ðŸ’¾ Guardado en Firebase");
+        // Guardar backup local siempre
+        localStorage.setItem('auctionStoreAppState_backup', JSON.stringify(state));
+        
+        // Guardar en Firebase si hay usuario
+        if (state.currentUser && db) {
+          await db.collection('appState').doc('mainState').set({
+            auctions: state.auctions,
+            products: state.products,
+            bids: state.bids,
+            cart: state.cart,
+            orders: state.orders,
+            botUsers: state.botUsers,
+            botSettings: state.botSettings,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          console.log("💾 Guardado en Firebase");
+        }
       } catch (error) {
         console.error("Error guardando:", error);
+        showToast('Error guardando cambios', 'error');
       }
     }
 
-    // DATOS DE DEMOSTRACIÃ“N
+    // DATOS DE DEMOSTRACIÓN
     function loadDemoData() {
       const now = new Date();
       state.users = [
@@ -1217,8 +1723,8 @@
         { id: 2, name: 'Admin', email: 'admin@demo.com', password: 'admin123', balance: 10000, role: 'admin' }
       ];
       state.botUsers = [
-        { id: 101, name: 'Bot 1', balance: 8000, active: true },
-        { id: 102, name: 'Bot 2', balance: 7500, active: true }
+        { id: 101, name: 'Bot Ofertante 1', balance: 8000, active: true, delay: 2 },
+        { id: 102, name: 'Bot Ofertante 2', balance: 7500, active: true, delay: 3 }
       ];
       state.auctions = [
         {
@@ -1226,7 +1732,7 @@
           title: 'iPhone 14 Pro',
           description: 'Nuevo',
           image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?ixlib=rb-4.0.3&w=500&q=80',
-          category: 'ElectrÃ³nicos',
+          category: 'Electrónicos',
           startPrice: 500,
           currentBid: 500,
           buyNowPrice: 1200,
@@ -1243,7 +1749,7 @@
           title: 'Laptop Gaming',
           description: 'Alto rendimiento',
           image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=500',
-          category: 'ElectrÃ³nicos',
+          category: 'Electrónicos',
           price: 1200,
           stock: 5,
           featured: true
@@ -1266,18 +1772,25 @@
       document.getElementById('addBotUser').addEventListener('click', addBotUser);
       document.getElementById('createAuctionForm').addEventListener('submit', createAuction);
       document.getElementById('bidForm').addEventListener('submit', placeBid);
-      document.getElementById('search').addEventListener('input', filterAuctions);
+      
+      // Filtros con debounce
+      document.getElementById('search').addEventListener('input', debounce(filterAuctions, 300));
       document.getElementById('sortBy').addEventListener('change', filterAuctions);
       document.getElementById('filterState').addEventListener('change', filterAuctions);
-      document.getElementById('searchProducts').addEventListener('input', filterProducts);
+      document.getElementById('searchProducts').addEventListener('input', debounce(filterProducts, 300));
       document.getElementById('filterProductCategory').addEventListener('change', filterProducts);
       document.getElementById('sortProducts').addEventListener('change', filterProducts);
       document.getElementById('exportCsv').addEventListener('click', exportToCsv);
       document.getElementById('manage-tab').addEventListener('click', renderManageAuctions);
       document.getElementById('bots-tab').addEventListener('click', renderBotUsers);
+      
+      // Bot settings
+      document.getElementById('botsEnabled').addEventListener('change', updateBotSettings);
+      document.getElementById('botDelayGlobal').addEventListener('change', updateBotSettings);
+      document.getElementById('botProbability').addEventListener('change', updateBotSettings);
     }
 
-    // AUTENTICACIÃ“N
+    // AUTENTICACIÓN
     function showLoginModal() {
       new bootstrap.Modal(document.getElementById('loginModal')).show();
     }
@@ -1286,6 +1799,8 @@
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
+      
+      showLoading('Iniciando sesión...');
       
       try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -1306,10 +1821,12 @@
         
         updateUI();
         bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-        showToast('âœ… SesiÃ³n iniciada', 'success');
+        showToast('✅ Sesión iniciada', 'success');
       } catch (error) {
         console.error("Error login:", error);
-        showToast('âŒ Credenciales incorrectas', 'error');
+        handleError(error, 'Login');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -1317,7 +1834,7 @@
       state.currentUser = null;
       updateUI();
       saveState();
-      showToast('ðŸ‘‹ SesiÃ³n cerrada', 'info');
+      showToast('👋 Sesión cerrada', 'info');
     }
 
     function updateUI() {
@@ -1336,7 +1853,7 @@
           adminPanel.classList.remove('hidden');
         }
       } else {
-        userInfo.textContent = 'No has iniciado sesiÃ³n';
+        userInfo.textContent = 'No has iniciado sesión';
         loginBtn.style.display = 'block';
         logoutBtn.style.display = 'none';
         balance.textContent = '$0';
@@ -1346,7 +1863,7 @@
       updateCartUI();
     }
 
-    // SUBIDA DE IMÃGENES
+    // SUBIDA DE IMÁGENES
     function setupImageUpload() {
       const container = document.getElementById('imageUploadContainer');
       const input = document.getElementById('imageUpload');
@@ -1369,14 +1886,25 @@
     }
 
     async function handleImageUpload(file) {
-      if (!file.type.match('image.*')) {
-        showToast('âš ï¸ Selecciona una imagen vÃ¡lida', 'error');
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('⚠️ Solo JPG, PNG o WebP', 'error');
         return;
       }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('⚠️ Imagen muy grande (máx 5MB)', 'error');
+        return;
+      }
+      
       try {
+        showLoading('Subiendo imagen...');
+        
+        // Comprimir imagen
+        const compressed = await compressImage(file);
+        
         const imageRef = storage.ref().child(`images/${Date.now()}_${file.name}`);
-        showToast('â¬†ï¸ Subiendo imagen...', 'info');
-        const snapshot = await imageRef.put(file);
+        const snapshot = await imageRef.put(compressed);
         const downloadURL = await snapshot.ref.getDownloadURL();
         
         const preview = document.getElementById('imagePreview');
@@ -1384,11 +1912,36 @@
         preview.classList.remove('hidden');
         state.imageUploaded = true;
         state.uploadedImageUrl = downloadURL;
-        showToast('âœ… Imagen subida', 'success');
+        showToast('✅ Imagen subida', 'success');
       } catch (error) {
         console.error("Error:", error);
-        showToast('âŒ Error subiendo imagen', 'error');
+        handleError(error, 'Subida de imagen');
+      } finally {
+        hideLoading();
       }
+    }
+
+    async function compressImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     // RENDERIZADO DE SUBASTAS
@@ -1403,16 +1956,20 @@
       
       list.innerHTML = auctions.map(auction => `
         <div class="auction-card glass p-4 rounded-xl">
-          <div class="flex gap-4">
-            <img src="${auction.image}" class="w-24 h-24 object-cover rounded-lg">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <img src="${auction.image}" 
+                 loading="lazy" 
+                 decoding="async"
+                 alt="${sanitizeHTML(auction.title)}"
+                 class="w-full sm:w-24 h-24 object-cover rounded-lg">
             <div class="flex-grow">
               <div class="flex justify-between">
-                <h3 class="font-semibold">${auction.title}</h3>
+                <h3 class="font-semibold">${sanitizeHTML(auction.title)}</h3>
                 <span class="status-badge ${auction.status === 'active' ? 'status-active' : 'status-ended'}">
                   ${auction.status === 'active' ? 'Activa' : 'Finalizada'}
                 </span>
               </div>
-              <p class="text-sm text-slate-400 mt-1">${auction.description}</p>
+              <p class="text-sm text-slate-400 mt-1">${sanitizeHTML(auction.description)}</p>
               <div class="flex justify-between items-center mt-4">
                 <div>
                   <div class="text-xs text-slate-400">Puja actual</div>
@@ -1420,7 +1977,7 @@
                 </div>
                 <div class="countdown" data-end="${auction.endTime}">${formatTimeRemaining(auction.endTime)}</div>
               </div>
-              <div class="flex gap-2 mt-4">
+              <div class="flex flex-col sm:flex-row gap-2 mt-4">
                 ${auction.status === 'active' ? `
                   <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${auction.id}">
                     <i class="fas fa-gavel"></i> Ofertar
@@ -1449,7 +2006,7 @@
         });
       });
       
-      updateCountdowns();
+      startCountdown();
     }
 
     // RENDERIZADO DE PRODUCTOS
@@ -1464,11 +2021,15 @@
       
       list.innerHTML = products.map(product => `
         <div class="product-card glass p-4 rounded-xl">
-          <div class="flex gap-4">
-            <img src="${product.image}" class="w-24 h-24 object-cover rounded-lg">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <img src="${product.image}" 
+                 loading="lazy"
+                 decoding="async"
+                 alt="${sanitizeHTML(product.title)}"
+                 class="w-full sm:w-24 h-24 object-cover rounded-lg">
             <div class="flex-grow">
-              <h3 class="font-semibold">${product.title}</h3>
-              <p class="text-sm text-slate-400">${product.description}</p>
+              <h3 class="font-semibold">${sanitizeHTML(product.title)}</h3>
+              <p class="text-sm text-slate-400">${sanitizeHTML(product.description)}</p>
               <div class="flex justify-between items-center mt-4">
                 <div class="price-tag">$${product.price}</div>
                 <span class="text-xs">Stock: ${product.stock}</span>
@@ -1499,7 +2060,7 @@
       
       const product = state.products.find(p => p.id === productId);
       if (!product || product.stock <= 0) {
-        showToast('âŒ Producto no disponible', 'error');
+        showToast('❌ Producto no disponible', 'error');
         return;
       }
       
@@ -1507,9 +2068,9 @@
       if (existing) {
         if (existing.quantity < product.stock) {
           existing.quantity++;
-          showToast('âœ… Cantidad actualizada', 'success');
+          showToast('✅ Cantidad actualizada', 'success');
         } else {
-          showToast('âŒ No hay mÃ¡s stock', 'error');
+          showToast('❌ No hay más stock', 'error');
           return;
         }
       } else {
@@ -1519,7 +2080,7 @@
           quantity: 1,
           price: product.price
         });
-        showToast('âœ… Agregado al carrito', 'success');
+        showToast('✅ Agregado al carrito', 'success');
       }
       
       updateCartUI();
@@ -1568,14 +2129,21 @@
         return `
           <div class="cart-item">
             <div class="flex gap-3">
-              <img src="${product.image}" class="w-16 h-16 object-cover rounded">
+              <img src="${product.image}" 
+                   loading="lazy"
+                   alt="${sanitizeHTML(product.title)}"
+                   class="w-16 h-16 object-cover rounded">
               <div class="flex-grow">
-                <h6 class="font-semibold">${product.title}</h6>
+                <h6 class="font-semibold">${sanitizeHTML(product.title)}</h6>
                 <p class="text-sm text-slate-400">$${item.price} c/u</p>
                 <div class="quantity-controls mt-2">
-                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">-</button>
+                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>
+                    <i class="fas fa-minus"></i>
+                  </button>
                   <span class="px-3">${item.quantity}</span>
-                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
+                  <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)" ${item.quantity >= product.stock ? 'disabled' : ''}>
+                    <i class="fas fa-plus"></i>
+                  </button>
                   <button class="quantity-btn ml-2" onclick="removeFromCart(${item.id})">
                     <i class="fas fa-trash"></i>
                   </button>
@@ -1603,7 +2171,7 @@
       }
       
       if (newQuantity > product.stock) {
-        showToast('âŒ No hay mÃ¡s stock', 'error');
+        showToast('❌ No hay más stock', 'error');
         return;
       }
       
@@ -1618,6 +2186,7 @@
       updateCartUI();
       renderCartItems();
       saveState();
+      showToast('🗑️ Producto removido', 'info');
     }
 
     function checkout() {
@@ -1631,7 +2200,7 @@
       const total = state.cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
       
       if (state.currentUser.balance < total) {
-        showToast('âŒ Saldo insuficiente', 'error');
+        showToast('❌ Saldo insuficiente', 'error');
         return;
       }
       
@@ -1655,10 +2224,13 @@
       updateUI();
       renderProducts();
       saveState();
-      showToast('âœ… Compra exitosa', 'success');
+      showToast('✅ Compra exitosa', 'success');
     }
 
-    // PUJAS
+    // Continuaré en el siguiente mensaje con el resto del código...
+  </script>
+</body>
+</html>// PUJAS
     function openBidModal(auctionId) {
       if (!state.currentUser) {
         showLoginModal();
@@ -1671,9 +2243,9 @@
       document.getElementById('bidAuctionId').value = auctionId;
       document.getElementById('bidAuctionInfo').innerHTML = `
         <div class="flex gap-3 p-3 bg-slate-800/30 rounded">
-          <img src="${auction.image}" class="w-12 h-12 object-cover rounded">
+          <img src="${auction.image}" loading="lazy" alt="${sanitizeHTML(auction.title)}" class="w-12 h-12 object-cover rounded">
           <div>
-            <div class="font-semibold">${auction.title}</div>
+            <div class="font-semibold">${sanitizeHTML(auction.title)}</div>
             <div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div>
           </div>
         </div>
@@ -1686,8 +2258,14 @@
       new bootstrap.Modal(document.getElementById('bidModal')).show();
     }
 
-    function placeBid(e) {
+    async function placeBid(e) {
       e.preventDefault();
+      
+      if (!rateLimiter.check('placeBid')) {
+        showToast('⚠️ Espera un momento antes de ofertar nuevamente', 'error');
+        return;
+      }
+      
       const auctionId = parseInt(document.getElementById('bidAuctionId').value);
       const amount = parseFloat(document.getElementById('bidAmount').value);
       
@@ -1696,33 +2274,41 @@
       
       const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
       if (amount < minBid) {
-        showToast(`âŒ MÃ­nimo: $${minBid}`, 'error');
+        showToast(`❌ Mínimo: $${minBid}`, 'error');
         return;
       }
       
       if (state.currentUser.balance < amount) {
-        showToast('âŒ Saldo insuficiente', 'error');
+        showToast('❌ Saldo insuficiente', 'error');
         return;
       }
       
-      state.bids.push({
-        id: state.bids.length + 1,
-        auctionId: auctionId,
-        userId: state.currentUser.id,
-        amount: amount,
-        timestamp: new Date().toISOString()
-      });
+      showLoading('Procesando puja...');
       
-      auction.bids.push(state.currentUser.id);
-      auction.currentBid = amount;
-      auction.lastBidTime = new Date().toISOString();
-      
-      bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
-      createConfetti();
-      saveState();
-      renderAuctions();
-      updateUI();
-      showToast('âœ… Puja realizada', 'success');
+      try {
+        state.bids.push({
+          id: state.bids.length + 1,
+          auctionId: auctionId,
+          userId: state.currentUser.id,
+          amount: amount,
+          timestamp: new Date().toISOString()
+        });
+        
+        auction.bids.push(state.currentUser.id);
+        auction.currentBid = amount;
+        auction.lastBidTime = new Date().toISOString();
+        
+        bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+        createConfetti();
+        await saveState();
+        renderAuctions();
+        updateUI();
+        showToast('✅ Puja realizada', 'success');
+      } catch (error) {
+        handleError(error, 'Realizar puja');
+      } finally {
+        hideLoading();
+      }
     }
 
     function buyNow(auctionId) {
@@ -1735,11 +2321,11 @@
       if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
       
       if (state.currentUser.balance < auction.buyNowPrice) {
-        showToast('âŒ Saldo insuficiente', 'error');
+        showToast('❌ Saldo insuficiente', 'error');
         return;
       }
       
-      if (confirm(`Â¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
+      if (confirm(`¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
         state.currentUser.balance -= auction.buyNowPrice;
         auction.status = 'ended';
         auction.currentBid = auction.buyNowPrice;
@@ -1747,15 +2333,15 @@
         saveState();
         renderAuctions();
         updateUI();
-        showToast('âœ… Compra realizada', 'success');
+        showToast('✅ Compra realizada', 'success');
       }
     }
 
     // CREAR SUBASTA
-    function createAuction(e) {
+    async function createAuction(e) {
       e.preventDefault();
       if (!state.currentUser || state.currentUser.role !== 'admin') {
-        showToast('âŒ Solo admins', 'error');
+        showToast('❌ Solo admins', 'error');
         return;
       }
       
@@ -1772,28 +2358,38 @@
         endTime = defaultEnd.toISOString();
       }
       
-      state.auctions.push({
-        id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
-        title: title,
-        description: desc,
-        image: image,
-        category: 'General',
-        startPrice: start,
-        currentBid: start,
-        buyNowPrice: buyNow,
-        endTime: new Date(endTime).toISOString(),
-        sellerId: state.currentUser.id,
-        bids: [],
-        lastBidTime: new Date().toISOString(),
-        status: 'active'
-      });
+      showLoading('Creando subasta...');
       
-      document.getElementById('createAuctionForm').reset();
-      document.getElementById('imagePreview').classList.add('hidden');
-      state.imageUploaded = false;
-      saveState();
-      renderAuctions();
-      showToast('âœ… Subasta creada', 'success');
+      try {
+        state.auctions.push({
+          id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
+          title: title,
+          description: desc,
+          image: image,
+          category: 'General',
+          startPrice: start,
+          currentBid: start,
+          buyNowPrice: buyNow,
+          endTime: new Date(endTime).toISOString(),
+          sellerId: state.currentUser.id,
+          bids: [],
+          lastBidTime: new Date().toISOString(),
+          status: 'active'
+        });
+        
+        document.getElementById('createAuctionForm').reset();
+        document.getElementById('imagePreview').classList.add('hidden');
+        state.imageUploaded = false;
+        state.uploadedImageUrl = null;
+        
+        await saveState();
+        renderAuctions();
+        showToast('✅ Subasta creada', 'success');
+      } catch (error) {
+        handleError(error, 'Crear subasta');
+      } finally {
+        hideLoading();
+      }
     }
 
     // ADMIN
@@ -1803,10 +2399,14 @@
         return;
       }
       if (state.currentUser.role !== 'admin') {
-        showToast('âŒ Solo admins', 'error');
+        showToast('❌ Solo admins', 'error');
         return;
       }
-      document.getElementById('adminPanel').classList.toggle('hidden');
+      const panel = document.getElementById('adminPanel');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) {
+        panel.scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     function renderManageAuctions() {
@@ -1814,8 +2414,8 @@
       list.innerHTML = state.auctions.map(a => `
         <div class="flex justify-between items-center p-3 glass-light rounded mb-2">
           <div>
-            <div class="font-medium">${a.title}</div>
-            <div class="text-xs text-slate-400">$${a.currentBid || a.startPrice}</div>
+            <div class="font-medium">${sanitizeHTML(a.title)}</div>
+            <div class="text-xs text-slate-400">$${a.currentBid || a.startPrice} • ${a.status}</div>
           </div>
           <button class="btn btn-outline-danger btn-sm" onclick="deleteAuction(${a.id})">
             <i class="fas fa-trash"></i>
@@ -1825,29 +2425,57 @@
     }
 
     function deleteAuction(id) {
-      if (confirm('Â¿Eliminar subasta?')) {
+      if (confirm('¿Eliminar subasta?')) {
         state.auctions = state.auctions.filter(a => a.id !== id);
         saveState();
         renderAuctions();
         renderManageAuctions();
-        showToast('ðŸ—‘ï¸ Eliminada', 'info');
+        showToast('🗑️ Eliminada', 'info');
       }
     }
 
-    // BOTS
+    // BOTS CON CONFIGURACIÓN INDIVIDUAL
     function renderBotUsers() {
       const list = document.getElementById('botUsersList');
-      list.innerHTML = state.botUsers.map(bot => `
-        <div class="flex justify-between items-center p-2 glass-light rounded">
-          <input type="text" class="bot-name-edit" value="${bot.name}" onchange="updateBotName(${bot.id}, this.value)">
-          <div class="flex gap-2">
-            <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})">
-              <i class="fas fa-trash"></i>
-            </button>
-            <input type="checkbox" ${bot.active ? 'checked' : ''} onchange="toggleBotUser(${bot.id}, this.checked)">
+      if (state.botUsers.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay bots configurados</div>';
+        return;
+      }
+      
+      list.innerHTML = state.botUsers.map(bot => {
+        const botDelayValue = bot.delay !== undefined ? bot.delay : state.botSettings.delayGlobal;
+        return `
+        <div class="glass-light p-3 rounded mb-2">
+          <div class="flex justify-between items-center mb-2">
+            <input type="text" 
+                   class="bot-name-edit flex-grow mr-2" 
+                   value="${sanitizeHTML(bot.name)}" 
+                   onchange="updateBotName(${bot.id}, this.value)">
+            <div class="flex gap-2 items-center">
+              <div class="form-check form-switch">
+                <input type="checkbox" 
+                       class="form-check-input" 
+                       ${bot.active ? 'checked' : ''} 
+                       onchange="toggleBotUser(${bot.id}, this.checked)">
+              </div>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
+          <div class="bot-settings-row">
+            <label>Tiempo espera (min):</label>
+            <input type="number" 
+                   min="1" 
+                   max="60" 
+                   value="${botDelayValue}" 
+                   onchange="updateBotDelay(${bot.id}, this.value)">
+            <small class="text-slate-400">Específico para este bot</small>
+          </div>
+          <div class="text-xs text-slate-400 mt-2">Saldo: ${bot.balance}</div>
         </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function addBotUser() {
@@ -1856,11 +2484,12 @@
         id: id,
         name: `Bot ${state.botUsers.length + 1}`,
         balance: 5000 + Math.random() * 5000,
-        active: true
+        active: true,
+        delay: state.botSettings.delayGlobal
       });
       saveState();
       renderBotUsers();
-      showToast('âœ… Bot agregado', 'success');
+      showToast('✅ Bot agregado', 'success');
     }
 
     function updateBotName(id, name) {
@@ -1871,50 +2500,80 @@
       }
     }
 
+    function updateBotDelay(id, delay) {
+      const bot = state.botUsers.find(b => b.id === id);
+      if (bot) {
+        bot.delay = parseInt(delay) || state.botSettings.delayGlobal;
+        saveState();
+        showToast(`⏱️ Delay actualizado: ${bot.delay} min`, 'info');
+      }
+    }
+
     function toggleBotUser(id, active) {
       const bot = state.botUsers.find(b => b.id === id);
       if (bot) {
         bot.active = active;
         saveState();
+        showToast(`${bot.name} ${active ? '✅ activado' : '⏸️ desactivado'}`, 'info');
       }
     }
 
     function deleteBotUser(id) {
-      if (confirm('Â¿Eliminar bot?')) {
+      if (confirm('¿Eliminar bot?')) {
         state.botUsers = state.botUsers.filter(b => b.id !== id);
         saveState();
         renderBotUsers();
+        showToast('🗑️ Bot eliminado', 'info');
       }
     }
 
-    function updateBotSettingsUI() {
-      document.getElementById('botsEnabled').checked = state.botSettings.enabled;
-    }
+    function updateBotSettings() {
+  const enabledCheckbox = document.getElementById('botsEnabled');
+  const delayInput = document.getElementById('botDelayGlobal');
+  const probabilityInput = document.getElementById('botProbability');
+  
+  if (enabledCheckbox) state.botSettings.enabled = enabledCheckbox.checked;
+  if (delayInput) state.botSettings.delayGlobal = parseInt(delayInput.value) || 2;
+  if (probabilityInput) state.botSettings.probability = parseInt(probabilityInput.value) || 70;
+  
+  saveState();
+  showToast('⚙️ Configuración actualizada', 'success');
+}
 
     function startBotActivity() {
-      setInterval(() => {
-        if (!state.botSettings.enabled) return;
+      if (botActivityInterval) clearInterval(botActivityInterval);
+      
+      botActivityInterval = setInterval(() => {
+        if (!state.botSettings.enabled || !state.currentUser) return;
+        
         const active = state.auctions.filter(a => a.status === 'active');
         active.forEach(auction => {
-          const timeSince = new Date() - new Date(auction.lastBidTime);
-          if (timeSince >= state.botSettings.delay * 60000) {
-            if (Math.random() * 100 <= state.botSettings.probability) {
-              makeBotBid(auction.id);
-            }
+          const activeBots = state.botUsers.filter(b => {
+            if (!b.active || b.balance <= (auction.currentBid || auction.startPrice) + 50) return false;
+            
+            const botDelay = (b.delay || state.botSettings.delayGlobal) * 60000;
+            const timeSince = new Date() - new Date(auction.lastBidTime);
+            
+            return timeSince >= botDelay;
+          });
+          
+          if (activeBots.length === 0) return;
+          
+          if (Math.random() * 100 <= state.botSettings.probability) {
+            const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
+            makeBotBid(auction.id, bot);
           }
         });
       }, 30000);
     }
 
-    function makeBotBid(auctionId) {
+    function makeBotBid(auctionId, bot) {
       const auction = state.auctions.find(a => a.id === auctionId);
       if (!auction) return;
       
-      const activeBots = state.botUsers.filter(b => b.active && b.balance > auction.currentBid + 50);
-      if (activeBots.length === 0) return;
-      
-      const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
       const bidAmount = (auction.currentBid || auction.startPrice) + state.currentIncrement + Math.floor(Math.random() * 50);
+      
+      if (bot.balance < bidAmount) return;
       
       state.bids.push({
         id: state.bids.length + 1,
@@ -1930,6 +2589,8 @@
       
       saveState();
       renderAuctions();
+      
+      showToast(`🤖 ${bot.name} pujó $${bidAmount}`, 'info');
     }
 
     // FILTROS
@@ -1977,117 +2638,33 @@
       renderProducts(filtered);
     }
 
-    function updateCategoryFilter() {
-      const categories = [...new Set(state.auctions.map(a => a.category))];
-      const filter = document.getElementById('filterCategory');
-      filter.innerHTML = '<option value="all">Todas</option>' + 
-        categories.map(c => `<option value="${c}">${c}</option>`).join('');
-      
-      const productCategories = [...new Set(state.products.map(p => p.category))];
-      const productFilter = document.getElementById('filterProductCategory');
-      productFilter.innerHTML = '<option value="all">Todas</option>' + 
-        productCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
+    // MERCADOPAGO - RECARGA (ya está en Parte 3, eliminar de aquí)
+    // Las funciones de topup están ahora en Parte 3
 
-    // MERCADOPAGO - RECARGA
-    function setupTopupListeners() {
-      document.querySelectorAll('.topup-amount-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          topupAmount = parseInt(this.getAttribute('data-amount'));
-          document.getElementById('customTopupAmount').value = '';
-          document.getElementById('proceedToPayment').disabled = false;
-        });
-      });
-      
-      document.getElementById('customTopupAmount').addEventListener('input', function() {
-        const value = parseInt(this.value);
-        if (value >= 100) {
-          topupAmount = value;
-          document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-          document.getElementById('proceedToPayment').disabled = false;
-        }
-      });
-      
-      document.getElementById('proceedToPayment').addEventListener('click', function() {
-        document.getElementById('topupAmountSelection').classList.add('hidden');
-        document.getElementById('topupPaymentMethods').classList.remove('hidden');
-        setupTopupPaymentMethods();
-      });
-      
-      document.getElementById('confirmTopupPayment').addEventListener('click', processTopupPayment);
-    }
-
-    function setupTopupPaymentMethods() {
-      const methods = document.querySelectorAll('#topupModal .payment-method');
-      const confirmBtn = document.getElementById('confirmTopupPayment');
-      
-      methods.forEach(method => {
-        method.addEventListener('click', function() {
-          methods.forEach(m => m.classList.remove('selected'));
-          this.classList.add('selected');
-          selectedPaymentMethod = this.getAttribute('data-method');
-          confirmBtn.disabled = false;
-        });
-      });
-    }
-
-    function processTopupPayment() {
-      document.getElementById('topupPaymentMethods').classList.add('hidden');
-      document.getElementById('topupLoading').classList.remove('hidden');
-      
-      setTimeout(() => {
-        const success = Math.random() > 0.1;
-        if (success) {
-          state.currentUser.balance += topupAmount;
-          document.getElementById('topupLoading').classList.add('hidden');
-          document.getElementById('topupSuccess').classList.remove('hidden');
-          document.getElementById('topupDetails').innerHTML = `
-            <div class="glass-light p-3 rounded mt-3">
-              <div><strong>Monto:</strong> ${topupAmount}</div>
-              <div><strong>Nuevo saldo:</strong> ${state.currentUser.balance}</div>
-            </div>
-          `;
-          updateUI();
-          saveState();
-          createConfetti();
-          setTimeout(() => {
-            bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
-          }, 2000);
-        }
-      }, 2000);
-    }
-
-    function addBalance() {
-      if (!state.currentUser) {
-        showLoginModal();
-        return;
-      }
-      resetTopupModal();
-      new bootstrap.Modal(document.getElementById('topupModal')).show();
-    }
-
-    function resetTopupModal() {
-      document.getElementById('topupAmountSelection').classList.remove('hidden');
-      document.getElementById('topupPaymentMethods').classList.add('hidden');
-      document.getElementById('topupLoading').classList.add('hidden');
-      document.getElementById('topupSuccess').classList.add('hidden');
-      document.getElementById('customTopupAmount').value = '';
-      document.getElementById('proceedToPayment').disabled = true;
-      topupAmount = 0;
-      selectedPaymentMethod = null;
-      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('#topupModal .payment-method').forEach(m => m.classList.remove('selected'));
-    }
-
-    // MERCADOPAGO - CARRITO
+    // Continuaré con MercadoPago carrito en Parte 5...// MERCADOPAGO - CARRITO
     function showMercadoPagoModal() {
       if (!state.currentUser) {
         showLoginModal();
         return;
       }
-      if (state.cart.length === 0) return;
+      if (state.cart.length === 0) {
+        showToast('❌ Carrito vacío', 'error');
+        return;
+      }
+      
+      renderPaymentSummary();
+      resetPaymentModal();
+      new bootstrap.Modal(document.getElementById('mpModal')).show();
+      setupCartPaymentMethods();
+    }
+      if (!state.currentUser) {
+        showLoginModal();
+        return;
+      }
+      if (state.cart.length === 0) {
+        showToast('❌ Carrito vacío', 'error');
+        return;
+      }
       
       renderPaymentSummary();
       resetPaymentModal();
@@ -2107,15 +2684,15 @@
         return `
           <div class="flex justify-between py-2 border-bottom border-slate-700">
             <div>
-              <div class="font-medium">${product?.title}</div>
-              <small>${item.quantity}x ${item.price}</small>
+              <div class="font-medium">${sanitizeHTML(product?.title || 'Producto')}</div>
+              <small>${item.quantity}x $${item.price}</small>
             </div>
-            <div>${itemTotal}</div>
+            <div>$${itemTotal}</div>
           </div>
         `;
       }).join('');
       
-      total.textContent = `${totalAmount}`;
+      total.textContent = `$${totalAmount}`;
     }
 
     function setupCartPaymentMethods() {
@@ -2128,6 +2705,7 @@
           this.classList.add('selected');
           selectedPaymentMethod = this.getAttribute('data-method');
           confirmBtn.disabled = false;
+          confirmBtn.innerHTML = `<i class="fas fa-lock"></i> Pagar con ${getPaymentMethodName(selectedPaymentMethod)}`;
         });
       });
       
@@ -2138,7 +2716,10 @@
     }
 
     function processCartPayment() {
-      if (!selectedPaymentMethod) return;
+      if (!selectedPaymentMethod) {
+        showToast('⚠️ Selecciona método de pago', 'error');
+        return;
+      }
       
       document.getElementById('paymentSummary').style.display = 'none';
       document.getElementById('paymentMethods').style.display = 'none';
@@ -2170,7 +2751,9 @@
           document.getElementById('paymentSuccess').classList.remove('hidden');
           document.getElementById('paymentDetails').innerHTML = `
             <div class="glass-light p-3 rounded mt-3">
-              <div><strong>Total pagado:</strong> ${total}</div>
+              <div><strong>ID:</strong> #${Date.now()}</div>
+              <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
+              <div><strong>Total:</strong> <span class="price-tag">$${total}</span></div>
             </div>
           `;
           
@@ -2184,7 +2767,13 @@
           setTimeout(() => {
             createConfetti();
             bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
-          }, 2000);
+            resetPaymentModal();
+            showToast('✅ ¡Pago exitoso!', 'success');
+          }, 2500);
+        } else {
+          document.getElementById('paymentLoading').classList.add('hidden');
+          alert('Error en el pago. Intenta nuevamente.');
+          resetPaymentModal();
         }
       }, 2000);
     }
@@ -2197,7 +2786,18 @@
       document.getElementById('paymentLoading').classList.add('hidden');
       document.getElementById('paymentSuccess').classList.add('hidden');
       document.getElementById('confirmPayment').disabled = true;
+      document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar';
       document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
+    }
+
+    function getPaymentMethodName(method) {
+      const names = {
+        'credit_card': 'Tarjeta de Crédito',
+        'debit_card': 'Tarjeta de Débito',
+        'mercadopago': 'Saldo MP',
+        'cash': 'Efectivo'
+      };
+      return names[method] || 'Método seleccionado';
     }
 
     // UTILIDADES
@@ -2222,12 +2822,19 @@
       return diff > 0 && diff <= 600000;
     }
 
+    function startCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(updateCountdowns, 1000);
+    }
+
     function updateCountdowns() {
       document.querySelectorAll('.countdown').forEach(el => {
         const endTime = el.getAttribute('data-end');
         el.textContent = formatTimeRemaining(endTime);
         if (isEndingSoon(endTime)) {
           el.classList.add('pulse');
+        } else {
+          el.classList.remove('pulse');
         }
       });
     }
@@ -2261,7 +2868,7 @@
       toast.className = `toast show toast-${type}`;
       toast.innerHTML = `
         <div class="toast-body d-flex justify-content-between align-items-center">
-          <span>${message}</span>
+          <span>${sanitizeHTML(message)}</span>
           <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.parentElement.remove()"></button>
         </div>
       `;
@@ -2269,146 +2876,79 @@
       setTimeout(() => toast.remove(), 5000);
     }
 
+    function showLoading(message = 'Cargando...') {
+      const existing = document.getElementById('globalLoader');
+      if (existing) return;
+      
+      const loader = document.createElement('div');
+      loader.id = 'globalLoader';
+      loader.innerHTML = `
+        <div class="glass p-6 rounded-2xl text-center">
+          <div class="spinner mb-3"></div>
+          <div>${sanitizeHTML(message)}</div>
+        </div>
+      `;
+      document.body.appendChild(loader);
+    }
+
+    function hideLoading() {
+      const loader = document.getElementById('globalLoader');
+      if (loader) loader.remove();
+    }
+
+    function handleError(error, context) {
+      const messages = {
+        'auth/user-not-found': 'Usuario no encontrado',
+        'auth/wrong-password': 'Contraseña incorrecta',
+        'permission-denied': 'No tienes permisos',
+        'storage/unauthorized': 'Error de autorización en almacenamiento'
+      };
+      
+      const message = messages[error.code] || `Error en ${context}: ${error.message}`;
+      showToast(message, 'error');
+      console.error(`[${context}]`, error);
+    }
+
     function exportToCsv() {
       const data = [
-        ['ID', 'TÃ­tulo', 'Precio', 'Estado'],
-        ...state.auctions.map(a => [a.id, a.title, a.currentBid || a.startPrice, a.status])
+        ['ID', 'Título', 'Precio', 'Estado', 'Categoría'],
+        ...state.auctions.map(a => [a.id, a.title, a.currentBid || a.startPrice, a.status, a.category])
       ];
       const csv = data.map(row => row.join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'subastas.csv';
+      a.download = `subastas_${Date.now()}.csv`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📄 CSV exportado', 'success');
     }
 
     function createDemoData() {
-      loadDemoData();
-      renderAuctions();
-      renderProducts();
-      updateUI();
-      showToast('Datos demo cargados', 'success');
-    }
-
-    function setupIncrementButtons() {
-      document.querySelectorAll('.increment-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          if (!this.classList.contains('quick-bid-btn')) {
-            document.querySelectorAll('.increment-btn:not(.quick-bid-btn)').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const increment = this.getAttribute('data-increment');
-            state.currentIncrement = parseInt(increment) || 10;
-          }
-        });
-      });
-    }
-
-    function setupMobileMenu() {
-      document.querySelectorAll('.mobile-menu-item').forEach(item => {
-        item.addEventListener('click', function() {
-          document.querySelectorAll('.mobile-menu-item').forEach(i => i.classList.remove('active'));
-          this.classList.add('active');
-          const target = this.getAttribute('data-target');
-          if (target === 'auctions') document.getElementById('auctions-tab').click();
-          else if (target === 'store') document.getElementById('store-tab').click();
-          else if (target === 'cart') showCartModal();
-        });
-      });
-    }
-
-    function initParticles() {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const container = document.getElementById('particles-js');
-      
-      canvas.style.position = 'absolute';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      container.appendChild(canvas);
-      
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      if (confirm('¿Recargar datos de demostración?')) {
+        loadDemoData();
+        renderAuctions();
+        renderProducts();
+        updateUI();
+        showToast('✅ Datos demo cargados', 'success');
       }
-      resize();
-      window.addEventListener('resize', resize);
-      
-      const particles = [];
-      for (let i = 0; i < 50; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 2,
-          vy: (Math.random() - 0.5) * 2,
-          size: Math.random() * 3 + 1,
-          opacity: Math.random() * 0.5 + 0.3
-        });
-      }
-      
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x <= 0 || p.x >= canvas.width) p.vx *= -1;
-          if (p.y <= 0 || p.y >= canvas.height) p.vy *= -1;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 62, 127, ${p.opacity})`;
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
-      }
-      animate();
     }
 
-    // Funciones globales
+    // FUNCIONES GLOBALES PARA EVENTOS ONCLICK
     window.updateCartQuantity = updateCartQuantity;
     window.removeFromCart = removeFromCart;
     window.toggleBotUser = toggleBotUser;
     window.updateBotName = updateBotName;
+    window.updateBotDelay = updateBotDelay;
     window.deleteBotUser = deleteBotUser;
     window.deleteAuction = deleteAuction;
 
-    setInterval(updateCountdowns, 1000);
-  
-    const mp = new MercadoPago('TEST-tu-public-key', {locale:'es-AR'});
-    let selectedCreditPackage = null;
-    window.selectCreditPackage = function(credits, price) {
-      if (!currentUser) return showToast('Inicia sesión', 'error');
-      selectedCreditPackage = {credits, price};
-      document.querySelectorAll('.credit-package').forEach(el => el.style.border = '2px solid rgba(255,255,255,0.2)');
-      if (event?.currentTarget) event.currentTarget.style.border = '2px solid var(--primary)';
-      const btn = document.getElementById('mpBuyCreditsBtn');
-      if (btn) btn.disabled = false;
-      showToast(`${credits} créditos x $${price}`, 'success');
-    }
-    window.purchaseCreditsMP = async function() {
-      if (!currentUser || !selectedCreditPackage) return showToast('Selecciona paquete', 'error');
-      showToast('Procesando...', 'info');
-      setTimeout(async () => {
-        await db.collection('users').doc(currentUser.uid).update({credits: firebase.firestore.FieldValue.increment(selectedCreditPackage.credits)});
-        await db.collection('transactions').add({userId: currentUser.uid, type: 'credit_purchase', credits: selectedCreditPackage.credits, amount: selectedCreditPackage.price, paymentMethod: 'mercadopago', status: 'completed', timestamp: firebase.firestore.FieldValue.serverTimestamp()});
-        showToast(`+${selectedCreditPackage.credits} créditos!`, 'success');
-        loadUserData();
-        selectedCreditPackage = null;
-        if (document.getElementById('mpBuyCreditsBtn')) document.getElementById('mpBuyCreditsBtn').disabled = true;
-      }, 2000);
-    }
-    window.purchaseProductMP = async function(product) {
-      if (!currentUser) return showToast('Inicia sesión', 'error');
-      showToast('Procesando...', 'info');
-      setTimeout(async () => {
-        await db.collection('purchases').add({userId: currentUser.uid, productId: product.id, productName: product.name, price: product.price, paymentMethod: 'mercadopago', status: 'completed', timestamp: firebase.firestore.FieldValue.serverTimestamp()});
-        showToast(`¡${product.name} comprado!`, 'success');
-      }, 2000);
-    }
-
+    // Limpiar intervalos al cerrar
+    window.addEventListener('beforeunload', () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (botActivityInterval) clearInterval(botActivityInterval);
+    });
   </script>
 </body>
-
 </html>
