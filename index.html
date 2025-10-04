@@ -7,7 +7,7 @@
   <meta name="description" content="Plataforma de subastas online con tienda virtual integrada">
   <meta name="theme-color" content="#ff3e7f">
   
-  <title>Subastas y Tienda - Demo Avanzado Completo</title>
+  <title>Subasta Argenta DEMO</title>
   
   <!-- Preconnect para optimizar carga -->
   <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -950,100 +950,184 @@
         </div>
 
         <div id="adminPanel" class="glass p-5 rounded-2xl hidden">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-lg flex items-center gap-2">
-              <i class="fas fa-user-shield text-pink-400"></i> Panel Admin
-            </h3>
-            <button id="exportCsv" class="btn btn-outline-light btn-sm">
-              <i class="fas fa-file-export"></i> Exportar
-            </button>
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="font-bold text-lg flex items-center gap-2">
+      <i class="fas fa-user-shield text-pink-400"></i> Panel Admin
+    </h3>
+    <button id="exportCsv" class="btn btn-outline-light btn-sm">
+      <i class="fas fa-file-export"></i> Exportar
+    </button>
+  </div>
+  
+  <ul class="nav nav-tabs mb-4" id="adminTabs">
+    <li class="nav-item">
+      <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
+        <i class="fas fa-plus"></i> Crear
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage">
+        <i class="fas fa-edit"></i> Gestionar
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots">
+        <i class="fas fa-robot"></i> Bots
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats">
+        <i class="fas fa-chart-bar"></i> Estadísticas
+      </button>
+    </li>
+  </ul>
+  
+  <div class="tab-content">
+    <!-- PESTAÑA CREAR -->
+    <div class="tab-pane fade show active" id="create">
+      <form id="createAuctionForm" class="space-y-4">
+        <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título" required />
+        <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
+        
+        <div id="imageUploadContainer" class="image-upload-container">
+          <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+          <div class="text-slate-400">Arrastra imagen aquí</div>
+          <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
+          <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="a_start" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio inicial" />
+          <input id="a_buyNow" type="number" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Compra directa (opcional)" />
+          <input id="a_end" type="datetime-local" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" />
+        </div>
+        
+        <button class="btn btn-primary btn-sm" type="submit">
+          <i class="fas fa-plus"></i> Crear Subasta
+        </button>
+      </form>
+    </div>
+    
+    <!-- PESTAÑA GESTIONAR -->
+    <div class="tab-pane fade" id="manage">
+      <div id="manageAuctionsList"></div>
+    </div>
+    
+    <!-- PESTAÑA BOTS -->
+    <div class="tab-pane fade" id="bots">
+      <div class="glass-light p-4 rounded-xl mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="font-medium">Sistema de Bots Automáticos</div>
+            <div class="text-sm text-slate-400">Usuarios ficticios que pujan automáticamente</div>
           </div>
-          
-          <ul class="nav nav-tabs mb-4" id="adminTabs">
-            <li class="nav-item">
-              <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
-                <i class="fas fa-plus"></i> Crear
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage">
-                <i class="fas fa-edit"></i> Gestionar
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots">
-                <i class="fas fa-robot"></i> Bots
-              </button>
-            </li>
-          </ul>
-          
-          <div class="tab-content">
-            <div class="tab-pane fade show active" id="create">
-              <form id="createAuctionForm" class="space-y-4">
-                <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título" required />
-                <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
-                
-                <div id="imageUploadContainer" class="image-upload-container">
-                  <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
-                  <div class="text-slate-400">Arrastra imagen aquí</div>
-                  <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
-                  <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input id="a_start" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio" />
-                  <input id="a_buyNow" type="number" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buy Now" />
-                  <input id="a_end" type="datetime-local" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" />
-                </div>
-                
-                <button class="btn btn-primary btn-sm" type="submit">
-                  <i class="fas fa-plus"></i> Crear
-                </button>
-              </form>
-            </div>
-            
-            <div class="tab-pane fade" id="manage">
-              <div id="manageAuctionsList"></div>
-            </div>
-            
-            <div class="tab-pane fade" id="bots">
-              <div class="glass-light p-4 rounded-xl mb-4">
-                <div class="flex items-center justify-between mb-3">
-                  <div>
-                    <div class="font-medium">Usuarios ficticios activos</div>
-                    <div class="text-sm text-slate-400">Pujan automáticamente en subastas</div>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input type="checkbox" id="botsEnabled" checked class="form-check-input">
-                    <label for="botsEnabled" class="form-check-label">Activar</label>
-                  </div>
-                </div>
-                
-                <div class="space-y-3 mb-4">
-                  <div class="bot-settings-row">
-                    <label for="botDelayGlobal">Tiempo de espera (min):</label>
-                    <input type="number" id="botDelayGlobal" min="1" max="60" value="2" />
-                    <small class="text-slate-400">Global para todos los bots</small>
-                  </div>
-                  
-                  <div class="bot-settings-row">
-                    <label for="botProbability">Probabilidad (%):</label>
-                    <input type="number" id="botProbability" min="1" max="100" value="70" />
-                    <small class="text-slate-400">Chance de ofertar</small>
-                  </div>
-                </div>
-                
-                <div class="border-t border-slate-600 pt-3">
-                  <label class="text-sm font-medium mb-2 block">Lista de Bots (con configuración individual):</label>
-                  <div id="botUsersList" class="space-y-2 max-h-80 overflow-y-auto"></div>
-                </div>
-              </div>
-              <button id="addBotUser" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-plus"></i> Agregar bot
-              </button>
-            </div>
+          <div class="form-check form-switch">
+            <input type="checkbox" id="botsEnabled" checked class="form-check-input" style="width: 60px; height: 30px; cursor: pointer;">
+            <label for="botsEnabled" class="form-check-label ms-2">
+              <span id="botsStatusText" class="badge bg-success">ACTIVO</span>
+            </label>
           </div>
         </div>
+        
+        <div class="space-y-3 mb-4">
+          <div class="bot-settings-row">
+            <label for="botDelayGlobal">Tiempo de espera (min):</label>
+            <input type="number" id="botDelayGlobal" min="1" max="60" value="2" />
+            <small class="text-slate-400">Global para todos los bots</small>
+          </div>
+          
+          <div class="bot-settings-row">
+            <label for="botProbability">Probabilidad (%):</label>
+            <input type="number" id="botProbability" min="1" max="100" value="70" />
+            <small class="text-slate-400">Chance de ofertar</small>
+          </div>
+        </div>
+        
+        <div class="border-t border-slate-600 pt-3">
+          <label class="text-sm font-medium mb-2 block">Lista de Bots (configuración individual):</label>
+          <div id="botUsersList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+        </div>
+      </div>
+      <button id="addBotUser" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-plus"></i> Agregar bot
+      </button>
+    </div>
+    <li class="nav-item">
+  <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats">
+    <i class="fas fa-chart-bar"></i> Estadísticas
+  </button>
+</li>
+<div class="tab-pane fade" id="stats">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="stats-card">
+      <div class="stats-value" id="totalAuctions">0</div>
+      <div class="stats-label">Subastas Totales</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-value" id="activeAuctions">0</div>
+      <div class="stats-label">Subastas Activas</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-value" id="totalBids">0</div>
+      <div class="stats-label">Ofertas Realizadas</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-value" id="totalOrders">0</div>
+      <div class="stats-label">Órdenes de Compra</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-value" id="totalRevenue">$0</div>
+      <div class="stats-label">Ingresos Totales</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-value" id="activeBots">0</div>
+      <div class="stats-label">Bots Activos</div>
+    </div>
+  </div>
+</div>
+    <!-- PESTAÑA ESTADÍSTICAS -->
+    <div class="tab-pane fade" id="stats">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="stats-card">
+          <div class="stats-value" id="totalAuctions">0</div>
+          <div class="stats-label">Subastas Totales</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="activeAuctions">0</div>
+          <div class="stats-label">Subastas Activas</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="totalBids">0</div>
+          <div class="stats-label">Ofertas Realizadas</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="totalProducts">0</div>
+          <div class="stats-label">Productos en Tienda</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="totalOrders">0</div>
+          <div class="stats-label">Órdenes Completadas</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="totalRevenue">$0</div>
+          <div class="stats-label">Ingresos Totales</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="activeBots">0</div>
+          <div class="stats-label">Bots Activos</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="totalUsers">2</div>
+          <div class="stats-label">Usuarios Registrados</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-value" id="avgBidAmount">$0</div>
+          <div class="stats-label">Puja Promedio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       </main>
 
       <aside class="space-y-6">
@@ -1562,7 +1646,34 @@ function renderAuctions(auctions = null) {
     return;
   }
   
-  list.innerHTML = items.map(a => `
+  list.innerHTML = items.map(a => {
+    // Obtener últimos 3 ofertantes únicos
+    const recentBidders = a.bids.slice(-5).reverse()
+      .map(userId => {
+        const user = state.botUsers.find(b => b.id === userId);
+        if (user) return { name: user.name, isBot: true };
+        if (state.currentUser && state.currentUser.id === userId) {
+          return { name: state.currentUser.name, isBot: false };
+        }
+        return { name: 'Usuario', isBot: false };
+      })
+      .filter((v, i, a) => a.findIndex(t => t.name === v.name) === i)
+      .slice(0, 3);
+    
+    const biddersHTML = recentBidders.length > 0 ? `
+      <div class="bid-history mt-2">
+        <small class="text-slate-400 me-2">Ofertantes:</small>
+        ${recentBidders.map(b => `
+          <span class="bidder-avatar" title="${b.name}">
+            ${b.name.charAt(0).toUpperCase()}
+            ${b.isBot ? '<span class="bot-badge">BOT</span>' : ''}
+          </span>
+        `).join('')}
+        ${a.bids.length > 3 ? `<span class="more-bidders">+${a.bids.length - 3}</span>` : ''}
+      </div>
+    ` : '';
+    
+    return `
     <div class="auction-card glass p-4 rounded-xl">
       <div class="flex flex-col sm:flex-row gap-4">
         <img src="${a.image}" loading="lazy" alt="${sanitizeHTML(a.title)}" class="w-full sm:w-24 h-24 object-cover rounded-lg">
@@ -1572,6 +1683,7 @@ function renderAuctions(auctions = null) {
             <span class="status-badge ${a.status === 'active' ? 'status-active' : 'status-ended'}">${a.status === 'active' ? 'Activa' : 'Finalizada'}</span>
           </div>
           <p class="text-sm text-slate-400 mt-1">${sanitizeHTML(a.description)}</p>
+          ${biddersHTML}
           <div class="flex justify-between items-center mt-4">
             <div><div class="text-xs text-slate-400">Puja actual</div><div class="price-tag">$${a.currentBid || a.startPrice}</div></div>
             <div class="countdown" data-end="${a.endTime}">${formatTimeRemaining(a.endTime)}</div>
@@ -1585,7 +1697,8 @@ function renderAuctions(auctions = null) {
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   
   document.querySelectorAll('.bid-btn').forEach(btn => {
     btn.onclick = () => openBidModal(parseInt(btn.dataset.id));
@@ -1852,43 +1965,26 @@ function checkout() {
 
 function showMercadoPagoModal() {
   if (!state.currentUser || !state.cart.length) {
-    showToast('❌ Carrito vacío', 'error');
+    showToast('Carrito vacío', 'error');
     return;
   }
   renderPaymentSummary();
-  resetPaymentModal();
+  
+  // Auto-seleccionar MercadoPago
+  selectedPaymentMethod = 'mercadopago';
+  
+  document.getElementById('paymentMethods').innerHTML = `
+    <div class="payment-method selected" data-method="mercadopago">
+      <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
+      <div class="font-semibold">MercadoPago</div>
+      <small class="text-slate-400">Tarjetas de crédito y débito</small>
+    </div>
+  `;
+  
+  document.getElementById('confirmPayment').disabled = false;
+  document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar con MercadoPago';
+  
   new bootstrap.Modal(document.getElementById('mpModal')).show();
-  setupPaymentMethods();
-}
-
-function renderPaymentSummary() {
-  const items = document.getElementById('paymentItems');
-  const total = document.getElementById('paymentTotal');
-  let totalAmount = 0;
-  
-  items.innerHTML = state.cart.map(item => {
-    const p = state.products.find(pr => pr.id === item.productId);
-    const itemTotal = item.quantity * item.price;
-    totalAmount += itemTotal;
-    return `<div class="flex justify-between py-2 border-bottom border-slate-700"><div><div class="font-medium">${sanitizeHTML(p?.title)}</div><small>${item.quantity}x $${item.price}</small></div><div>$${itemTotal}</div></div>`;
-  }).join('');
-  
-  total.textContent = `$${totalAmount}`;
-}
-
-function setupPaymentMethods() {
-  const methods = document.querySelectorAll('#mpModal .payment-method');
-  const confirmBtn = document.getElementById('confirmPayment');
-  
-  methods.forEach(m => {
-    m.onclick = function() {
-      methods.forEach(x => x.classList.remove('selected'));
-      this.classList.add('selected');
-      selectedPaymentMethod = this.dataset.method;
-      confirmBtn.disabled = false;
-      confirmBtn.innerHTML = `<i class="fas fa-lock"></i> Pagar con ${getPaymentMethodName(selectedPaymentMethod)}`;
-    };
-  });
   
   document.getElementById('confirmPayment').onclick = processCartPayment;
   document.getElementById('cancelPayment').onclick = () => {
@@ -1974,9 +2070,17 @@ function openBidModal(auctionId) {
   document.getElementById('bidAuctionId').value = auctionId;
   document.getElementById('bidAuctionInfo').innerHTML = `<div class="flex gap-3 p-3 bg-slate-800/30 rounded"><img src="${auction.image}" loading="lazy" alt="${sanitizeHTML(auction.title)}" class="w-12 h-12 object-cover rounded"><div><div class="font-semibold">${sanitizeHTML(auction.title)}</div><div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div></div></div>`;
   
-  const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
-  document.getElementById('bidAmount').value = minBid;
-  document.getElementById('bidAmount').min = minBid;
+  const currentBid = auction.currentBid || auction.startPrice;
+  document.getElementById('bidAmount').value = currentBid + 500;
+  document.getElementById('bidAmount').min = currentBid + 100;
+  
+  // Configurar botones de incremento
+  document.querySelectorAll('#bidModal .increment-btn').forEach(btn => {
+    btn.onclick = function() {
+      const increment = parseInt(this.dataset.amount);
+      document.getElementById('bidAmount').value = currentBid + increment;
+    };
+  });
   
   new bootstrap.Modal(document.getElementById('bidModal')).show();
 }
@@ -2263,8 +2367,19 @@ function updateBotSettings() {
   state.botSettings.enabled = document.getElementById('botsEnabled').checked;
   state.botSettings.delayGlobal = parseInt(document.getElementById('botDelayGlobal').value) || 2;
   state.botSettings.probability = parseInt(document.getElementById('botProbability').value) || 70;
+  
+  // Actualizar texto del badge
+  const statusText = document.getElementById('botsStatusText');
+  if (state.botSettings.enabled) {
+    statusText.textContent = 'ACTIVO';
+    statusText.className = 'badge bg-success';
+  } else {
+    statusText.textContent = 'INACTIVO';
+    statusText.className = 'badge bg-danger';
+  }
+  
   saveState();
-  showToast('⚙️ Actualizado', 'success');
+  showToast('Configuración actualizada', 'success');
 }
 
 function startBotActivity() {
@@ -2443,7 +2558,19 @@ function setupMobileMenu() {
   });
 }
 
+function renderStats() {
+  document.getElementById('totalAuctions').textContent = state.auctions.length;
+  document.getElementById('activeAuctions').textContent = state.auctions.filter(a => a.status === 'active').length;
+  document.getElementById('totalBids').textContent = state.bids.length;
+  document.getElementById('totalOrders').textContent = state.orders.length;
+  
+  const revenue = state.orders.reduce((sum, o) => sum + o.total, 0);
+  document.getElementById('totalRevenue').textContent = `$${revenue}`;
+  
+  document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
+}
 function setupListeners() {
+  document.getElementById('stats-tab').onclick = renderStats;
   document.getElementById('loginBtn').onclick = showLoginModal;
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('loginForm').onsubmit = handleLogin;
