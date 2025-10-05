@@ -2338,6 +2338,13 @@ function buyNow(auctionId) {
     state.currentUser.balance -= auction.buyNowPrice;
     auction.status = 'ended';
     auction.currentBid = auction.buyNowPrice;
+    // 🔥 BROADCAST: Notificar compra inmediata
+broadcastUpdate('buy_now', {
+  auctionId: auctionId,
+  userId: state.currentUser.id,
+  userName: state.currentUser.name,
+  price: auction.buyNowPrice
+});
     createConfetti();
     saveState();
     renderAuctions();
