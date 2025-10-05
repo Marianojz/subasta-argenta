@@ -2282,17 +2282,30 @@ async function placeBid(e) {
   showLoading('Procesando...');
   
   try {
-    state.bids.push({
-      id: state.bids.length + 1,
-      auctionId,
-      userId: state.currentUser.id,
-      amount,
-      timestamp: new Date().toISOString()
-    });
-    
-    auction.bids.push(state.currentUser.id);
-    auction.currentBid = amount;
-    auction.lastBidTime = new Date().toISOString();
+    const bidId = state.bids.length + 1;
+const timestamp = new Date().toISOString();
+
+state.bids.push({
+  id: bidId,
+  auctionId,
+  userId: state.currentUser.id,
+  amount,
+  timestamp
+});
+
+auction.bids.push(state.currentUser.id);
+auction.currentBid = amount;
+auction.lastBidTime = timestamp;
+
+// 🔥 BROADCAST: Notificar en tiempo real
+broadcastUpdate('new_bid', {
+  bidId: bidId,
+  auctionId: auctionId,
+  userId: state.currentUser.id,
+  userName: state.currentUser.name,
+  amount: amount,
+  timestamp: timestamp
+});
     
     bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
     createConfetti();
