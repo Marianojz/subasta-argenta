@@ -1021,6 +1021,11 @@
       </button>
     </li>
     <li class="nav-item">
+  <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products">
+    <i class="fas fa-box"></i> Productos
+  </button>
+</li>
+    <li class="nav-item">
       <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats">
         <i class="fas fa-chart-bar"></i> Estadísticas
       </button>
@@ -1129,6 +1134,44 @@
       <div class="stats-label">Bots Activos</div>
     </div>
   </div>
+</div>
+<!-- PESTAÑA PRODUCTOS -->
+<div class="tab-pane fade" id="products">
+  <h6 class="mb-3">Crear Producto</h6>
+  <form id="createProductForm" class="space-y-4 mb-4">
+    <input id="p_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título del producto" required />
+    <textarea id="p_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
+    
+    <div id="productImageUploadContainer" class="image-upload-container">
+      <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+      <div class="text-slate-400">Arrastra imagen aquí</div>
+      <input type="file" id="productImageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
+      <img id="productImagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <input id="p_price" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio" required />
+      <input id="p_stock" type="number" value="10" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Stock" required />
+      <select id="p_category" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+        <option value="Electrónicos">Electrónicos</option>
+        <option value="Ropa">Ropa</option>
+        <option value="Hogar">Hogar</option>
+        <option value="Deportes">Deportes</option>
+        <option value="Libros">Libros</option>
+        <option value="Juguetes">Juguetes</option>
+        <option value="Otros">Otros</option>
+      </select>
+    </div>
+    
+    <button class="btn btn-primary btn-sm" type="submit">
+      <i class="fas fa-plus"></i> Crear Producto
+    </button>
+  </form>
+  
+  <hr class="border-slate-700 my-4">
+  
+  <h6 class="mb-3">Gestionar Productos</h6>
+  <div id="manageProductsList"></div>
 </div>
     <!-- PESTAÑA ESTADÍSTICAS -->
     <div class="tab-pane fade" id="stats">
