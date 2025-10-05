@@ -2344,6 +2344,12 @@ broadcastUpdate('buy_now', {
   userId: state.currentUser.id,
   userName: state.currentUser.name,
   price: auction.buyNowPrice
+});// 🔥 BROADCAST: Notificar compra inmediata
+broadcastUpdate('buy_now', {
+  auctionId: auctionId,
+  userId: state.currentUser.id,
+  userName: state.currentUser.name,
+  price: auction.buyNowPrice
 });
     createConfetti();
     saveState();
