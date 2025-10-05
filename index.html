@@ -2879,6 +2879,131 @@ window.updateBotName = updateBotName;
 window.updateBotDelay = updateBotDelay;
 window.deleteBotUser = deleteBotUser;
 window.deleteAuction = deleteAuction;
+// ======================
+// GESTIÓN DE PRODUCTOS
+// ======================
+
+function setupProductImageUpload() {
+  const container = document.getElementById('productImageUploadContainer');
+  const input = document.getElementById('productImageUpload');
+  
+  if (!container || !input) return;
+  
+  container.onclick = () => input.click();
+  container.ondragover = (e) => { e.preventDefault(); container.classList.add('dragover'); };
+  container.ondragleave = () => container.classList.remove('dragover');
+  container.ondrop = (e) => {
+    e.preventDefault();
+    container.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleProductImageUpload(e.dataTransfer.files[0]);
+  };
+  input.onchange = (e) => {
+    if (e.target.files.length) handleProductImageUpload(e.target.files[0]);
+  };
+}
+
+async function handleProductImageUpload(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    showToast('Solo JPG/PNG/WebP', 'error');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Máximo 5MB', 'error');
+    return;
+  }
+  
+  try {
+    showLoading('Subiendo...');
+    if (!storage) throw new Error('Storage no disponible');
+    
+    const imageRef = storage.ref().child(`products/${Date.now()}_${file.name}`);
+    const snapshot = await imageRef.put(file);
+    const url = await snapshot.ref.getDownloadURL();
+    
+    const preview = document.getElementById('productImagePreview');
+    preview.src = url;
+    preview.classList.remove('hidden');
+    state.uploadedProductImageUrl = url;
+    showToast('Imagen subida', 'success');
+  } catch (error) {
+    handleError(error, 'Subida producto');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function createProduct(e) {
+  e.preventDefault();
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('Solo admins', 'error');
+    return;
+  }
+  
+  const title = document.getElementById('p_title').value;
+  const desc = document.getElementById('p_desc').value;
+  const price = parseFloat(document.getElementById('p_price').value) || 0;
+  const stock = parseInt(document.getElementById('p_stock').value) || 0;
+  const category = document.getElementById('p_category').value;
+  const image = state.uploadedProductImageUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  
+  showLoading('Creando...');
+  
+  try {
+    state.products.push({
+      id: Math.max(0, ...state.products.map(p => p.id)) + 1,
+      title,
+      description: desc,
+      image,
+      category,
+      price,
+      stock,
+      featured: false
+    });
+    
+    document.getElementById('createProductForm').reset();
+    document.getElementById('productImagePreview').classList.add('hidden');
+    state.uploadedProductImageUrl = null;
+    
+    await saveState();
+    renderProducts();
+    renderManageProducts();
+    showToast('Producto creado', 'success');
+  } catch (error) {
+    handleError(error, 'Crear producto');
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderManageProducts() {
+  const list = document.getElementById('manageProductsList');
+  if (!list) return;
+  
+  list.innerHTML = state.products.map(p => `
+    <div class="flex justify-between items-center p-3 glass-light rounded mb-2">
+      <div class="flex gap-3 items-center">
+        <img src="${p.image}" class="w-12 h-12 object-cover rounded" loading="lazy" alt="${sanitizeHTML(p.title)}">
+        <div>
+          <div class="font-medium">${sanitizeHTML(p.title)}</div>
+          <div class="text-xs text-slate-400">$${p.price} • Stock: ${p.stock}</div>
+        </div>
+      </div>
+      <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct(${p.id})">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function deleteProduct(id) {
+  if (confirm('¿Eliminar producto?')) {
+    state.products = state.products.filter(p => p.id !== id);
+    saveState();
+    renderProducts();
+    renderManageProducts();
+    showToast('Producto eliminado', 'info');
+  }
+}
 
 window.onbeforeunload = () => {
   if (countdownInterval) clearInterval(countdownInterval);
