@@ -2833,6 +2833,11 @@ function setupListeners() {
   document.getElementById('botsEnabled').onchange = updateBotSettings;
   document.getElementById('botDelayGlobal').onchange = updateBotSettings;
   document.getElementById('botProbability').onchange = updateBotSettings;
+  document.getElementById('createProductForm').onsubmit = createProduct;
+document.getElementById('products-tab').onclick = () => {
+  renderManageProducts();
+  setupProductImageUpload();
+};
   
   const filterToggle = document.querySelector('.filter-toggle');
   if (filterToggle) {
