@@ -1444,6 +1444,130 @@ let selectedPaymentMethod = null;
 let topupAmount = 0;
 let countdownInterval = null;
 let botActivityInterval = null;
+// ID único para esta sesión
+const SESSION_ID = 'session_' + Date.now() + '_' + Math.random();
+
+// ==========================================
+// SISTEMA DE SINCRONIZACIÓN EN TIEMPO REAL
+// ==========================================
+
+// Escuchar cambios de localStorage (sincronización entre pestañas)
+window.addEventListener('storage', function(e) {
+  if (e.key === 'auction_update' && e.newValue) {
+    const update = JSON.parse(e.newValue);
+    
+    // Ignorar actualizaciones de esta misma sesión
+    if (update.sessionId === SESSION_ID) return;
+    
+    handleRealtimeUpdate(update);
+  }
+});
+
+// Polling cada 3 segundos para sincronización
+setInterval(() => {
+  checkForUpdates();
+}, 3000);
+
+function handleRealtimeUpdate(update) {
+  switch(update.type) {
+    case 'new_bid':
+      handleNewBidUpdate(update.data);
+      break;
+    case 'auction_ended':
+      handleAuctionEndedUpdate(update.data);
+      break;
+    case 'buy_now':
+      handleBuyNowUpdate(update.data);
+      break;
+  }
+}
+
+function handleNewBidUpdate(data) {
+  const auction = state.auctions.find(a => a.id === data.auctionId);
+  if (!auction) return;
+  
+  // Actualizar la subasta
+  auction.currentBid = data.amount;
+  auction.lastBidTime = data.timestamp;
+  
+  // Agregar la puja si no existe
+  if (!state.bids.find(b => b.id === data.bidId)) {
+    state.bids.push({
+      id: data.bidId,
+      auctionId: data.auctionId,
+      userId: data.userId,
+      amount: data.amount,
+      timestamp: data.timestamp
+    });
+  }
+  
+  // Actualizar UI
+  renderAuctions();
+  
+  // Mostrar notificación si no es el usuario actual
+  if (data.userId !== state.currentUser?.id) {
+    showToast(`🔔 Nueva puja en "${auction.title}": $${data.amount}`, 'info');
+    highlightAuctionCard(data.auctionId);
+  }
+}
+
+function handleAuctionEndedUpdate(data) {
+  const auction = state.auctions.find(a => a.id === data.auctionId);
+  if (auction) {
+    auction.status = 'ended';
+    renderAuctions();
+    showToast(`⏱️ Subasta finalizada: "${auction.title}"`, 'warning');
+  }
+}
+
+function handleBuyNowUpdate(data) {
+  const auction = state.auctions.find(a => a.id === data.auctionId);
+  if (auction) {
+    auction.status = 'sold';
+    renderAuctions();
+    showToast(`✅ Compra inmediata en "${auction.title}"`, 'success');
+  }
+}
+
+function highlightAuctionCard(auctionId) {
+  const card = document.querySelector(`[data-auction-id="${auctionId}"]`);
+  if (card) {
+    card.classList.add('pulse-highlight');
+    setTimeout(() => card.classList.remove('pulse-highlight'), 2000);
+  }
+}
+
+function broadcastUpdate(type, data) {
+  const update = {
+    type: type,
+    data: data,
+    sessionId: SESSION_ID,
+    timestamp: new Date().toISOString()
+  };
+  
+  localStorage.setItem('auction_update', JSON.stringify(update));
+}
+
+function checkForUpdates() {
+  const saved = localStorage.getItem('subastaArgenta_backup');
+  if (saved) {
+    const savedState = JSON.parse(saved);
+    let hasChanges = false;
+    
+    savedState.auctions.forEach(savedAuction => {
+      const currentAuction = state.auctions.find(a => a.id === savedAuction.id);
+      if (currentAuction && savedAuction.currentBid !== currentAuction.currentBid) {
+        currentAuction.currentBid = savedAuction.currentBid;
+        currentAuction.lastBidTime = savedAuction.lastBidTime;
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      renderAuctions();
+    }
+  }
+}
 
 // ======================
 // UTILIDADES
