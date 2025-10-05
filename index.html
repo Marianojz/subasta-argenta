@@ -1835,7 +1835,6 @@ function renderAuctions(auctions = null) {
         ${recentBidders.map(b => `
           <span class="bidder-avatar" title="${b.name}">
             ${b.name.charAt(0).toUpperCase()}
-            ${b.isBot ? '<span class="bot-badge">BOT</span>' : ''}
           </span>
         `).join('')}
         ${a.bids.length > 3 ? `<span class="more-bidders">+${a.bids.length - 3}</span>` : ''}
