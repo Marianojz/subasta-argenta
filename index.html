@@ -2501,6 +2501,7 @@ async function createAuction(e) {
     document.getElementById('imagePreview').classList.add('hidden');
     state.imageUploaded = false;
     state.uploadedImageUrl = null;
+    uploadedProductImageUrl: null
     
     await saveState();
     renderAuctions();
@@ -2968,6 +2969,7 @@ async function createProduct(e) {
     document.getElementById('createProductForm').reset();
     document.getElementById('productImagePreview').classList.add('hidden');
     state.uploadedProductImageUrl = null;
+    uploadedProductImageUrl: null
     
     await saveState();
     renderProducts();
