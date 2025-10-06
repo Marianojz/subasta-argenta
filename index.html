@@ -1846,12 +1846,15 @@ function loadDemoData() {
 // UI Y RENDER
 // ======================
 
-function updateUI() {
+function updateUI() {const profileBtn = document.getElementById('profileBtn');
+
+if (state.currentUser) {
   const userInfo = document.getElementById('userInfo');
   const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const balance = document.getElementById('balance');
   const adminPanel = document.getElementById('adminPanel');
+  profileBtn.style.display = 'block';
   
   if (state.currentUser) {
     userInfo.textContent = `${state.currentUser.name}`;
