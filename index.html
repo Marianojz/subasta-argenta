@@ -1856,7 +1856,12 @@ function updateUI() {
     logoutBtn.style.display = 'block';
     balance.textContent = `$${state.currentUser.balance}`;
     if (state.currentUser.role === 'admin') {
-      adminPanel.classList.remove('hidden');
+  document.getElementById('openAdmin').style.display = 'block';
+  adminPanel.classList.remove('hidden');
+} else {
+  document.getElementById('openAdmin').style.display = 'none';
+  adminPanel.classList.add('hidden');
+}
     }
   } else {
     userInfo.textContent = 'No iniciado';
