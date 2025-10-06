@@ -2404,8 +2404,10 @@ function buyNow(auctionId) {
   const auction = state.auctions.find(a => a.id === auctionId);
   if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
   
-  if (state.currentUser.balance < auction.buyNowPrice) {
-    showToast('❌ Saldo insuficiente', 'error');
+  // Validar que buyNow siga siendo mayor que currentBid
+  if (auction.buyNowPrice <= auction.currentBid) {
+    showToast('❌ La puja actual superó el precio de compra directa', 'error');
+    renderAuctions(); // Actualizar vista
     return;
   }
   
