@@ -2499,6 +2499,12 @@ async function createAuction(e) {
   const desc = document.getElementById('a_desc').value;
   const start = parseFloat(document.getElementById('a_start').value) || 0;
   const buyNow = document.getElementById('a_buyNow').value ? parseFloat(document.getElementById('a_buyNow').value) : null;
+  // Validar que buyNow sea mayor que startPrice
+if (buyNow && buyNow <= start) {
+  showToast('❌ Compra directa debe ser mayor que precio inicial', 'error');
+  hideLoading();
+  return;
+}
   const image = state.uploadedImageUrl || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
   
   let endTime = document.getElementById('a_end').value;
