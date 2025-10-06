@@ -2676,7 +2676,7 @@ function startBotActivity() {
       if (!activeBots.length) return;
       if (Math.random() * 100 <= state.botSettings.probability) {
         const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
-        const bidAmount = (auction.currentBid || auction.startPrice) + state.currentIncrement + Math.floor(Math.random() * 50);
+        const bidAmount = (auction.currentBid || auction.startPrice) + 500 + (Math.floor(Math.random() * 3) * 100);
         if (bot.balance >= bidAmount) {
           state.bids.push({ id: state.bids.length + 1, auctionId: auction.id, userId: bot.id, amount: bidAmount, timestamp: new Date().toISOString() });
           auction.bids.push(bot.id);
