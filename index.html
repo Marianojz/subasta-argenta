@@ -1126,43 +1126,43 @@ header .btn:hover::after {
   
   <div class="max-w-6xl mx-auto p-4 relative z-10">
     <header class="flex items-center justify-between gap-4 mb-6 glass p-4 rounded-2xl header-glow animate-header">
-      <div class="flex items-center gap-4">
-  <div class="logo-container">
-    <img src="https://firebasestorage.googleapis.com/v0/b/subasta-argenta-474019.firebasestorage.app/o/imagenes%20utiles%2Flogo3.png?alt=media&token=bc5bab5c-0ccd-49e0-932b-2cee25a93b7d" alt="Subasta Argenta" class="logo-img-enhanced">
-    <div class="logo-ring"></div>
-  </div>
-  <div>
-    <h1 class="header-title">Subasta Argenta</h1>
-    <div class="header-subtitle">Subastas en vivo y tienda virtual</div>
-    <div class="flex flex-wrap gap-2 mt-2">
-      <span class="tech-badge"><i class="fas fa-fire"></i> Tienda</span>
-      <span class="tech-badge"><i class="fas fa-bolt"></i> Subastas</span>
-      <span class="tech-badge"><i class="fas fa-credit-card"></i> MercadoPago</span>
+  <!-- LADO IZQUIERDO: Logo + Título -->
+  <div class="flex items-center gap-4">
+    <div class="logo-container">
+      <img src="https://firebasestorage.googleapis.com/v0/b/subasta-argenta-474019.firebasestorage.app/o/imagenes%20utiles%2Flogo3.png?alt=media&token=bc5bab5c-0ccd-49e0-932b-2cee25a93b7d" alt="Subasta Argenta" class="logo-img-enhanced">
+      <div class="logo-ring"></div>
+    </div>
+    <div>
+      <h1 class="header-title">Subasta Argenta</h1>
+      <div class="header-subtitle">Subastas en vivo y tienda virtual</div>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <span class="tech-badge"><i class="fas fa-fire"></i> TIENDA</span>
+        <span class="tech-badge"><i class="fas fa-bolt"></i> SUBASTAS</span>
+        <span class="tech-badge"><i class="fas fa-credit-card"></i> MERCADOPAGO</span>
+      </div>
     </div>
   </div>
-</div>
-          
-        </div>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap">
-  <div class="relative" id="cartContainer">
-    <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
-      <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
+  
+  <!-- LADO DERECHO: Botones de usuario -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <div class="relative" id="cartContainer" style="display:none">
+      <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+        <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
+      </button>
+      <span id="cartBadge" class="cart-badge hidden">0</span>
+    </div>
+    <button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
+      <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
     </button>
-    <span id="cartBadge" class="cart-badge hidden">0</span>
+    <div id="userInfo" class="text-sm text-slate-300 hidden md:block" style="display:none"></div>
+    <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+      <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
+    </button>
+    <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
+      <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesión</span>
+    </button>
   </div>
-  <button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
-    <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
-  </button>
-  <div id="userInfo" class="text-sm text-slate-300 hidden md:block" style="display:none"></div>
-  <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
-    <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
-  </button>
-  <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
-    <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesión</span>
-  </button>
-</div>
-    </header>
+</header>
 
     <div class="grid lg:grid-cols-3 gap-6">
       <main class="lg:col-span-2 space-y-6">
