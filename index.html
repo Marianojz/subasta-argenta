@@ -1852,35 +1852,35 @@ function loadDemoData() {
 // UI Y RENDER
 // ======================
 
-function updateUI() {const profileBtn = document.getElementById('profileBtn');
-
-if (state.currentUser) {
+function updateUI() {
   const userInfo = document.getElementById('userInfo');
   const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
+  const profileBtn = document.getElementById('profileBtn');
   const balance = document.getElementById('balance');
   const adminPanel = document.getElementById('adminPanel');
-  profileBtn.style.display = 'block';
   
   if (state.currentUser) {
     userInfo.textContent = `${state.currentUser.name}`;
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'block';
+    profileBtn.style.display = 'block';
     balance.textContent = `$${state.currentUser.balance}`;
+    
     if (state.currentUser.role === 'admin') {
-  document.getElementById('openAdmin').style.display = 'block';
-  adminPanel.classList.remove('hidden');
-} else {
-  document.getElementById('openAdmin').style.display = 'none';
-  adminPanel.classList.add('hidden');
-}
+      document.getElementById('openAdmin').style.display = 'block';
+      adminPanel.classList.remove('hidden');
+    } else {
+      document.getElementById('openAdmin').style.display = 'none';
+      adminPanel.classList.add('hidden');
     }
-  } else {profileBtn.style.display = 'none';
-}
+  } else {
     userInfo.textContent = 'No iniciado';
     loginBtn.style.display = 'block';
     logoutBtn.style.display = 'none';
+    profileBtn.style.display = 'none';
     balance.textContent = '$0';
+    document.getElementById('openAdmin').style.display = 'none';
     adminPanel.classList.add('hidden');
   }
   updateCategoryFilter();
