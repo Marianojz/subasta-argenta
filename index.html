@@ -1869,7 +1869,8 @@ if (state.currentUser) {
   adminPanel.classList.add('hidden');
 }
     }
-  } else {
+  } else {profileBtn.style.display = 'none';
+}
     userInfo.textContent = 'No iniciado';
     loginBtn.style.display = 'block';
     logoutBtn.style.display = 'none';
