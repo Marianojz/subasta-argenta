@@ -2418,6 +2418,7 @@ function openBidModal(auctionId) {
   const currentBid = auction.currentBid || auction.startPrice;
 document.getElementById('bidAmount').value = currentBid + 500;
 document.getElementById('bidAmount').min = currentBid + 500;
+document.getElementById('bidAmount').step = 500;
   
   // Configurar botones de incremento
   document.querySelectorAll('#bidModal .increment-btn').forEach(btn => {
