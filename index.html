@@ -2954,6 +2954,21 @@ function setupListeners() {
   document.getElementById('loginBtn').onclick = showLoginModal;
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('loginForm').onsubmit = handleLogin;
+  document.getElementById('profileBtn').onclick = () => {
+  if (!state.currentUser) return;
+  document.getElementById('profileName').value = state.currentUser.name || '';
+  document.getElementById('profileEmail').value = state.currentUser.email || '';
+  new bootstrap.Modal(document.getElementById('profileModal')).show();
+};
+
+document.getElementById('profileForm').onsubmit = (e) => {
+  e.preventDefault();
+  state.currentUser.name = document.getElementById('profileName').value;
+  saveState();
+  updateUI();
+  bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+  showToast('Perfil actualizado', 'success');
+};
   document.getElementById('cartBtn').onclick = showCartModal;
   document.getElementById('checkoutBtn').onclick = checkout;
   document.getElementById('mercadopagoBtn').onclick = showMercadoPagoModal;
