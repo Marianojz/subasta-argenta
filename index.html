@@ -1957,6 +1957,60 @@ function renderAuctions(auctions = null) {
   startCountdown();
 }
 
+function renderFeaturedAuction() {
+  const container = document.getElementById('featuredAuction');
+  if (!container) return;
+  
+  const activeAuctions = state.auctions.filter(a => a.status === 'active');
+  if (!activeAuctions.length) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  activeAuctions.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+  const featured = activeAuctions[0];
+  
+  container.innerHTML = `
+    <div class="glass-light p-4 rounded-2xl border-2 border-pink-500/30">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-lg">🔥 Subasta Destacada</h3>
+        <a href="#" id="viewAllAuctions" class="text-sm text-pink-400 hover:text-pink-300">
+          Ver todas las subastas →
+        </a>
+      </div>
+      <div class="flex flex-col md:flex-row gap-4">
+        <img src="${featured.image}" class="w-full md:w-48 h-48 object-cover rounded-xl">
+        <div class="flex-grow">
+          <h4 class="font-bold text-xl mb-2">${featured.title}</h4>
+          <div class="grid grid-cols-2 gap-4 my-4">
+            <div class="glass-light p-3 rounded-xl">
+              <div class="text-xs text-slate-400">Puja actual</div>
+              <div class="price-tag text-2xl">$${featured.currentBid || featured.startPrice}</div>
+            </div>
+            <div class="glass-light p-3 rounded-xl">
+              <div class="text-xs text-slate-400">Termina en</div>
+              <div class="text-xl font-bold">${formatTimeRemaining(featured.endTime)}</div>
+            </div>
+          </div>
+          <button class="bid-btn btn btn-primary" data-id="${featured.id}">
+            <i class="fas fa-gavel"></i> Ofertar Ahora
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  const bidBtn = container.querySelector('.bid-btn');
+  if (bidBtn) bidBtn.onclick = () => openBidModal(parseInt(bidBtn.dataset.id));
+  
+  const viewAllLink = container.querySelector('#viewAllAuctions');
+  if (viewAllLink) {
+    viewAllLink.onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('auctions-tab').click();
+    };
+  }
+}
 function renderProducts(products = null) {
   const list = document.getElementById('productsList');
   const items = products || state.products;
