@@ -2762,7 +2762,11 @@ function renderBotUsers() {
         <label>Delay (min):</label>
         <input type="number" min="1" max="60" value="${bot.delay || state.botSettings.delayGlobal}" onchange="updateBotDelay(${bot.id}, parseInt(this.value))">
       </div>
-      <div class="text-xs text-slate-400 mt-2">Saldo: $${Math.round(bot.balance)}</div>
+      <div class="bot-settings-row">
+  <label>Saldo ($):</label>
+  <input type="number" min="0" step="100" value="${Math.round(bot.balance)}" onchange="updateBotBalance(${bot.id}, parseFloat(this.value))">
+  <small class="text-slate-400">Balance disponible</small>
+</div>
     </div>
   `).join('');
 }
