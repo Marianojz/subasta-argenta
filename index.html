@@ -2451,8 +2451,16 @@ async function placeBid(e) {
   if (!auction) return;
   
   const minBid = (auction.currentBid || auction.startPrice) + 500;
-if (amount < minBid) {
-  showToast(`❌ Mínimo: $${minBid}`, 'error');
+const roundedMin = Math.ceil(minBid / 500) * 500;
+
+// Validar que sea múltiplo de 500
+if (amount % 500 !== 0) {
+  showToast('❌ Solo se permiten incrementos de $500', 'error');
+  return;
+}
+
+if (amount < roundedMin) {
+  showToast(`❌ Mínimo: $${roundedMin}`, 'error');
   return;
 }
   
