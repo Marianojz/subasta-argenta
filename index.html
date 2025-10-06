@@ -2803,7 +2803,8 @@ function toggleBotUser(id, active) {
   if (bot) {
     bot.active = active;
     saveState();
-    showToast(`${bot.name} ${active ? '✅' : '⏸️'}`, 'info');
+    renderBotUsers(); // Actualizar vista para mostrar cambio visual
+    showToast(`${bot.name} ${active ? '✅ Activado' : '⏸️ Desactivado'}`, 'info');
   }
 }
 
