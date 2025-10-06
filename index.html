@@ -2801,6 +2801,14 @@ function updateBotDelay(id, delay) {
     showToast(`⏱️ Delay: ${bot.delay}min`, 'info');
   }
 }
+function updateBotBalance(id, balance) {
+  const bot = state.botUsers.find(b => b.id === id);
+  if (bot && balance >= 0) {
+    bot.balance = balance;
+    saveState();
+    showToast(`💰 Saldo actualizado: $${balance}`, 'info');
+  }
+}
 
 function toggleBotUser(id, active) {
   const bot = state.botUsers.find(b => b.id === id);
