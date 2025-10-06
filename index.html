@@ -2012,7 +2012,10 @@ function renderFeaturedAuction() {
   }
 }
 function renderProducts(products = null) {
+  renderFeaturedAuction(); // AGREGAR ESTA LÍNEA
+  
   const list = document.getElementById('productsList');
+  // ... resto del código
   const items = products || state.products;
   
   if (!items.length) {
