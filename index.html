@@ -2129,32 +2129,41 @@ function updateUI() {
   const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const profileBtn = document.getElementById('profileBtn');
+  const cartBtn = document.getElementById('cartBtn');
   const balance = document.getElementById('balance');
   const adminPanel = document.getElementById('adminPanel');
+  const openAdmin = document.getElementById('openAdmin');
   
   if (state.currentUser) {
-    userInfo.textContent = `${state.currentUser.name}`;
+    // USUARIO LOGUEADO - Mostrar todo
+    userInfo.textContent = state.currentUser.name;
+    userInfo.style.display = 'block';
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'block';
     profileBtn.style.display = 'block';
+    cartBtn.parentElement.style.display = 'block'; // Mostrar contenedor del carrito
     balance.textContent = `$${state.currentUser.balance}`;
     
+    // Panel admin solo si es admin
     if (state.currentUser.role === 'admin') {
-      document.getElementById('openAdmin').style.display = 'block';
-      adminPanel.classList.remove('hidden');
+      openAdmin.style.display = 'block';
     } else {
-      document.getElementById('openAdmin').style.display = 'none';
+      openAdmin.style.display = 'none';
       adminPanel.classList.add('hidden');
     }
   } else {
-    userInfo.textContent = 'No iniciado';
+    // SIN SESIÓN - Solo mostrar login
+    userInfo.textContent = '';
+    userInfo.style.display = 'none';
     loginBtn.style.display = 'block';
     logoutBtn.style.display = 'none';
     profileBtn.style.display = 'none';
+    cartBtn.parentElement.style.display = 'none'; // Ocultar contenedor del carrito
     balance.textContent = '$0';
-    document.getElementById('openAdmin').style.display = 'none';
+    openAdmin.style.display = 'none';
     adminPanel.classList.add('hidden');
   }
+  
   updateCategoryFilter();
   updateCartUI();
 }
