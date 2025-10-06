@@ -829,6 +829,60 @@ select option:hover {
       border-radius: 8px;
       margin-bottom: 0.5rem;
     }
+    .bot-toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bot-toggle-slider {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  background: rgba(255, 56, 96, 0.3);
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 56, 96, 0.5);
+}
+
+.bot-toggle-slider.active {
+  background: rgba(0, 255, 136, 0.3);
+  border-color: rgba(0, 255, 136, 0.8);
+}
+
+.bot-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #ff3860;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.bot-toggle-slider.active .bot-toggle-knob {
+  left: 26px;
+  background: #00ff88;
+}
+
+.bot-toggle-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 60px;
+  color: var(--text-light);
+}
+
+.bot-toggle-switch:hover .bot-toggle-slider {
+  box-shadow: 0 0 10px rgba(255, 62, 127, 0.5);
+}
+
+.bot-toggle-switch:active .bot-toggle-slider {
+  transform: scale(0.95);
+}
     
     .bot-settings-row label {
       font-size: 0.875rem;
