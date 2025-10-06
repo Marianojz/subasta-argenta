@@ -2695,7 +2695,12 @@ function renderBotUsers() {
       <div class="flex justify-between items-center mb-2">
         <input type="text" class="bot-name-edit flex-grow mr-2" value="${sanitizeHTML(bot.name)}" onchange="updateBotName(${bot.id}, this.value)">
         <div class="flex gap-2 items-center">
-          <div class="form-check form-switch"><input type="checkbox" class="form-check-input" ${bot.active ? 'checked' : ''} onchange="toggleBotUser(${bot.id}, this.checked)"></div>
+          <div class="bot-toggle-switch" onclick="toggleBotUser(${bot.id}, ${!bot.active})">
+  <div class="bot-toggle-slider ${bot.active ? 'active' : ''}">
+    <div class="bot-toggle-knob"></div>
+  </div>
+  <span class="bot-toggle-label">${bot.active ? 'ACTIVO' : 'INACTIVO'}</span>
+</div>
           <button class="btn btn-outline-danger btn-sm" onclick="deleteBotUser(${bot.id})"><i class="fas fa-trash"></i></button>
         </div>
       </div>
