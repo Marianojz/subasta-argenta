@@ -894,10 +894,15 @@ select option:hover {
       </div>
       <div class="flex items-center gap-2">
         <div class="relative">
-          <button id="cartBtn" </div>
-<button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
-  <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
-</button> class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+          <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+            <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
+          </button>
+          <span id="cartBadge" class="cart-badge hidden">0</span>
+        </div>
+        <button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
+          <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
+        </button>
+        <div id="userInfo" class="text-sm text-slate-300 hidden md:block">No has iniciado sesión</div>
             <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
           </button>
           <span id="cartBadge" class="cart-badge hidden">0</span>
