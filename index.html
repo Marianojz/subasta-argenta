@@ -2416,8 +2416,13 @@ function openBidModal(auctionId) {
   document.getElementById('bidAuctionInfo').innerHTML = `<div class="flex gap-3 p-3 bg-slate-800/30 rounded"><img src="${auction.image}" loading="lazy" alt="${sanitizeHTML(auction.title)}" class="w-12 h-12 object-cover rounded"><div><div class="font-semibold">${sanitizeHTML(auction.title)}</div><div class="text-sm text-slate-400">Actual: $${auction.currentBid || auction.startPrice}</div></div></div>`;
   
   const currentBid = auction.currentBid || auction.startPrice;
-document.getElementById('bidAmount').value = currentBid + 500;
-document.getElementById('bidAmount').min = currentBid + 500;
+const minBid = currentBid + 500;
+const roundedMin = Math.ceil(minBid / 500) * 500; // Redondea al múltiplo de 500 más cercano
+
+const bidInput = document.getElementById('bidAmount');
+bidInput.value = roundedMin;
+bidInput.min = roundedMin;
+bidInput.step = 500;
 document.getElementById('bidAmount').step = 500;
   
   // Configurar botones de incremento
