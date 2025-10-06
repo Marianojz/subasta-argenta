@@ -2341,11 +2341,11 @@ async function placeBid(e) {
   const auction = state.auctions.find(a => a.id === auctionId);
   if (!auction) return;
   
-  const minBid = (auction.currentBid || auction.startPrice) + state.currentIncrement;
-  if (amount < minBid) {
-    showToast(`❌ Mínimo: $${minBid}`, 'error');
-    return;
-  }
+  const minBid = (auction.currentBid || auction.startPrice) + 500;
+if (amount < minBid) {
+  showToast(`❌ Mínimo: $${minBid}`, 'error');
+  return;
+}
   
   if (state.currentUser.balance < amount) {
     showToast('❌ Saldo insuficiente', 'error');
