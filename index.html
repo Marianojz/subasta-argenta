@@ -3434,70 +3434,107 @@ function renderStats() {
   document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
 }
 function setupListeners() {
-  document.getElementById('stats-tab').onclick = renderStats;
-  document.getElementById('loginBtn').onclick = showLoginModal;
-  document.getElementById('logoutBtn').onclick = logout;
-  document.getElementById('loginForm').onsubmit = handleLogin;
-  document.getElementById('registerForm').onsubmit = handleRegister;
-  document.getElementById('switchToRegister').onclick = (e) => {
+  // Helper para asignar eventos de forma segura
+  const safeAssign = (id, event, handler) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element[event] = handler;
+    } else {
+      console.warn(`⚠️ Elemento no encontrado: ${id}`);
+    }
+  };
+  
+  // Auth y perfil
+  safeAssign('stats-tab', 'onclick', renderStats);
+  safeAssign('loginBtn', 'onclick', showLoginModal);
+  safeAssign('logoutBtn', 'onclick', logout);
+  safeAssign('loginForm', 'onsubmit', handleLogin);
+  
+  // Registro (nuevos)
+  safeAssign('registerForm', 'onsubmit', handleRegister);
+  safeAssign('switchToRegister', 'onclick', (e) => {
     e.preventDefault();
     switchToRegister();
-  };
-  document.getElementById('switchToLogin').onclick = (e) => {
+  });
+  safeAssign('switchToLogin', 'onclick', (e) => {
     e.preventDefault();
     switchToLogin();
-  };
-  document.getElementById('profileBtn').onclick = () => {
-  if (!state.currentUser) return;
-  document.getElementById('profileName').value = state.currentUser.name || '';
-  document.getElementById('profileEmail').value = state.currentUser.email || '';
-  new bootstrap.Modal(document.getElementById('profileModal')).show();
-};
-
-document.getElementById('profileForm').onsubmit = (e) => {
-  e.preventDefault();
-  state.currentUser.name = document.getElementById('profileName').value;
-  saveState();
-  updateUI();
-  bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
-  showToast('Perfil actualizado', 'success');
-};
-  document.getElementById('cartBtn').onclick = showCartModal;
-  document.getElementById('checkoutBtn').onclick = checkout;
-  document.getElementById('mercadopagoBtn').onclick = showMercadoPagoModal;
-  document.getElementById('btnCreateDemo').onclick = createDemoData;
-  document.getElementById('openAdmin').onclick = toggleAdminPanel;
-  document.getElementById('topup').onclick = () => showToast('Función en desarrollo', 'info');
-  document.getElementById('addBotUser').onclick = addBotUser;
-  document.getElementById('createAuctionForm').onsubmit = createAuction;
-  document.getElementById('bidForm').onsubmit = placeBid;
-  document.getElementById('search').oninput = debounce(filterAuctions, 300);
-  document.getElementById('sortBy').onchange = filterAuctions;
-  document.getElementById('filterState').onchange = filterAuctions;
-  document.getElementById('searchProducts').oninput = debounce(filterProducts, 300);
-  document.getElementById('filterProductCategory').onchange = filterProducts;
-  document.getElementById('sortProducts').onchange = filterProducts;
-  document.getElementById('exportCsv').onclick = exportToCsv;
-  document.getElementById('manage-tab').onclick = renderManageAuctions;
-  document.getElementById('bots-tab').onclick = renderBotUsers;
-  document.getElementById('botsEnabled').onchange = updateBotSettings;
-  document.getElementById('botDelayGlobal').onchange = updateBotSettings;
-  document.getElementById('botProbability').onchange = updateBotSettings;
-  document.getElementById('createProductForm').onsubmit = createProduct;
-document.getElementById('products-tab').onclick = () => {
-  renderManageProducts();
-  setupProductImageUpload();
-};
+  });
   
+  // Perfil
+  safeAssign('profileBtn', 'onclick', () => {
+    if (!state.currentUser) return;
+    const nameInput = document.getElementById('profileName');
+    const emailInput = document.getElementById('profileEmail');
+    if (nameInput) nameInput.value = state.currentUser.name || '';
+    if (emailInput) emailInput.value = state.currentUser.email || '';
+    new bootstrap.Modal(document.getElementById('profileModal')).show();
+  });
+
+  safeAssign('profileForm', 'onsubmit', (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('profileName');
+    if (nameInput && state.currentUser) {
+      state.currentUser.name = nameInput.value;
+      saveState();
+      updateUI();
+      bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+      showToast('Perfil actualizado', 'success');
+    }
+  });
+  
+  // Carrito y pagos
+  safeAssign('cartBtn', 'onclick', showCartModal);
+  safeAssign('checkoutBtn', 'onclick', checkout);
+  safeAssign('mercadopagoBtn', 'onclick', showMercadoPagoModal);
+  
+  // Admin
+  safeAssign('btnCreateDemo', 'onclick', createDemoData);
+  safeAssign('openAdmin', 'onclick', toggleAdminPanel);
+  safeAssign('topup', 'onclick', () => showToast('Función en desarrollo', 'info'));
+  safeAssign('addBotUser', 'onclick', addBotUser);
+  safeAssign('exportCsv', 'onclick', exportToCsv);
+  
+  // Formularios
+  safeAssign('createAuctionForm', 'onsubmit', createAuction);
+  safeAssign('bidForm', 'onsubmit', placeBid);
+  safeAssign('createProductForm', 'onsubmit', createProduct);
+  
+  // Filtros y búsqueda
+  safeAssign('search', 'oninput', debounce(filterAuctions, 300));
+  safeAssign('sortBy', 'onchange', filterAuctions);
+  safeAssign('filterState', 'onchange', filterAuctions);
+  safeAssign('searchProducts', 'oninput', debounce(filterProducts, 300));
+  safeAssign('filterProductCategory', 'onchange', filterProductCategory);
+  safeAssign('sortProducts', 'onchange', filterProducts);
+  
+  // Tabs
+  safeAssign('manage-tab', 'onclick', renderManageAuctions);
+  safeAssign('bots-tab', 'onclick', renderBotUsers);
+  safeAssign('products-tab', 'onclick', () => {
+    renderManageProducts();
+    setupProductImageUpload();
+  });
+  
+  // Configuración de bots
+  safeAssign('botsEnabled', 'onchange', updateBotSettings);
+  safeAssign('botDelayGlobal', 'onchange', updateBotSettings);
+  safeAssign('botProbability', 'onchange', updateBotSettings);
+  
+  // Filtros móviles
   const filterToggle = document.querySelector('.filter-toggle');
   if (filterToggle) {
     filterToggle.onclick = function() {
       const content = document.querySelector('.filter-content');
       const icon = this.querySelector('.fa-chevron-down');
-      content.classList.toggle('active');
-      icon.classList.toggle('fa-rotate-180');
+      if (content && icon) {
+        content.classList.toggle('active');
+        icon.classList.toggle('fa-rotate-180');
+      }
     };
   }
+  
+  console.log('✅ Listeners configurados');
 }
 
 // ======================
