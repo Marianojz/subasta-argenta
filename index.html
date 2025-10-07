@@ -1859,8 +1859,8 @@ function handleNewBidUpdate(data) {
   // Actualizar UI
   renderAuctions();
   
-  // Mostrar notificación si no es el usuario actual
-  if (data.userId !== state.currentUser?.id) {
+  // Mostrar notificación SOLO A ADMINS si no es el usuario actual
+  if (data.userId !== state.currentUser?.id && state.currentUser?.role === 'admin') {
     showToast(`🔔 Nueva puja en "${auction.title}": $${data.amount}`, 'info');
     highlightAuctionCard(data.auctionId);
   }
@@ -3076,8 +3076,12 @@ function startBotActivity() {
   auction.lastBidTime = new Date().toISOString();
   saveState();
   renderAuctions();
-  renderBotUsers(); // Actualizar vista de bots para mostrar nuevo saldo
-  showToast(`🤖 ${bot.name} pujó $${bidAmount} (Saldo restante: $${Math.round(bot.balance)})`, 'info');
+  
+  // Mostrar notificación SOLO A ADMINS
+  if (state.currentUser?.role === 'admin') {
+    renderBotUsers(); // Actualizar vista de bots para mostrar nuevo saldo
+    showToast(`🤖 ${bot.name} pujó $${bidAmount} (Saldo restante: $${Math.round(bot.balance)})`, 'info');
+  }
 }
       }
     });
