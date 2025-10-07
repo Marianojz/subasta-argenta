@@ -2179,6 +2179,8 @@ function getPaymentMethodName(method) {
 // FIREBASE
 // ======================
 
+let realtimeListener = null; // Variable global para el listener
+
 async function loadState() {
   try {
     if (db) {
@@ -2194,7 +2196,10 @@ async function loadState() {
           botUsers: data.botUsers || [],
           botSettings: data.botSettings || state.botSettings
         });
-        console.log("✅ Datos de Firebase");
+        console.log("✅ Datos de Firebase cargados");
+        
+        // Iniciar escucha en tiempo real
+        startRealtimeListener();
         return;
       }
     }
@@ -2208,6 +2213,64 @@ async function loadState() {
     console.log("✅ Datos del backup");
   } else {
     loadDemoData();
+  }
+}
+
+function startRealtimeListener() {
+  if (!db || realtimeListener) return;
+  
+  console.log("🔴 Iniciando escucha en tiempo real...");
+  
+  // Escuchar cambios en tiempo real en Firestore
+  realtimeListener = db.collection('appState').doc('mainState')
+    .onSnapshot((doc) => {
+      if (!doc.exists) return;
+      
+      const data = doc.data();
+      const updatedAuctions = data.auctions || [];
+      
+      // Verificar si hay cambios en las subastas
+      let hasChanges = false;
+      updatedAuctions.forEach(updatedAuction => {
+        const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
+        if (currentAuction) {
+          // Detectar cambios en puja o estado
+          if (currentAuction.currentBid !== updatedAuction.currentBid || 
+              currentAuction.status !== updatedAuction.status) {
+            hasChanges = true;
+            
+            // Actualizar la subasta
+            Object.assign(currentAuction, updatedAuction);
+            
+            // Animación visual de actualización
+            highlightAuctionCard(updatedAuction.id);
+            
+            // Notificación solo para admins
+            if (state.currentUser?.role === 'admin' && currentAuction.currentBid !== updatedAuction.currentBid) {
+              showToast(`🔴 EN VIVO: Nueva puja $${updatedAuction.currentBid}`, 'info');
+            }
+          }
+        }
+      });
+      
+      // Actualizar estado completo si hay cambios
+      if (hasChanges) {
+        state.auctions = updatedAuctions;
+        state.bids = data.bids || [];
+        renderAuctions();
+        renderFeaturedAuction();
+        console.log("🔴 Actualización en tiempo real aplicada");
+      }
+    }, (error) => {
+      console.error("Error en listener:", error);
+    });
+}
+
+function stopRealtimeListener() {
+  if (realtimeListener) {
+    realtimeListener();
+    realtimeListener = null;
+    console.log("⏸️ Listener detenido");
   }
 }
 
