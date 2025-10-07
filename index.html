@@ -2217,85 +2217,102 @@ async function loadState() {
 }
 
 function startRealtimeListener() {
-  if (!db || realtimeListener) return;
+  if (!db) {
+    console.warn("⚠️ Firestore no disponible, usando polling local");
+    startLocalPolling();
+    return;
+  }
+  
+  if (realtimeListener) {
+    console.log("⚠️ Listener ya activo");
+    return;
+  }
   
   console.log("🔴 Iniciando escucha en tiempo real...");
   
-  // Escuchar cambios en tiempo real en Firestore
-  realtimeListener = db.collection('appState').doc('mainState')
-    .onSnapshot((doc) => {
-      if (!doc.exists) return;
-      
-      const data = doc.data();
-      const updatedAuctions = data.auctions || [];
-      
-      // Verificar si hay cambios en las subastas
-      let hasChanges = false;
-      updatedAuctions.forEach(updatedAuction => {
-        const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
-        if (currentAuction) {
-          // Detectar cambios en puja o estado
-          if (currentAuction.currentBid !== updatedAuction.currentBid || 
-              currentAuction.status !== updatedAuction.status) {
-            hasChanges = true;
-            
-            // Actualizar la subasta
-            Object.assign(currentAuction, updatedAuction);
-            
-            // Animación visual de actualización
-            highlightAuctionCard(updatedAuction.id);
-            
-            // Notificación solo para admins
-            if (state.currentUser?.role === 'admin' && currentAuction.currentBid !== updatedAuction.currentBid) {
-              showToast(`🔴 EN VIVO: Nueva puja $${updatedAuction.currentBid}`, 'info');
+  try {
+    // Escuchar cambios en tiempo real en Firestore
+    realtimeListener = db.collection('appState').doc('mainState')
+      .onSnapshot({
+        includeMetadataChanges: false
+      }, (doc) => {
+        if (!doc.exists) {
+          console.warn("⚠️ Documento no existe en Firestore");
+          return;
+        }
+        
+        const data = doc.data();
+        const updatedAuctions = data.auctions || [];
+        
+        // Verificar si hay cambios en las subastas
+        let hasChanges = false;
+        let featuredNeedsUpdate = false;
+        
+        updatedAuctions.forEach(updatedAuction => {
+          const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
+          if (currentAuction) {
+            // Detectar cambios en puja o estado
+            if (currentAuction.currentBid !== updatedAuction.currentBid || 
+                currentAuction.status !== updatedAuction.status ||
+                currentAuction.lastBidTime !== updatedAuction.lastBidTime) {
+              hasChanges = true;
+              
+              // Verificar si la subasta que cambió es activa
+              if (updatedAuction.status === 'active') {
+                featuredNeedsUpdate = true;
+              }
+              
+              // Actualizar la subasta
+              Object.assign(currentAuction, updatedAuction);
+              
+              // Animación visual de actualización
+              highlightAuctionCard(updatedAuction.id);
+              
+              // Notificación solo para admins
+              if (state.currentUser?.role === 'admin' && currentAuction.currentBid !== updatedAuction.currentBid) {
+                showToast(`🔴 EN VIVO: Nueva puja $${updatedAuction.currentBid}`, 'info');
+              }
             }
           }
+        });
+        
+        // Actualizar estado completo si hay cambios
+        if (hasChanges) {
+          state.auctions = updatedAuctions;
+          state.bids = data.bids || [];
+          
+          // Renderizar vistas
+          renderAuctions();
+          renderFeaturedAuction();
+          
+          console.log("🔴 Actualización en tiempo real aplicada");
+          
+          // Animar tarjeta destacada si cambió
+          if (featuredNeedsUpdate) {
+            setTimeout(() => {
+              const featuredCard = document.querySelector('#featuredAuction .glass-light');
+              if (featuredCard) {
+                featuredCard.classList.add('pulse-highlight');
+                setTimeout(() => featuredCard.classList.remove('pulse-highlight'), 2000);
+              }
+            }, 100);
+          }
+        }
+      }, (error) => {
+        console.error("❌ Error en listener:", error);
+        
+        // Si falla, usar polling local como fallback
+        if (error.code === 'permission-denied' || error.code === 'unavailable') {
+          showToast('⚠️ Modo offline - actualizaciones limitadas', 'warning');
+          stopRealtimeListener();
+          startLocalPolling();
         }
       });
       
-      // Actualizar estado completo si hay cambios
-      if (hasChanges) {
-        state.auctions = updatedAuctions;
-        state.bids = data.bids || [];
-        renderAuctions();
-        renderFeaturedAuction();
-        console.log("🔴 Actualización en tiempo real aplicada");
-      }
-    }, (error) => {
-      console.error("Error en listener:", error);
-    });
-}
-
-function stopRealtimeListener() {
-  if (realtimeListener) {
-    realtimeListener();
-    realtimeListener = null;
-    console.log("⏸️ Listener detenido");
-  }
-}
-
-async function saveState() {
-  // Guardar en localStorage como backup
-  localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
-  
-  // Guardar en Firestore si hay usuario y db disponible
-  if (state.currentUser && db) {
-    try {
-      await db.collection('appState').doc('mainState').set({
-        auctions: state.auctions,
-        products: state.products,
-        bids: state.bids,
-        cart: state.cart,
-        orders: state.orders,
-        botUsers: state.botUsers,
-        botSettings: state.botSettings,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      console.log("💾 Estado guardado en Firestore");
-    } catch (e) {
-      console.error("❌ Error guardando en Firestore:", e);
-      showToast('Error al sincronizar', 'error');
-    }
+    console.log("✅ Listener de Firestore activo");
+  } catch (error) {
+    console.error("❌ Error iniciando listener:", error);
+    startLocalPolling();
   }
 }
 
