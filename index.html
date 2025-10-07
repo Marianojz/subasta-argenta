@@ -3416,6 +3416,15 @@ function setupListeners() {
   document.getElementById('loginBtn').onclick = showLoginModal;
   document.getElementById('logoutBtn').onclick = logout;
   document.getElementById('loginForm').onsubmit = handleLogin;
+  document.getElementById('registerForm').onsubmit = handleRegister;
+  document.getElementById('switchToRegister').onclick = (e) => {
+    e.preventDefault();
+    switchToRegister();
+  };
+  document.getElementById('switchToLogin').onclick = (e) => {
+    e.preventDefault();
+    switchToLogin();
+  };
   document.getElementById('profileBtn').onclick = () => {
   if (!state.currentUser) return;
   document.getElementById('profileName').value = state.currentUser.name || '';
