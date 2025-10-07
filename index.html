@@ -1177,9 +1177,17 @@ header .btn:hover::after {
       <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
     </button>
     <div id="userInfo" class="text-sm text-slate-300 hidden md:block" style="display:none"></div>
-    <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
-      <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
-    </button>
+    
+    <!-- Botones de autenticación (solo visibles cuando NO hay sesión) -->
+    <div id="authButtons" class="flex flex-col gap-2">
+      <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 justify-center glow">
+        <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
+      </button>
+      <button id="registerBtn" class="btn btn-primary btn-sm flex items-center gap-1 justify-center">
+        <i class="fas fa-user-plus"></i> <span class="hidden md:inline">Regístrate</span>
+      </button>
+    </div>
+    
     <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
       <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesión</span>
     </button>
