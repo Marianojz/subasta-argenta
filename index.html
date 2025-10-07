@@ -3825,6 +3825,26 @@ function setupListeners() {
     renderManageProducts();
     setupProductImageUpload();
   });
+  // Actualizar subasta destacada al cambiar a pestaña de tienda
+  safeAssign('store-tab', 'onclick', () => {
+    setTimeout(() => {
+      renderFeaturedAuction();
+      renderProducts();
+    }, 100);
+  });
+  // Actualizar subasta destacada al cambiar a pestaña de tienda
+  safeAssign('store-tab', 'onclick', () => {
+    setTimeout(() => {
+      renderFeaturedAuction();
+      renderProducts();
+    }, 100);
+  });
+  
+  safeAssign('auctions-tab', 'onclick', () => {
+    setTimeout(() => {
+      renderAuctions();
+    }, 100);
+  });
   
   // Configuración de bots
   safeAssign('botsEnabled', 'onchange', updateBotSettings);
