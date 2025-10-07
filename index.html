@@ -2202,7 +2202,7 @@ function loadDemoData() {
 
 function updateUI() {
   const userInfo = document.getElementById('userInfo');
-  const loginBtn = document.getElementById('loginBtn');
+  const authButtons = document.getElementById('authButtons');
   const logoutBtn = document.getElementById('logoutBtn');
   const profileBtn = document.getElementById('profileBtn');
   const cartBtn = document.getElementById('cartBtn');
@@ -2211,13 +2211,13 @@ function updateUI() {
   const openAdmin = document.getElementById('openAdmin');
   
   if (state.currentUser) {
-    // USUARIO LOGUEADO - Mostrar todo
+    // USUARIO LOGUEADO
     userInfo.textContent = state.currentUser.name;
     userInfo.style.display = 'block';
-    loginBtn.style.display = 'none';
+    authButtons.style.display = 'none'; // Ocultar botones de login y registro
     logoutBtn.style.display = 'block';
     profileBtn.style.display = 'block';
-    cartBtn.parentElement.style.display = 'block'; // Mostrar contenedor del carrito
+    cartBtn.parentElement.style.display = 'block';
     balance.textContent = `$${state.currentUser.balance}`;
     
     // Panel admin solo si es admin
@@ -2228,13 +2228,13 @@ function updateUI() {
       adminPanel.classList.add('hidden');
     }
   } else {
-    // SIN SESIÓN - Solo mostrar login
+    // SIN SESIÓN
     userInfo.textContent = '';
     userInfo.style.display = 'none';
-    loginBtn.style.display = 'block';
+    authButtons.style.display = 'flex'; // Mostrar botones de login y registro
     logoutBtn.style.display = 'none';
     profileBtn.style.display = 'none';
-    cartBtn.parentElement.style.display = 'none'; // Ocultar contenedor del carrito
+    cartBtn.parentElement.style.display = 'none';
     balance.textContent = '$0';
     openAdmin.style.display = 'none';
     adminPanel.classList.add('hidden');
