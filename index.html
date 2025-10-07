@@ -2225,7 +2225,7 @@ function loadDemoData() {
 
 function updateUI() {
   const userInfo = document.getElementById('userInfo');
-  const authButtons = document.getElementById('authButtons');
+  const authContainer = document.getElementById('authButtonsContainer');
   const logoutBtn = document.getElementById('logoutBtn');
   const profileBtn = document.getElementById('profileBtn');
   const cartBtn = document.getElementById('cartBtn');
@@ -2237,13 +2237,12 @@ function updateUI() {
     // USUARIO LOGUEADO
     userInfo.textContent = state.currentUser.name;
     userInfo.style.display = 'block';
-    authButtons.style.display = 'none'; // Ocultar botones de login y registro
+    authContainer.style.display = 'none'; // Ocultar contenedor de auth
     logoutBtn.style.display = 'block';
     profileBtn.style.display = 'block';
     cartBtn.parentElement.style.display = 'block';
     balance.textContent = `$${state.currentUser.balance}`;
     
-    // Panel admin solo si es admin
     if (state.currentUser.role === 'admin') {
       openAdmin.style.display = 'block';
     } else {
@@ -2254,7 +2253,7 @@ function updateUI() {
     // SIN SESIÓN
     userInfo.textContent = '';
     userInfo.style.display = 'none';
-    authButtons.style.display = 'flex'; // Mostrar botones de login y registro
+    authContainer.style.display = 'flex'; // Mostrar contenedor de auth
     logoutBtn.style.display = 'none';
     profileBtn.style.display = 'none';
     cartBtn.parentElement.style.display = 'none';
