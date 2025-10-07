@@ -2315,6 +2315,33 @@ function startRealtimeListener() {
     startLocalPolling();
   }
 }
+// ======================
+// SISTEMA DE POLLING LOCAL (FALLBACK)
+// ======================
+
+let localPollingInterval = null;
+
+function startLocalPolling() {
+  if (localPollingInterval) return;
+  
+  console.log("🔄 Iniciando polling local (cada 5 segundos)");
+  
+  localPollingInterval = setInterval(async () => {
+    if (!db) return;
+    
+    try {
+      const doc = await db.collection('appState').doc('mainState').get();
+      if (!doc.exists) return;
+      
+      const data = doc.data();
+      const updatedAuctions = data.auctions || [];
+      
+      let hasChanges = false;
+      updatedAuctions.forEach(updatedAuction => {
+        const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
+        if (currentAuction && currentAuction.currentBid !== updatedAuction.currentBid) {
+          hasChanges = true;
+          Object.assign(currentA
 
 function loadDemoData() {
   const now = new Date();
