@@ -3061,33 +3061,26 @@ if (amount < roundedMin) {
   
   try {
     const bidId = state.bids.length + 1;
-const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString();
 
-state.bids.push({
-  id: bidId,
-  auctionId,
-  userId: state.currentUser.id,
-  amount,
-  timestamp
-});
+    state.bids.push({
+      id: bidId,
+      auctionId,
+      userId: state.currentUser.id,
+      amount,
+      timestamp
+    });
 
-auction.bids.push(state.currentUser.id);
-auction.currentBid = amount;
-auction.lastBidTime = timestamp;
-
-// 🔥 BROADCAST: Notificar en tiempo real
-broadcastUpdate('new_bid', {
-  bidId: bidId,
-  auctionId: auctionId,
-  userId: state.currentUser.id,
-  userName: state.currentUser.name,
-  amount: amount,
-  timestamp: timestamp
-});
+    auction.bids.push(state.currentUser.id);
+    auction.currentBid = amount;
+    auction.lastBidTime = timestamp;
     
+    // Guardar INMEDIATAMENTE en Firestore
+    await saveState();
+    
+    // Notificar visualmente
     bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
     createConfetti();
-    await saveState();
     renderAuctions();
     updateUI();
     showToast('✅ Puja realizada', 'success');
