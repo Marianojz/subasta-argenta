@@ -3916,7 +3916,8 @@ function deleteProduct(id) {
 window.onbeforeunload = () => {
   if (countdownInterval) clearInterval(countdownInterval);
   if (botActivityInterval) clearInterval(botActivityInterval);
-  stopRealtimeListener(); // Detener listener al cerrar
+  stopRealtimeListener();
+  stopLocalPolling();
 };
 
 console.log('✅ JavaScript cargado');
