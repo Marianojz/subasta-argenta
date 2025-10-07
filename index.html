@@ -2583,8 +2583,29 @@ function renderFeaturedAuction() {
     return;
   }
   
-  activeAuctions.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
-  const featured = activeAuctions[0];
+  // Filtrar subastas que realmente estén activas (no expiradas)
+  const now = new Date();
+  const reallyActive = activeAuctions.filter(a => new Date(a.endTime) > now);
+  
+  if (!reallyActive.length) {
+    container.innerHTML = '';
+    
+    // Marcar como finalizadas las que expiraron
+    activeAuctions.forEach(a => {
+      if (new Date(a.endTime) <= now) {
+        a.status = 'ended';
+      }
+    });
+    
+    if (activeAuctions.length > 0) {
+      saveState();
+    }
+    
+    return;
+  }
+  
+  reallyActive.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+  const featured = reallyActive[0];
   
   container.innerHTML = `
     <div class="glass-light p-3 md:p-4 rounded-2xl border-2 border-pink-500/30 mb-4">
