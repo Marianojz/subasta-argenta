@@ -1197,17 +1197,17 @@ header .btn:hover::after {
   <div class="toast-container" id="toastContainer"></div>
   
   <div class="max-w-6xl mx-auto p-4 relative z-10">
-    <header class="flex items-center justify-between gap-4 mb-6 glass p-4 rounded-2xl header-glow animate-header">
+    <header class="flex items-center justify-between gap-2 mb-6 glass p-3 md:p-4 rounded-2xl header-glow animate-header">
   <!-- LADO IZQUIERDO: Logo + Título -->
-  <div class="flex items-center gap-4">
-    <div class="logo-container">
+  <div class="flex items-center gap-2 md:gap-4 flex-shrink min-w-0">
+    <div class="logo-container flex-shrink-0">
       <img src="https://firebasestorage.googleapis.com/v0/b/subasta-argenta-474019.firebasestorage.app/o/imagenes%20utiles%2Flogo3.png?alt=media&token=bc5bab5c-0ccd-49e0-932b-2cee25a93b7d" alt="Subasta Argenta" class="logo-img-enhanced">
       <div class="logo-ring"></div>
     </div>
-    <div class="hidden md:block">
-      <h1 class="header-title">Subasta Argenta</h1>
-      <div class="header-subtitle">Subastas en vivo y tienda virtual</div>
-      <div class="flex flex-wrap gap-2 mt-2">
+    <div class="min-w-0 flex-1">
+      <h1 class="header-title text-base md:text-xl lg:text-2xl truncate">Subasta Argenta</h1>
+      <div class="header-subtitle hidden sm:block">Subastas en vivo y tienda virtual</div>
+      <div class="hidden md:flex flex-wrap gap-2 mt-2">
         <span class="tech-badge"><i class="fas fa-fire"></i> TIENDA</span>
         <span class="tech-badge"><i class="fas fa-bolt"></i> SUBASTAS</span>
         <span class="tech-badge"><i class="fas fa-credit-card"></i> MERCADOPAGO</span>
@@ -1216,7 +1216,7 @@ header .btn:hover::after {
   </div>
   
   <!-- LADO DERECHO: Botones de usuario -->
-  <div class="flex items-center gap-2">
+  <div class="flex items-center gap-2 flex-shrink-0">
     <div class="relative" id="cartContainer" style="display:none">
       <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
         <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
@@ -1224,22 +1224,22 @@ header .btn:hover::after {
       <span id="cartBadge" class="cart-badge hidden">0</span>
     </div>
     <button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
-      <i class="fas fa-user"></i> <span class="hidden md:inline">Perfil</span>
+      <i class="fas fa-user"></i> <span class="hidden lg:inline">Perfil</span>
     </button>
-    <div id="userInfo" class="text-sm text-slate-300 hidden md:block" style="display:none"></div>
+    <div id="userInfo" class="text-xs md:text-sm text-slate-300 hidden lg:block" style="display:none"></div>
     
-    <!-- Contenedor de botones de autenticación (apilados verticalmente) -->
+    <!-- Contenedor de botones de autenticación -->
     <div id="authButtonsContainer" class="flex flex-col gap-1.5">
-      <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center justify-center gap-1 glow" style="min-width: 140px; padding: 0.4rem 0.75rem;">
-        <i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span>
+      <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center justify-center gap-1 glow whitespace-nowrap" style="min-width: 44px; padding: 0.4rem 0.6rem;">
+        <i class="fas fa-sign-in-alt"></i> <span class="hidden sm:inline">Iniciar sesión</span>
       </button>
-      <button id="registerBtn" class="btn btn-primary btn-sm flex items-center justify-center gap-1" style="min-width: 140px; padding: 0.4rem 0.75rem;">
-        <i class="fas fa-user-plus"></i> <span>Regístrate</span>
+      <button id="registerBtn" class="btn btn-primary btn-sm flex items-center justify-center gap-1 whitespace-nowrap" style="min-width: 44px; padding: 0.4rem 0.6rem;">
+        <i class="fas fa-user-plus"></i> <span class="hidden sm:inline">Regístrate</span>
       </button>
     </div>
     
     <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
-      <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Cerrar sesión</span>
+      <i class="fas fa-sign-out-alt"></i> <span class="hidden lg:inline">Cerrar sesión</span>
     </button>
   </div>
 </header>
