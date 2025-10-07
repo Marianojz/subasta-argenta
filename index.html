@@ -3242,9 +3242,11 @@ if (amount < roundedMin) {
     await saveState();
     
     // Notificar visualmente
+    // Notificar visualmente
     bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
     createConfetti();
     renderAuctions();
+    renderFeaturedAuction(); // 👈 AGREGAR ESTA LÍNEA
     updateUI();
     showToast('✅ Puja realizada', 'success');
   } catch (error) {
