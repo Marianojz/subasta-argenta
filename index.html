@@ -2215,6 +2215,65 @@ async function loadState() {
     loadDemoData();
   }
 }
+async function saveState() {
+  // Guardar en localStorage como backup
+  localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
+  
+  // Guardar en Firestore si hay usuario y db disponible
+  if (state.currentUser && db) {
+    try {
+      await db.collection('appState').doc('mainState').set({
+        auctions: state.auctions,
+        products: state.products,
+        bids: state.bids,
+        cart: state.cart,
+        orders: state.orders,
+        botUsers: state.botUsers,
+        botSettings: state.botSettings,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log("💾 Estado guardado en Firestore");
+    } catch (e) {
+      console.error("❌ Error guardando en Firestore:", e);
+      showToast('Error al sincronizar', 'error');
+    }
+  }
+}
+
+function loadDemoData() {
+  const now = new Date();
+  state.botUsers = [
+    { id: 101, name: 'Bot 1', balance: 8000, active: true, delay: 2 },
+    { id: 102, name: 'Bot 2', balance: 7500, active: true, delay: 3 }
+  ];
+  state.auctions = [{
+    id: 1,
+    title: 'iPhone 14 Pro',
+    description: 'Nuevo en caja',
+    image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+    category: 'Electrónicos',
+    startPrice: 500,
+    currentBid: 500,
+    buyNowPrice: 1200,
+    endTime: new Date(now.getTime() + 24*60*60*1000).toISOString(),
+    sellerId: 2,
+    bids: [],
+    lastBidTime: now.toISOString(),
+    status: 'active'
+  }];
+  state.products = [{
+    id: 1,
+    title: 'Laptop Gaming',
+    description: 'Alto rendimiento',
+    image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=500',
+    category: 'Electrónicos',
+    price: 1200,
+    stock: 5,
+    featured: true
+  }];
+  saveState();
+  console.log("✅ Demo data cargada");
+}
 
 function startRealtimeListener() {
   if (!db) {
