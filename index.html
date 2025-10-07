@@ -2395,13 +2395,13 @@ function renderFeaturedAuction() {
         <div>
           <h4 class="font-bold text-lg md:text-xl mb-3">${sanitizeHTML(featured.title)}</h4>
           <div class="grid grid-cols-2 gap-3 mb-3">
-            <div class="glass-light p-3 rounded-xl">
+            <div class="glass-light p-3 rounded-xl text-center">
               <div class="text-xs text-slate-400 mb-1">Puja actual</div>
-              <div class="price-tag text-xl md:text-2xl">$${featured.currentBid || featured.startPrice}</div>
+              <div class="featured-value">$${featured.currentBid || featured.startPrice}</div>
             </div>
-            <div class="glass-light p-3 rounded-xl">
+            <div class="glass-light p-3 rounded-xl text-center">
               <div class="text-xs text-slate-400 mb-1">Termina en</div>
-              <div class="text-lg md:text-xl font-bold">${formatTimeRemaining(featured.endTime)}</div>
+              <div class="featured-value">${formatTimeRemaining(featured.endTime)}</div>
             </div>
           </div>
           <button class="bid-btn btn btn-primary w-full" data-id="${featured.id}">
