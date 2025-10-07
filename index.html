@@ -2275,7 +2275,10 @@ function stopRealtimeListener() {
 }
 
 async function saveState() {
+  // Guardar en localStorage como backup
   localStorage.setItem('subastaArgenta_backup', JSON.stringify(state));
+  
+  // Guardar en Firestore si hay usuario y db disponible
   if (state.currentUser && db) {
     try {
       await db.collection('appState').doc('mainState').set({
@@ -2288,8 +2291,10 @@ async function saveState() {
         botSettings: state.botSettings,
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
       });
+      console.log("💾 Estado guardado en Firestore");
     } catch (e) {
-      console.error("Error guardando:", e);
+      console.error("❌ Error guardando en Firestore:", e);
+      showToast('Error al sincronizar', 'error');
     }
   }
 }
