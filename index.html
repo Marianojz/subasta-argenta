@@ -2612,6 +2612,7 @@ showToast(`👋 Bienvenido ${state.currentUser.name}`, 'success');
 
 function logout() {
   state.currentUser = null;
+  stopRealtimeListener(); // Detener listener
   updateUI();
   showToast('👋 Sesión cerrada', 'info');
 }
