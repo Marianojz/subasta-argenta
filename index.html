@@ -3397,22 +3397,31 @@ function startBotActivity() {
         const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
         const bidAmount = (auction.currentBid || auction.startPrice) + 500 + (Math.floor(Math.random() * 3) * 100);
         if (bot.balance >= bidAmount) {
-  // Descontar saldo del bot
-  bot.balance -= bidAmount;
-  
-  state.bids.push({ id: state.bids.length + 1, auctionId: auction.id, userId: bot.id, amount: bidAmount, timestamp: new Date().toISOString() });
-  auction.bids.push(bot.id);
-  auction.currentBid = bidAmount;
-  auction.lastBidTime = new Date().toISOString();
-  saveState();
-  renderAuctions();
-  
-  // Mostrar notificación SOLO A ADMINS
-  if (state.currentUser?.role === 'admin') {
-    renderBotUsers(); // Actualizar vista de bots para mostrar nuevo saldo
-    showToast(`🤖 ${bot.name} pujó $${bidAmount} (Saldo restante: $${Math.round(bot.balance)})`, 'info');
-  }
-}
+          // Descontar saldo del bot
+          bot.balance -= bidAmount;
+          
+          state.bids.push({ 
+            id: state.bids.length + 1, 
+            auctionId: auction.id, 
+            userId: bot.id, 
+            amount: bidAmount, 
+            timestamp: new Date().toISOString() 
+          });
+          auction.bids.push(bot.id);
+          auction.currentBid = bidAmount;
+          auction.lastBidTime = new Date().toISOString();
+          
+          // Guardar inmediatamente en Firestore
+          saveState();
+          
+          // NO renderizar aquí, el listener lo hará automáticamente
+          
+          // Mostrar notificación SOLO A ADMINS
+          if (state.currentUser?.role === 'admin') {
+            renderBotUsers();
+            showToast(`🤖 ${bot.name} pujó $${bidAmount}`, 'info');
+          }
+        }
       }
     });
   }, 30000);
