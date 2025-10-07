@@ -1201,13 +1201,13 @@ header .btn:hover::after {
     </button>
     <div id="userInfo" class="text-sm text-slate-300 hidden md:block" style="display:none"></div>
     
-    <!-- Botones de autenticación (solo visibles cuando NO hay sesión) -->
-    <div id="authButtons" class="flex flex-col gap-2">
-      <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 justify-center glow">
-        <i class="fas fa-sign-in-alt"></i> <span class="hidden md:inline">Iniciar sesión</span>
+    <!-- Contenedor de botones de autenticación (apilados verticalmente) -->
+    <div id="authButtonsContainer" class="flex flex-col gap-1.5">
+      <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center justify-center gap-1 glow" style="min-width: 140px; padding: 0.4rem 0.75rem;">
+        <i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span>
       </button>
-      <button id="registerBtn" class="btn btn-primary btn-sm flex items-center gap-1 justify-center">
-        <i class="fas fa-user-plus"></i> <span class="hidden md:inline">Regístrate</span>
+      <button id="registerBtn" class="btn btn-primary btn-sm flex items-center justify-center gap-1" style="min-width: 140px; padding: 0.4rem 0.75rem;">
+        <i class="fas fa-user-plus"></i> <span>Regístrate</span>
       </button>
     </div>
     
