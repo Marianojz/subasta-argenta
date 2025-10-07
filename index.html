@@ -2444,6 +2444,128 @@ function logout() {
   updateUI();
   showToast('👋 Sesión cerrada', 'info');
 }
+// ======================
+// REGISTRO DE USUARIOS
+// ======================
+
+function showRegisterModal() {
+  // Cerrar modal de login si está abierto
+  const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+  if (loginModal) loginModal.hide();
+  
+  // Abrir modal de registro
+  new bootstrap.Modal(document.getElementById('registerModal')).show();
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('registerName').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+  const termsAccepted = document.getElementById('registerTerms').checked;
+  
+  // Validaciones
+  if (name.length < 3) {
+    showToast('❌ El nombre debe tener al menos 3 caracteres', 'error');
+    return;
+  }
+  
+  if (password.length < 6) {
+    showToast('❌ La contraseña debe tener al menos 6 caracteres', 'error');
+    return;
+  }
+  
+  if (password !== passwordConfirm) {
+    showToast('❌ Las contraseñas no coinciden', 'error');
+    return;
+  }
+  
+  if (!termsAccepted) {
+    showToast('❌ Debes aceptar los términos y condiciones', 'error');
+    return;
+  }
+  
+  // Validar formato de email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showToast('❌ Email inválido', 'error');
+    return;
+  }
+  
+  showLoading('Creando cuenta...');
+  
+  try {
+    if (!auth) throw new Error('Firebase Auth no disponible');
+    
+    // Crear usuario en Firebase Auth
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    
+    // Actualizar perfil con nombre
+    await cred.user.updateProfile({
+      displayName: name
+    });
+    
+    // Crear documento de usuario en Firestore
+    const userData = {
+      id: cred.user.uid,
+      name: name,
+      email: email,
+      balance: 5000, // Saldo inicial de bienvenida
+      role: 'user',
+      createdAt: new Date().toISOString(),
+      totalBids: 0,
+      totalPurchases: 0
+    };
+    
+    await db.collection('users').doc(cred.user.uid).set(userData);
+    
+    // Establecer usuario actual
+    state.currentUser = userData;
+    
+    // Cerrar modal y actualizar UI
+    bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+    document.getElementById('registerForm').reset();
+    
+    updateUI();
+    createConfetti();
+    showToast(`🎉 ¡Bienvenido ${name}! Recibiste $5000 de regalo`, 'success');
+    
+  } catch (error) {
+    // Manejar errores específicos
+    const messages = {
+      'auth/email-already-in-use': 'Este email ya está registrado',
+      'auth/invalid-email': 'Email inválido',
+      'auth/operation-not-allowed': 'Registro no habilitado',
+      'auth/weak-password': 'Contraseña muy débil',
+      'auth/network-request-failed': 'Error de conexión'
+    };
+    const msg = messages[error.code] || `Error: ${error.message}`;
+    showToast(msg, 'error');
+    console.error('[Registro]', error);
+  } finally {
+    hideLoading();
+  }
+}
+
+function switchToLogin() {
+  const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+  if (registerModal) registerModal.hide();
+  
+  setTimeout(() => {
+    new bootstrap.Modal(document.getElementById('loginModal')).show();
+  }, 300);
+}
+
+function switchToRegister() {
+  const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+  if (loginModal) loginModal.hide();
+  
+  setTimeout(() => {
+    new bootstrap.Modal(document.getElementById('registerModal')).show();
+  }, 300);
+}
 
 // ======================
 // CARRITO
