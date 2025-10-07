@@ -2395,28 +2395,28 @@ function renderFeaturedAuction() {
   const featured = activeAuctions[0];
   
   container.innerHTML = `
-    <div class="glass-light p-4 rounded-2xl border-2 border-pink-500/30">
+    <div class="glass-light p-3 md:p-4 rounded-2xl border-2 border-pink-500/30 mb-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="font-bold text-lg">🔥 Subasta Destacada</h3>
-        <a href="#" id="viewAllAuctions" class="text-sm text-pink-400 hover:text-pink-300">
-          Ver todas las subastas →
+        <h3 class="font-bold text-base md:text-lg">🔥 Subasta Destacada</h3>
+        <a href="#" id="viewAllAuctions" class="text-xs md:text-sm text-pink-400 hover:text-pink-300 whitespace-nowrap">
+          Ver todas →
         </a>
       </div>
-      <div class="flex flex-col md:flex-row gap-4">
-        <img src="${featured.image}" class="w-full md:w-48 h-48 object-cover rounded-xl">
-        <div class="flex-grow">
-          <h4 class="font-bold text-xl mb-2">${featured.title}</h4>
-          <div class="grid grid-cols-2 gap-4 my-4">
+      <div class="flex flex-col gap-3">
+        <img src="${featured.image}" class="w-full h-40 md:h-48 object-cover rounded-xl" loading="lazy" alt="${sanitizeHTML(featured.title)}">
+        <div>
+          <h4 class="font-bold text-lg md:text-xl mb-3">${sanitizeHTML(featured.title)}</h4>
+          <div class="grid grid-cols-2 gap-3 mb-3">
             <div class="glass-light p-3 rounded-xl">
-              <div class="text-xs text-slate-400">Puja actual</div>
-              <div class="price-tag text-2xl">$${featured.currentBid || featured.startPrice}</div>
+              <div class="text-xs text-slate-400 mb-1">Puja actual</div>
+              <div class="price-tag text-xl md:text-2xl">$${featured.currentBid || featured.startPrice}</div>
             </div>
             <div class="glass-light p-3 rounded-xl">
-              <div class="text-xs text-slate-400">Termina en</div>
-              <div class="text-xl font-bold">${formatTimeRemaining(featured.endTime)}</div>
+              <div class="text-xs text-slate-400 mb-1">Termina en</div>
+              <div class="text-lg md:text-xl font-bold">${formatTimeRemaining(featured.endTime)}</div>
             </div>
           </div>
-          <button class="bid-btn btn btn-primary" data-id="${featured.id}">
+          <button class="bid-btn btn btn-primary w-full" data-id="${featured.id}">
             <i class="fas fa-gavel"></i> Ofertar Ahora
           </button>
         </div>
