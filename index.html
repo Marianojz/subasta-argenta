@@ -2377,6 +2377,22 @@ function loadDemoData() {
   saveState();
   console.log("✅ Demo data cargada");
 }
+function stopLocalPolling() {
+  if (localPollingInterval) {
+    clearInterval(localPollingInterval);
+    localPollingInterval = null;
+    console.log("⏸️ Polling local detenido");
+  }
+}
+
+function stopRealtimeListener() {
+  if (realtimeListener) {
+    realtimeListener();
+    realtimeListener = null;
+    console.log("⏸️ Listener detenido");
+  }
+  stopLocalPolling();
+}
 
 // ======================
 // UI Y RENDER
