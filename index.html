@@ -1140,6 +1140,29 @@ header .btn:hover::after {
         min-width: calc(50% - 5px);
       }
     }
+    /* Botones de autenticación apilados */
+#authButtons {
+  min-width: 140px;
+}
+
+#authButtons button {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  #authButtons {
+    min-width: 44px;
+  }
+  
+  #authButtons button span {
+    display: none !important;
+  }
+  
+  #authButtons {
+    gap: 0.5rem;
+  }
+}
   </style>
 </head><body class="text-slate-100 pb-16 md:pb-0">
   <div id="particles-js"></div>
