@@ -558,7 +558,16 @@ select option:hover {
   animation: gradientFlow 4s ease infinite;
   letter-spacing: -0.5px;
   text-shadow: 0 0 30px rgba(255, 62, 127, 0.3);
-  line-height: 1.2;
+  line-height: 1.1;
+}
+
+/* Versión móvil del título */
+@media (max-width: 767px) {
+  .header-title {
+    font-size: 1.4rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.3px;
+  }
 }
 
 @keyframes gradientFlow {
