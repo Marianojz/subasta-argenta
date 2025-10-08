@@ -1395,7 +1395,12 @@ header .btn:hover::after {
   
   <ul class="nav nav-tabs mb-4" id="adminTabs">
     <li class="nav-item">
-      <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
+      <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
         <i class="fas fa-plus"></i> Crear
       </button>
     </li>
@@ -1405,18 +1410,23 @@ header .btn:hover::after {
       </button>
     </li>
     <li class="nav-item">
+      <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users">
+        <i class="fas fa-users"></i> Usuarios
+      </button>
+    </li>
+    <li class="nav-item">
       <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots">
         <i class="fas fa-robot"></i> Bots
       </button>
     </li>
     <li class="nav-item">
-  <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products">
-    <i class="fas fa-box"></i> Productos
-  </button>
-</li>
+      <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products">
+        <i class="fas fa-box"></i> Productos
+      </button>
+    </li>
     <li class="nav-item">
-      <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats">
-        <i class="fas fa-chart-bar"></i> Estadísticas
+      <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config">
+        <i class="fas fa-cog"></i> Configuración
       </button>
     </li>
   </ul>
