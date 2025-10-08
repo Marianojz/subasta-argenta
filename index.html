@@ -3583,7 +3583,7 @@ if (buyNow && buyNow <= start) {
     document.getElementById('imagePreview').classList.add('hidden');
     state.imageUploaded = false;
     state.uploadedImageUrl = null;
-    uploadedProductImageUrl: null
+    state.uploadedProductImageUrl = null;
     
     await saveState();
     renderAuctions();
