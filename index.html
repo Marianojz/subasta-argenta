@@ -4751,4 +4751,37 @@ window.onbeforeunload = () => {
 };
 
 console.log('✅ JavaScript cargado');
-</script>
+
+// ======================
+// INICIALIZACIÓN
+// ======================
+(async function init() {
+  try {
+    showLoading('Inicializando...');
+    
+    await loadState();
+    setupListeners();
+    setupImageUpload();
+    setupProductImageUpload();
+    setupMobileMenu();
+    initParticles();
+    
+    // Cargar vista inicial
+    renderAuctions();
+    renderProducts();
+    renderFeaturedAuction();
+    updateUI();
+    
+    // Iniciar sistemas automáticos
+    startCountdown();
+    startBotActivity();
+    
+    console.log('🚀 Aplicación inicializada');
+  } catch (error) {
+    console.error('❌ Error en inicialización:', error);
+    showToast('Error al iniciar la aplicación', 'error');
+  } finally {
+    hideLoading();
+  }
+})();
+</script></body></html>
