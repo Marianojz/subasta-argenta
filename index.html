@@ -3847,6 +3847,438 @@ function renderStats() {
   
   document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
 }
+// ======================
+// NUEVAS FUNCIONES ADMIN
+// ======================
+
+// Renderizar Dashboard
+function renderDashboard() {
+  // Estadísticas básicas
+  document.getElementById('dash_totalAuctions').textContent = state.auctions.length;
+  document.getElementById('dash_activeAuctions').textContent = state.auctions.filter(a => a.status === 'active').length;
+  document.getElementById('dash_totalProducts').textContent = state.products.length;
+  document.getElementById('dash_productsInStock').textContent = state.products.filter(p => p.stock > 0).length;
+  document.getElementById('dash_totalBids').textContent = state.bids.length;
+  document.getElementById('dash_totalOrders').textContent = state.orders.length;
+  
+  // Ingresos totales
+  const revenue = state.orders.reduce((sum, o) => sum + o.total, 0);
+  document.getElementById('dash_totalRevenue').textContent = `$${revenue}`;
+  
+  // Puja promedio
+  const avgBid = state.bids.length > 0 
+    ? Math.round(state.bids.reduce((sum, b) => sum + b.amount, 0) / state.bids.length)
+    : 0;
+  document.getElementById('dash_avgBid').textContent = `$${avgBid}`;
+  
+  // Usuarios (simulado - en producción vendría de Firestore)
+  document.getElementById('dash_totalUsers').textContent = state.allUsers ? state.allUsers.length : 2;
+  document.getElementById('dash_activeUsers').textContent = state.currentUser ? 1 : 0;
+  
+  // Bots activos
+  document.getElementById('dash_activeBots').textContent = state.botUsers.filter(b => b.active).length;
+  
+  // Tiempo activo (simulado)
+  const uptime = Math.floor((Date.now() - (state.startTime || Date.now())) / 3600000);
+  document.getElementById('dash_timeActive').textContent = `${uptime}h`;
+  
+  // Top usuarios
+  renderTopUsers();
+}
+
+function renderTopUsers() {
+  const container = document.getElementById('topUsersList');
+  
+  // Crear lista de usuarios con sus pujas
+  const userStats = {};
+  
+  state.bids.forEach(bid => {
+    if (!userStats[bid.userId]) {
+      userStats[bid.userId] = {
+        id: bid.userId,
+        totalBids: 0,
+        totalAmount: 0
+      };
+    }
+    userStats[bid.userId].totalBids++;
+    userStats[bid.userId].totalAmount += bid.amount;
+  });
+  
+  // Convertir a array y ordenar
+  const sortedUsers = Object.values(userStats)
+    .sort((a, b) => b.totalAmount - a.totalAmount)
+    .slice(0, 5);
+  
+  if (sortedUsers.length === 0) {
+    container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay datos</div>';
+    return;
+  }
+  
+  container.innerHTML = sortedUsers.map((userStat, index) => {
+    let userName = 'Usuario';
+    const bot = state.botUsers.find(b => b.id === userStat.id);
+    if (bot) {
+      userName = bot.name;
+    } else if (state.currentUser && state.currentUser.id === userStat.id) {
+      userName = state.currentUser.name;
+    }
+    
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
+    
+    return `
+      <div class="flex justify-between items-center p-2 bg-slate-800/30 rounded">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">${medal}</span>
+          <div>
+            <div class="font-medium text-sm">${sanitizeHTML(userName)}</div>
+            <div class="text-xs text-slate-400">${userStat.totalBids} pujas</div>
+          </div>
+        </div>
+        <div class="text-sm font-bold text-pink-400">$${userStat.totalAmount}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Exportar a Excel
+function exportToExcel() {
+  showLoading('Generando Excel...');
+  
+  try {
+    // Crear CSV con todas las subastas
+    const headers = ['ID', 'Título', 'Categoría', 'Precio Inicial', 'Puja Actual', 'Compra Directa', 'Estado', 'Fecha Fin', 'Total Pujas'];
+    const rows = state.auctions.map(a => [
+      a.id,
+      a.title,
+      a.category,
+      a.startPrice,
+      a.currentBid || a.startPrice,
+      a.buyNowPrice || 'N/A',
+      a.status,
+      new Date(a.endTime).toLocaleString(),
+      a.bids.length
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    
+    // Agregar productos
+    const productHeaders = ['\n\nPRODUCTOS', 'ID', 'Título', 'Categoría', 'Precio', 'Stock'];
+    const productRows = state.products.map(p => ['', p.id, p.title, p.category, p.price, p.stock]);
+    const productCsv = [productHeaders, ...productRows].map(row => row.join(',')).join('\n');
+    
+    // Agregar órdenes
+    const orderHeaders = ['\n\nÓRDENES', 'ID', 'Usuario', 'Total', 'Fecha'];
+    const orderRows = state.orders.map(o => ['', o.id, o.userId, o.total, new Date(o.timestamp).toLocaleString()]);
+    const orderCsv = [orderHeaders, ...orderRows].map(row => row.join(',')).join('\n');
+    
+    const fullCsv = csv + productCsv + orderCsv;
+    
+    const blob = new Blob([fullCsv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `subasta_argenta_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ Excel exportado', 'success');
+  } catch (error) {
+    handleError(error, 'Exportar');
+  } finally {
+    hideLoading();
+  }
+}
+
+// Reset de estadísticas
+function resetStatistics() {
+  if (!confirm('⚠️ ¿Borrar todas las estadísticas? Esto eliminará:\n\n• Todas las pujas\n• Todas las órdenes\n• El historial de transacciones\n\n⚠️ Las subastas y productos NO se borrarán.')) {
+    return;
+  }
+  
+  if (!confirm('🔴 ÚLTIMA CONFIRMACIÓN: ¿Estás completamente seguro?')) {
+    return;
+  }
+  
+  showLoading('Reseteando...');
+  
+  try {
+    state.bids = [];
+    state.orders = [];
+    
+    // Limpiar historial de pujas en subastas
+    state.auctions.forEach(auction => {
+      auction.bids = [];
+    });
+    
+    saveState();
+    renderDashboard();
+    showToast('✅ Estadísticas reseteadas', 'success');
+  } catch (error) {
+    handleError(error, 'Reset');
+  } finally {
+    hideLoading();
+  }
+}
+
+// Backup de datos
+function backupData() {
+  try {
+    const backup = {
+      timestamp: new Date().toISOString(),
+      version: '1.0',
+      data: {
+        auctions: state.auctions,
+        products: state.products,
+        bids: state.bids,
+        orders: state.orders,
+        botUsers: state.botUsers,
+        botSettings: state.botSettings
+      }
+    };
+    
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('✅ Backup descargado', 'success');
+  } catch (error) {
+    handleError(error, 'Backup');
+  }
+}
+
+// Gestión de usuarios
+function renderUsersList() {
+  const container = document.getElementById('usersList');
+  
+  if (!state.allUsers) {
+    state.allUsers = [];
+  }
+  
+  // Agregar usuario actual si existe
+  if (state.currentUser && !state.allUsers.find(u => u.id === state.currentUser.id)) {
+    state.allUsers.push({
+      ...state.currentUser,
+      status: 'active',
+      registeredAt: new Date().toISOString()
+    });
+  }
+  
+  if (state.allUsers.length === 0) {
+    container.innerHTML = '<div class="text-center py-10 text-slate-400">No hay usuarios registrados</div>';
+    return;
+  }
+  
+  const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
+  const statusFilter = document.getElementById('filterUserStatus')?.value || 'all';
+  
+  let filtered = state.allUsers.filter(user => {
+    const matchSearch = user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search);
+    const matchStatus = statusFilter === 'all' || user.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+  
+  container.innerHTML = filtered.map(user => `
+    <div class="glass-light p-4 rounded-xl">
+      <div class="flex justify-between items-start mb-3">
+        <div class="flex gap-3 items-center">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
+            ${user.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div class="font-bold">${sanitizeHTML(user.name)}</div>
+            <div class="text-sm text-slate-400">${sanitizeHTML(user.email)}</div>
+            <div class="text-xs text-slate-500">ID: ${user.id}</div>
+          </div>
+        </div>
+        <span class="badge ${user.status === 'active' ? 'bg-success' : 'bg-danger'}">
+          ${user.status === 'active' ? 'ACTIVO' : 'BLOQUEADO'}
+        </span>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div class="text-center p-2 bg-slate-800/30 rounded">
+          <div class="text-xs text-slate-400">Saldo</div>
+          <div class="font-bold text-pink-400">$${user.balance || 0}</div>
+        </div>
+        <div class="text-center p-2 bg-slate-800/30 rounded">
+          <div class="text-xs text-slate-400">Rol</div>
+          <div class="font-bold">${user.role === 'admin' ? '👑 Admin' : '👤 Usuario'}</div>
+        </div>
+        <div class="text-center p-2 bg-slate-800/30 rounded">
+          <div class="text-xs text-slate-400">Pujas</div>
+          <div class="font-bold">${state.bids.filter(b => b.userId === user.id).length}</div>
+        </div>
+        <div class="text-center p-2 bg-slate-800/30 rounded">
+          <div class="text-xs text-slate-400">Compras</div>
+          <div class="font-bold">${state.orders.filter(o => o.userId === user.id).length}</div>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button class="btn btn-outline-light btn-sm flex-1" onclick="rechargeUserBalance('${user.id}')">
+          <i class="fas fa-plus"></i> Recargar
+        </button>
+        <button class="btn ${user.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'} btn-sm flex-1" 
+                onclick="toggleUserStatus('${user.id}')">
+          <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i> 
+          ${user.status === 'active' ? 'Bloquear' : 'Desbloquear'}
+        </button>
+        ${user.role !== 'admin' ? `
+          <button class="btn btn-outline-warning btn-sm" onclick="toggleUserRole('${user.id}')">
+            <i class="fas fa-crown"></i>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function rechargeUserBalance(userId) {
+  const user = state.allUsers.find(u => u.id === userId);
+  if (!user) return;
+  
+  const amount = prompt(`💰 Recargar saldo para ${user.name}\n\nIngresa el monto a agregar:`, '1000');
+  if (!amount || isNaN(amount)) return;
+  
+  const numAmount = parseFloat(amount);
+  if (numAmount <= 0) {
+    showToast('❌ Monto inválido', 'error');
+    return;
+  }
+  
+  user.balance = (user.balance || 0) + numAmount;
+  
+  // Si es el usuario actual, actualizar también
+  if (state.currentUser && state.currentUser.id === userId) {
+    state.currentUser.balance = user.balance;
+  }
+  
+  saveState();
+  renderUsersList();
+  updateUI();
+  showToast(`✅ Se agregaron $${numAmount} a ${user.name}`, 'success');
+}
+
+function toggleUserStatus(userId) {
+  const user = state.allUsers.find(u => u.id === userId);
+  if (!user) return;
+  
+  const newStatus = user.status === 'active' ? 'blocked' : 'active';
+  const action = newStatus === 'blocked' ? 'bloquear' : 'desbloquear';
+  
+  if (!confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} a ${user.name}?`)) {
+    return;
+  }
+  
+  user.status = newStatus;
+  
+  // Si es el usuario actual y se bloquea, cerrar sesión
+  if (state.currentUser && state.currentUser.id === userId && newStatus === 'blocked') {
+    showToast('⚠️ Tu cuenta ha sido bloqueada', 'error');
+    setTimeout(() => logout(), 2000);
+  }
+  
+  saveState();
+  renderUsersList();
+  showToast(`✅ Usuario ${action === 'bloquear' ? 'bloqueado' : 'desbloqueado'}`, 'success');
+}
+
+function toggleUserRole(userId) {
+  const user = state.allUsers.find(u => u.id === userId);
+  if (!user) return;
+  
+  if (!confirm(`¿Convertir a ${user.name} en administrador?`)) {
+    return;
+  }
+  
+  user.role = 'admin';
+  
+  if (state.currentUser && state.currentUser.id === userId) {
+    state.currentUser.role = 'admin';
+  }
+  
+  saveState();
+  renderUsersList();
+  updateUI();
+  showToast('✅ Usuario promovido a admin', 'success');
+}
+
+function addTestUser() {
+  const id = 'user_' + Date.now();
+  const num = state.allUsers.length + 1;
+  
+  state.allUsers.push({
+    id: id,
+    name: `Usuario Test ${num}`,
+    email: `test${num}@demo.com`,
+    balance: 5000,
+    role: 'user',
+    status: 'active',
+    registeredAt: new Date().toISOString()
+  });
+  
+  saveState();
+  renderUsersList();
+  showToast('✅ Usuario de prueba creado', 'success');
+}
+
+// Configuración
+function saveMPConfig() {
+  const mpConfig = {
+    alias: document.getElementById('mpAlias').value,
+    publicKey: document.getElementById('mpPublicKey').value,
+    accessToken: document.getElementById('mpAccessToken').value
+  };
+  
+  if (!mpConfig.alias || !mpConfig.publicKey || !mpConfig.accessToken) {
+    showToast('⚠️ Completa todos los campos', 'error');
+    return;
+  }
+  
+  state.mpConfig = mpConfig;
+  saveState();
+  showToast('✅ Configuración de MP guardada', 'success');
+}
+
+function saveGeneralConfig() {
+  state.config = {
+    maintenanceMode: document.getElementById('maintenanceMode').checked,
+    allowRegistration: document.getElementById('allowRegistration').checked,
+    platformFee: parseFloat(document.getElementById('platformFee').value) || 10
+  };
+  
+  saveState();
+  showToast('✅ Configuración guardada', 'success');
+}
+
+function clearCache() {
+  if (!confirm('¿Limpiar la caché local?')) return;
+  
+  localStorage.removeItem('subastaArgenta_backup');
+  showToast('✅ Caché limpiada', 'success');
+}
+
+function resetAllData() {
+  if (!confirm('⚠️ PELIGRO: Esto borrará TODOS los datos permanentemente.\n\n¿Continuar?')) {
+    return;
+  }
+  
+  if (!confirm('🔴 ÚLTIMA ADVERTENCIA: Se borrarán subastas, productos, usuarios, órdenes y toda la información.\n\n¿Estás COMPLETAMENTE seguro?')) {
+    return;
+  }
+  
+  showLoading('Borrando todo...');
+  
+  setTimeout(() => {
+    localStorage.clear();
+    location.reload();
+  }, 1000);
+}
 function setupListeners() {
   // Helper para asignar eventos de forma segura
   const safeAssign = (id, event, handler) => {
