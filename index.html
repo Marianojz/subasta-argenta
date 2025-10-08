@@ -3186,6 +3186,101 @@ function checkout() {
   showToast('✅ Compra exitosa', 'success');
 }
 
+function showTopupModal() {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  // Reset del modal
+  document.getElementById('topupAmountSelection').style.display = 'block';
+  document.getElementById('topupPaymentMethods').classList.add('hidden');
+  document.getElementById('topupLoading').classList.add('hidden');
+  document.getElementById('topupSuccess').classList.add('hidden');
+  document.getElementById('customTopupAmount').value = '';
+  document.getElementById('proceedToPayment').disabled = true;
+  topupAmount = 0;
+  
+  new bootstrap.Modal(document.getElementById('topupModal')).show();
+  
+  // Listeners para montos predefinidos
+  document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+    btn.onclick = function() {
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      topupAmount = parseInt(this.dataset.amount);
+      document.getElementById('customTopupAmount').value = '';
+      document.getElementById('proceedToPayment').disabled = false;
+    };
+  });
+  
+  // Listener para monto personalizado
+  document.getElementById('customTopupAmount').oninput = function() {
+    const value = parseFloat(this.value);
+    if (value > 0) {
+      topupAmount = value;
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('proceedToPayment').disabled = false;
+    } else {
+      document.getElementById('proceedToPayment').disabled = true;
+    }
+  };
+  
+  // Listener para continuar al pago
+  document.getElementById('proceedToPayment').onclick = showTopupPaymentMethods;
+}
+
+function showTopupPaymentMethods() {
+  if (topupAmount <= 0) return;
+  
+  document.getElementById('topupAmountSelection').style.display = 'none';
+  document.getElementById('topupPaymentMethods').classList.remove('hidden');
+  
+  // Selección de método de pago
+  document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(method => {
+    method.onclick = function() {
+      document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(m => m.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedPaymentMethod = this.dataset.method;
+      document.getElementById('confirmTopupPayment').disabled = false;
+    };
+  });
+  
+  document.getElementById('confirmTopupPayment').onclick = processTopup;
+}
+
+function processTopup() {
+  if (!selectedPaymentMethod || topupAmount <= 0) return;
+  
+  document.getElementById('topupPaymentMethods').classList.add('hidden');
+  document.getElementById('topupLoading').classList.remove('hidden');
+  
+  setTimeout(() => {
+    state.currentUser.balance += topupAmount;
+    
+    document.getElementById('topupLoading').classList.add('hidden');
+    document.getElementById('topupSuccess').classList.remove('hidden');
+    document.getElementById('topupDetails').innerHTML = `
+      <div class="glass-light p-3 rounded mt-3">
+        <div><strong>Monto:</strong> $${topupAmount}</div>
+        <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
+        <div><strong>Nuevo saldo:</strong> $${state.currentUser.balance}</div>
+      </div>
+    `;
+    
+    saveState();
+    updateUI();
+    
+    setTimeout(() => {
+      createConfetti();
+      bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+      showToast('✅ Recarga exitosa', 'success');
+    }, 2500);
+  }, 2000);
+}
+
+// Continúa con checkout...
+function checkout() {
 function renderPaymentSummary() {
   const itemsContainer = document.getElementById('paymentItems');
   const totalContainer = document.getElementById('paymentTotal');
