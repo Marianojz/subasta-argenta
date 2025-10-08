@@ -3186,6 +3186,32 @@ function checkout() {
   showToast('✅ Compra exitosa', 'success');
 }
 
+function renderPaymentSummary() {
+  const itemsContainer = document.getElementById('paymentItems');
+  const totalContainer = document.getElementById('paymentTotal');
+  
+  if (!state.cart.length) return;
+  
+  let total = 0;
+  itemsContainer.innerHTML = state.cart.map(item => {
+    const product = state.products.find(p => p.id === item.productId);
+    if (!product) return '';
+    const itemTotal = item.quantity * item.price;
+    total += itemTotal;
+    return `
+      <div class="flex justify-between py-2 border-b border-slate-700">
+        <div>
+          <div class="font-medium">${sanitizeHTML(product.title)}</div>
+          <div class="text-xs text-slate-400">${item.quantity} x $${item.price}</div>
+        </div>
+        <div class="font-semibold">$${itemTotal}</div>
+      </div>
+    `;
+  }).join('');
+  
+  totalContainer.textContent = `$${total}`;
+}
+
 // ======================
 // MERCADOPAGO
 // ======================
