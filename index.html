@@ -4511,9 +4511,8 @@ function setupListeners() {
   // Admin
   safeAssign('btnCreateDemo', 'onclick', createDemoData);
   safeAssign('openAdmin', 'onclick', toggleAdminPanel);
-  safeAssign('topup', 'onclick', () => showToast('Función en desarrollo', 'info'));
+  safeAssign('topup', 'onclick', showTopupModal);
   safeAssign('addBotUser', 'onclick', addBotUser);
-  safeAssign('exportCsv', 'onclick', exportToCsv);
   
   // Formularios
   safeAssign('createAuctionForm', 'onsubmit', createAuction);
