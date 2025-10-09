@@ -3669,13 +3669,12 @@ function setupListeners() {
   };
   
   // Auth y perfil
-  safeAssign('stats-tab', 'onclick', renderStats);
   safeAssign('loginBtn', 'onclick', showLoginModal);
   safeAssign('registerBtn', 'onclick', showRegisterModal);
   safeAssign('logoutBtn', 'onclick', logout);
   safeAssign('loginForm', 'onsubmit', handleLogin);
   
-  // Registro (nuevos)
+  // Registro
   safeAssign('registerForm', 'onsubmit', handleRegister);
   safeAssign('switchToRegister', 'onclick', (e) => {
     e.preventDefault();
@@ -3718,7 +3717,6 @@ function setupListeners() {
   safeAssign('openAdmin', 'onclick', toggleAdminPanel);
   safeAssign('topup', 'onclick', () => showToast('Función en desarrollo', 'info'));
   safeAssign('addBotUser', 'onclick', addBotUser);
-  safeAssign('exportCsv', 'onclick', exportToCsv);
   
   // Formularios
   safeAssign('createAuctionForm', 'onsubmit', createAuction);
@@ -3726,12 +3724,11 @@ function setupListeners() {
   safeAssign('createProductForm', 'onsubmit', createProduct);
   
   // Filtros y búsqueda
-  safeAssign('search', 'oninput', debounce(filterAuctions, 300));
-  safeAssign('sortBy', 'onchange', filterAuctions);
-  safeAssign('filterState', 'onchange', filterAuctions);
+  safeAssign('searchAuctions', 'oninput', debounce(filterAuctions, 300));
+  safeAssign('sortAuctions', 'onchange', filterAuctions);
+  safeAssign('filterAuctionState', 'onchange', filterAuctions);
   safeAssign('searchProducts', 'oninput', debounce(filterProducts, 300));
   safeAssign('filterProductCategory', 'onchange', filterProducts);
-  safeAssign('filterCategory', 'onchange', filterAuctions);
   safeAssign('sortProducts', 'onchange', filterProducts);
   
   // Tabs
@@ -3741,13 +3738,7 @@ function setupListeners() {
     renderManageProducts();
     setupProductImageUpload();
   });
-  // Actualizar subasta destacada al cambiar a pestaña de tienda
-  safeAssign('store-tab', 'onclick', () => {
-    setTimeout(() => {
-      renderFeaturedAuction();
-      renderProducts();
-    }, 100);
-  });
+  
   // Actualizar subasta destacada al cambiar a pestaña de tienda
   safeAssign('store-tab', 'onclick', () => {
     setTimeout(() => {
@@ -3766,19 +3757,6 @@ function setupListeners() {
   safeAssign('botsEnabled', 'onchange', updateBotSettings);
   safeAssign('botDelayGlobal', 'onchange', updateBotSettings);
   safeAssign('botProbability', 'onchange', updateBotSettings);
-  
-  // Filtros móviles
-  const filterToggle = document.querySelector('.filter-toggle');
-  if (filterToggle) {
-    filterToggle.onclick = function() {
-      const content = document.querySelector('.filter-content');
-      const icon = this.querySelector('.fa-chevron-down');
-      if (content && icon) {
-        content.classList.toggle('active');
-        icon.classList.toggle('fa-rotate-180');
-      }
-    };
-  }
   
   console.log('✅ Listeners configurados');
 }
