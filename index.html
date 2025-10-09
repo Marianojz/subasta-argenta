@@ -3778,6 +3778,93 @@ window.updateBotName = updateBotName;
 window.updateBotDelay = updateBotDelay;
 window.deleteBotUser = deleteBotUser;
 window.deleteAuction = deleteAuction;
+// ======================
+// FUNCIONES FALTANTES
+// ======================
+
+function filterProducts() {
+  const search = document.getElementById('searchProducts')?.value.toLowerCase() || '';
+  const category = document.getElementById('filterProductCategory')?.value || 'all';
+  const sortBy = document.getElementById('sortProducts')?.value || 'newest';
+  
+  let filtered = state.products.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+    const matchCategory = category === 'all' || p.category === category;
+    return matchSearch && matchCategory;
+  });
+  
+  if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+  else if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+  else filtered.sort((a, b) => b.id - a.id);
+  
+  renderProducts(filtered);
+}
+
+function filterProductCategory() {
+  filterProducts();
+}
+
+function renderStats() {
+  const totalAuctions = state.auctions.length;
+  const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
+  const totalProducts = state.products.length;
+  const productsInStock = state.products.reduce((sum, p) => sum + p.stock, 0);
+  const totalBids = state.bids.length;
+  const totalOrders = state.orders.length;
+  
+  // Actualizar elementos del dashboard
+  const totalAuctionsEl = document.getElementById('totalAuctions');
+  const activeAuctionsEl = document.getElementById('activeAuctions');
+  const totalProductsEl = document.getElementById('totalProducts');
+  const productsInStockEl = document.getElementById('productsInStock');
+  const totalBidsEl = document.getElementById('totalBids');
+  const totalOrdersEl = document.getElementById('totalOrders');
+  
+  if (totalAuctionsEl) totalAuctionsEl.textContent = totalAuctions;
+  if (activeAuctionsEl) activeAuctionsEl.textContent = activeAuctions;
+  if (totalProductsEl) totalProductsEl.textContent = totalProducts;
+  if (productsInStockEl) productsInStockEl.textContent = productsInStock;
+  if (totalBidsEl) totalBidsEl.textContent = totalBids;
+  if (totalOrdersEl) totalOrdersEl.textContent = totalOrders;
+}
+
+function renderPaymentSummary() {
+  const items = document.getElementById('paymentItems');
+  const total = document.getElementById('paymentTotal');
+  
+  let html = '';
+  let totalAmount = 0;
+  
+  state.cart.forEach(item => {
+    const p = state.products.find(pr => pr.id === item.productId);
+    if (p) {
+      const itemTotal = item.quantity * item.price;
+      totalAmount += itemTotal;
+      html += `
+        <div class="flex justify-between text-sm mb-2">
+          <span>${sanitizeHTML(p.title)} x${item.quantity}</span>
+          <span>$${itemTotal}</span>
+        </div>
+      `;
+    }
+  });
+  
+  if (items) items.innerHTML = html;
+  if (total) total.textContent = `$${totalAmount}`;
+}
+
+// Funciones globales adicionales
+window.filterProducts = filterProducts;
+window.filterProductCategory = filterProductCategory;
+window.renderStats = renderStats;
+function updateBotBalance(id, balance) {
+  const bot = state.botUsers.find(b => b.id === id);
+  if (bot && balance >= 0) {
+    bot.balance = balance;
+    saveState();
+    showToast(`💰 Saldo actualizado: $${balance}`, 'info');
+  }
+}
 function renderPaymentSummary() {
   const items = document.getElementById('paymentItems');
   const total = document.getElementById('paymentTotal');
