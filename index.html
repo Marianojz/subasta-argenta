@@ -3887,7 +3887,17 @@ function renderStats() {
   document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
 }
 function setupListeners() {
-    // Dashboard
+  // Helper para asignar eventos de forma segura
+  function safeAssign(id, event, handler) {
+    const element = document.getElementById(id);
+    if (element) {
+      element[event] = handler;
+    } else {
+      console.warn(`⚠️ Elemento no encontrado: ${id}`);
+    }
+  }
+  
+  // Dashboard
   safeAssign('dashboard-tab', 'onclick', renderDashboardStats);
   safeAssign('exportExcel', 'onclick', exportToExcel);
   safeAssign('resetStats', 'onclick', resetStats);
@@ -3906,19 +3916,8 @@ function setupListeners() {
   safeAssign('saveGeneralConfig', 'onclick', saveGeneralConfig);
   safeAssign('clearCache', 'onclick', clearCache);
   safeAssign('resetAllData', 'onclick', resetAllData);
-  // Helper para asignar eventos de forma segura
-  const safeAssign = (id, event, handler) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element[event] = handler;
-    } else {
-      console.warn(`⚠️ Elemento no encontrado: ${id}`);
-    }
-  };
-  
+
   // Auth y perfil
-    // Dashboard
-  safeAssign('dashboard-tab', 'onclick', renderStats);
   safeAssign('loginBtn', 'onclick', showLoginModal);
   safeAssign('registerBtn', 'onclick', showRegisterModal);
   safeAssign('logoutBtn', 'onclick', logout);
@@ -3965,7 +3964,7 @@ function setupListeners() {
   // Admin
   safeAssign('btnCreateDemo', 'onclick', createDemoData);
   safeAssign('openAdmin', 'onclick', toggleAdminPanel);
-        safeAssign('topup', 'onclick', () => {
+  safeAssign('topup', 'onclick', () => {
     // Función temporal - puedes implementar la recarga más tarde
     if (state.currentUser) {
       state.currentUser.balance += 1000;
@@ -3976,7 +3975,6 @@ function setupListeners() {
       showToast('❌ Inicia sesión primero', 'error');
     }
   });
-    ;
   safeAssign('addBotUser', 'onclick', addBotUser);
   
   // Formularios
