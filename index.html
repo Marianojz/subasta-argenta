@@ -3848,7 +3848,8 @@ function setupListeners() {
   safeAssign('sortBy', 'onchange', filterAuctions);
   safeAssign('filterState', 'onchange', filterAuctions);
   safeAssign('searchProducts', 'oninput', debounce(filterProducts, 300));
-  safeAssign('filterProductCategory', 'onchange', filterProductCategory);
+  safeAssign('filterProductCategory', 'onchange', filterProducts);
+  safeAssign('filterCategory', 'onchange', filterAuctions);
   safeAssign('sortProducts', 'onchange', filterProducts);
   
   // Tabs
