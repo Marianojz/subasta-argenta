@@ -3215,9 +3215,9 @@ broadcastUpdate('buy_now', {
 // ======================
 
 function filterAuctions() {
-  const search = document.getElementById('search').value.toLowerCase();
-  const sortBy = document.getElementById('sortBy').value;
-  const filterState = document.getElementById('filterState').value;
+  const search = document.getElementById('searchAuctions')?.value.toLowerCase() || '';
+  const sortBy = document.getElementById('sortAuctions')?.value || 'ending';
+  const filterState = document.getElementById('filterAuctionState')?.value || 'all';
   
   let filtered = state.auctions.filter(a => {
     const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
@@ -3234,24 +3234,6 @@ function filterAuctions() {
   }
   
   renderAuctions(filtered);
-}
-
-function filterProducts() {
-  const search = document.getElementById('searchProducts').value.toLowerCase();
-  const category = document.getElementById('filterProductCategory').value;
-  const sortBy = document.getElementById('sortProducts').value;
-  
-  let filtered = state.products.filter(p => {
-    const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
-    const matchCategory = category === 'all' || p.category === category;
-    return matchSearch && matchCategory;
-  });
-  
-  if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
-  else if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
-  else filtered.sort((a, b) => b.id - a.id);
-  
-  renderProducts(filtered);
 }
 
 // ======================
