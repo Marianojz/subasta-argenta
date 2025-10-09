@@ -3781,15 +3781,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 });
 
-// Funciones globales para onclick
-window.updateCartQuantity = updateCartQuantity;
-window.removeFromCart = removeFromCart;
-window.deleteProduct = deleteProduct;
-window.toggleBotUser = toggleBotUser;
-window.updateBotName = updateBotName;
-window.updateBotDelay = updateBotDelay;
-window.deleteBotUser = deleteBotUser;
-window.deleteAuction = deleteAuction;
 // ======================
 // FUNCIONES FALTANTES
 // ======================
@@ -3864,41 +3855,8 @@ function renderPaymentSummary() {
   if (items) items.innerHTML = html;
   if (total) total.textContent = `$${totalAmount}`;
 }
-function renderPaymentSummary() {
-  const items = document.getElementById('paymentItems');
-  const total = document.getElementById('paymentTotal');
-  
-  let html = '';
-  let totalAmount = 0;
-  
-  state.cart.forEach(item => {
-    const p = state.products.find(pr => pr.id === item.productId);
-    if (p) {
-      const itemTotal = item.quantity * item.price;
-      totalAmount += itemTotal;
-      html += `
-        <div class="flex justify-between text-sm mb-2">
-          <span>${sanitizeHTML(p.title)} x${item.quantity}</span>
-          <span>$${itemTotal}</span>
-        </div>
-      `;
-    }
-  });
-  
-  if (items) items.innerHTML = html;
-  if (total) total.textContent = `$${totalAmount}`;
-}
-// Funciones globales adicionales
+
 // Funciones globales para onclick
-window.updateCartQuantity = updateCartQuantity;
-window.removeFromCart = removeFromCart;
-window.deleteProduct = deleteProduct;
-window.toggleBotUser = toggleBotUser;
-window.updateBotName = updateBotName;
-window.updateBotDelay = updateBotDelay;
-window.deleteBotUser = deleteBotUser;
-window.deleteAuction = deleteAuction;
-window.updateBotBalance = updateBotBalance;
 window.filterProducts = filterProducts;
 window.filterProductCategory = filterProductCategory;
 window.renderStats = renderStats;
