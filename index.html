@@ -3889,6 +3889,16 @@ function renderPaymentSummary() {
   if (total) total.textContent = `$${totalAmount}`;
 }
 // Funciones globales adicionales
+// Funciones globales para onclick
+window.updateCartQuantity = updateCartQuantity;
+window.removeFromCart = removeFromCart;
+window.deleteProduct = deleteProduct;
+window.toggleBotUser = toggleBotUser;
+window.updateBotName = updateBotName;
+window.updateBotDelay = updateBotDelay;
+window.deleteBotUser = deleteBotUser;
+window.deleteAuction = deleteAuction;
+window.updateBotBalance = updateBotBalance;
 window.filterProducts = filterProducts;
 window.filterProductCategory = filterProductCategory;
 window.renderStats = renderStats;
