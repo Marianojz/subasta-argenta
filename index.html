@@ -3718,16 +3718,7 @@ function setupListeners() {
       showToast('❌ Inicia sesión primero', 'error');
     }
   });
-    // Función temporal - puedes implementar la recarga más tarde
-    if (state.currentUser) {
-      state.currentUser.balance += 1000;
-      updateUI();
-      saveState();
-      showToast('💰 $1000 agregados a tu saldo', 'success');
-    } else {
-      showToast('❌ Inicia sesión primero', 'error');
-    }
-  });
+    ;
   safeAssign('addBotUser', 'onclick', addBotUser);
   
   // Formularios
