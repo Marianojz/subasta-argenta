@@ -1547,6 +1547,50 @@ header .btn:hover::after {
           </div>
         </div>
       </main>
+            </main>
+
+      <aside class="space-y-6">
+        <!-- Saldo del usuario -->
+        <div class="glass p-5 rounded-2xl sticky top-4">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <div class="text-sm text-slate-400">Saldo</div>
+              <div id="balance" class="text-2xl font-bold price-tag">$0</div>
+            </div>
+            <button id="topup" class="btn btn-outline-light btn-sm glow">
+              <i class="fas fa-plus"></i> Cargar
+            </button>
+          </div>
+          <div class="mt-4 text-sm">
+            <div class="mb-2 font-medium">Cuentas demo</div>
+            <div class="space-y-2">
+              <div class="p-2 rounded bg-slate-800/30">
+                <div>user@demo.com</div>
+                <div class="text-xs text-slate-400">Pass: user123</div>
+              </div>
+              <div class="p-2 rounded bg-slate-800/30">
+                <div>admin@demo.com</div>
+                <div class="text-xs text-slate-400">Pass: admin123</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="glass p-5 rounded-2xl">
+          <h4 class="font-semibold mb-4">Filtros</h4>
+          <div class="space-y-4">
+            <select id="filterCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Todas las categorías</option>
+            </select>
+            <select id="filterTime" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Cualquier tiempo</option>
+              <option value="short">< 10 min</option>
+              <option value="1hour">< 1 hora</option>
+            </select>
+          </div>
+        </div>
+      </aside>
         </div>
 
         <div class="glass p-5 rounded-2xl">
