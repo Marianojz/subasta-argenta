@@ -3651,6 +3651,8 @@ function setupListeners() {
   };
   
   // Auth y perfil
+    // Dashboard
+  safeAssign('dashboard-tab', 'onclick', renderStats);
   safeAssign('loginBtn', 'onclick', showLoginModal);
   safeAssign('registerBtn', 'onclick', showRegisterModal);
   safeAssign('logoutBtn', 'onclick', logout);
