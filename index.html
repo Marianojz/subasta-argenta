@@ -3707,7 +3707,7 @@ function setupListeners() {
   // Admin
   safeAssign('btnCreateDemo', 'onclick', createDemoData);
   safeAssign('openAdmin', 'onclick', toggleAdminPanel);
-      safeAssign('topup', 'onclick', () => {
+        safeAssign('topup', 'onclick', () => {
     // Función temporal - puedes implementar la recarga más tarde
     if (state.currentUser) {
       state.currentUser.balance += 1000;
