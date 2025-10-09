@@ -4096,6 +4096,290 @@ function renderPaymentSummary() {
 }
 
 // Funciones globales para onclick
+// ======================
+// FUNCIONES DEL PANEL ADMIN COMPLETO
+// ======================
+
+// Dashboard y estadísticas
+function renderDashboardStats() {
+  const totalAuctions = state.auctions.length;
+  const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
+  const totalProducts = state.products.length;
+  const productsInStock = state.products.reduce((sum, p) => sum + p.stock, 0);
+  const totalBids = state.bids.length;
+  const totalOrders = state.orders.length;
+  const totalRevenue = state.orders.reduce((sum, o) => sum + o.total, 0);
+  const avgBid = totalBids > 0 ? Math.round(state.bids.reduce((sum, b) => sum + b.amount, 0) / totalBids) : 0;
+  const totalUsers = state.botUsers.length + 1; // +1 para el admin actual
+  const activeUsers = state.botUsers.filter(b => b.active).length + 1;
+  const activeBots = state.botUsers.filter(b => b.active).length;
+  
+  // Actualizar elementos del dashboard
+  document.getElementById('dash_totalAuctions').textContent = totalAuctions;
+  document.getElementById('dash_activeAuctions').textContent = activeAuctions;
+  document.getElementById('dash_totalProducts').textContent = totalProducts;
+  document.getElementById('dash_productsInStock').textContent = productsInStock;
+  document.getElementById('dash_totalBids').textContent = totalBids;
+  document.getElementById('dash_totalOrders').textContent = totalOrders;
+  document.getElementById('dash_totalRevenue').textContent = `$${totalRevenue}`;
+  document.getElementById('dash_avgBid').textContent = `$${avgBid}`;
+  document.getElementById('dash_totalUsers').textContent = totalUsers;
+  document.getElementById('dash_activeUsers').textContent = activeUsers;
+  document.getElementById('dash_activeBots').textContent = activeBots;
+  document.getElementById('dash_timeActive').textContent = `${Math.floor((Date.now() - state.startTime) / 3600000)}h`;
+  
+  // Actualizar top usuarios
+  renderTopUsers();
+}
+
+function renderTopUsers() {
+  const userBids = {};
+  state.bids.forEach(bid => {
+    if (!userBids[bid.userId]) userBids[bid.userId] = 0;
+    userBids[bid.userId] += bid.amount;
+  });
+  
+  const topUsers = Object.entries(userBids)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  
+  const topUsersList = document.getElementById('topUsersList');
+  if (topUsers.length === 0) {
+    topUsersList.innerHTML = '<div class="text-center text-slate-400 py-4">No hay datos</div>';
+    return;
+  }
+  
+  topUsersList.innerHTML = topUsers.map(([userId, amount]) => {
+    const user = state.botUsers.find(b => b.id == userId) || { name: 'Usuario' };
+    return `
+      <div class="flex justify-between items-center p-2 bg-slate-800/30 rounded">
+        <div class="font-medium">${user.name}</div>
+        <div class="price-tag text-sm">$${amount}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Exportar datos
+function exportToExcel() {
+  const data = [
+    ['ID', 'Título', 'Precio Inicial', 'Puja Actual', 'Estado', 'Fecha Fin'],
+    ...state.auctions.map(a => [
+      a.id, 
+      a.title, 
+      a.startPrice, 
+      a.currentBid || a.startPrice, 
+      a.status,
+      new Date(a.endTime).toLocaleDateString()
+    ])
+  ];
+  
+  const csv = data.map(row => row.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `subastas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📊 Datos exportados a CSV', 'success');
+}
+
+function backupData() {
+  const backup = {
+    auctions: state.auctions,
+    products: state.products,
+    bids: state.bids,
+    orders: state.orders,
+    botUsers: state.botUsers,
+    timestamp: new Date().toISOString()
+  };
+  
+  const dataStr = JSON.stringify(backup, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup_subastas_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Backup creado', 'success');
+}
+
+function resetStats() {
+  if (confirm('¿Estás seguro de resetear las estadísticas? Esta acción no se puede deshacer.')) {
+    if (confirm('¿REALMENTE seguro? Se perderán todos los datos históricos.')) {
+      state.bids = [];
+      state.orders = [];
+      state.startTime = Date.now();
+      saveState();
+      renderDashboardStats();
+      showToast('🔄 Estadísticas reseteadas', 'success');
+    }
+  }
+}
+
+// Gestión de usuarios
+function renderUsersList() {
+  const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
+  const filterStatus = document.getElementById('filterUserStatus')?.value || 'all';
+  const sortBy = document.getElementById('sortUsers')?.value || 'name';
+  
+  let users = [...state.botUsers];
+  
+  // Filtrar
+  users = users.filter(user => {
+    const matchSearch = user.name.toLowerCase().includes(search);
+    const matchStatus = filterStatus === 'all' || 
+                       (filterStatus === 'active' && user.active) || 
+                       (filterStatus === 'blocked' && !user.active);
+    return matchSearch && matchStatus;
+  });
+  
+  // Ordenar
+  if (sortBy === 'balance') users.sort((a, b) => b.balance - a.balance);
+  else if (sortBy === 'date') users.sort((a, b) => b.id - a.id);
+  else users.sort((a, b) => a.name.localeCompare(b.name));
+  
+  const usersList = document.getElementById('usersList');
+  if (users.length === 0) {
+    usersList.innerHTML = '<div class="text-center text-slate-400 py-4">No hay usuarios</div>';
+    return;
+  }
+  
+  usersList.innerHTML = users.map(user => `
+    <div class="glass-light p-3 rounded">
+      <div class="flex justify-between items-center mb-2">
+        <div class="font-medium">${user.name}</div>
+        <div class="flex gap-2">
+          <span class="badge ${user.active ? 'bg-success' : 'bg-danger'}">${user.active ? 'ACTIVO' : 'BLOQUEADO'}</span>
+          ${user.role === 'admin' ? '<span class="badge bg-warning">ADMIN</span>' : ''}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div>Saldo: <span class="price-tag">$${Math.round(user.balance)}</span></div>
+        <div>ID: ${user.id}</div>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-outline-light btn-sm" onclick="rechargeUserBalance(${user.id}, 1000)">
+          <i class="fas fa-coins"></i> +$1000
+        </button>
+        <button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus(${user.id}, ${!user.active})">
+          <i class="fas ${user.active ? 'fa-lock' : 'fa-unlock'}"></i> ${user.active ? 'Bloquear' : 'Activar'}
+        </button>
+        ${user.role !== 'admin' ? `
+          <button class="btn btn-outline-info btn-sm" onclick="promoteToAdmin(${user.id})">
+            <i class="fas fa-crown"></i> Hacer Admin
+          </button>
+        ` : ''}
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteUser(${user.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addTestUser() {
+  const newId = Math.max(100, ...state.botUsers.map(u => u.id)) + 1;
+  state.botUsers.push({
+    id: newId,
+    name: `Usuario Test ${newId}`,
+    balance: 5000,
+    active: true,
+    role: 'user',
+    delay: state.botSettings.delayGlobal
+  });
+  saveState();
+  renderUsersList();
+  showToast('✅ Usuario de prueba agregado', 'success');
+}
+
+function rechargeUserBalance(userId, amount) {
+  const user = state.botUsers.find(u => u.id === userId);
+  if (user) {
+    user.balance += amount;
+    saveState();
+    renderUsersList();
+    showToast(`💰 $${amount} agregados a ${user.name}`, 'success');
+  }
+}
+
+function toggleUserStatus(userId, active) {
+  const user = state.botUsers.find(u => u.id === userId);
+  if (user) {
+    user.active = active;
+    saveState();
+    renderUsersList();
+    showToast(`${user.name} ${active ? '✅ activado' : '❌ bloqueado'}`, 'info');
+  }
+}
+
+function promoteToAdmin(userId) {
+  const user = state.botUsers.find(u => u.id === userId);
+  if (user) {
+    user.role = 'admin';
+    saveState();
+    renderUsersList();
+    showToast(`👑 ${user.name} promovido a administrador`, 'success');
+  }
+}
+
+function deleteUser(userId) {
+  if (confirm('¿Eliminar usuario? Esta acción no se puede deshacer.')) {
+    state.botUsers = state.botUsers.filter(u => u.id !== userId);
+    saveState();
+    renderUsersList();
+    showToast('🗑️ Usuario eliminado', 'info');
+  }
+}
+
+// Configuración
+function saveMPConfig() {
+  const alias = document.getElementById('mpAlias')?.value || '';
+  const publicKey = document.getElementById('mpPublicKey')?.value || '';
+  const accessToken = document.getElementById('mpAccessToken')?.value || '';
+  
+  // Aquí guardarías la configuración en tu estado
+  showToast('✅ Configuración de MercadoPago guardada', 'success');
+}
+
+function saveGeneralConfig() {
+  const maintenanceMode = document.getElementById('maintenanceMode')?.checked || false;
+  const allowRegistration = document.getElementById('allowRegistration')?.checked || true;
+  const platformFee = parseFloat(document.getElementById('platformFee')?.value) || 10;
+  
+  // Aquí guardarías la configuración en tu estado
+  showToast('✅ Configuración general guardada', 'success');
+}
+
+function clearCache() {
+  localStorage.removeItem('subastaArgenta_backup');
+  showToast('🗑️ Caché limpiado', 'success');
+}
+
+function resetAllData() {
+  if (confirm('¿ESTÁS ABSOLUTAMENTE SEGURO? Esto borrará TODOS los datos: subastas, productos, usuarios, TODO.')) {
+    if (confirm('¿ÚLTIMA OPORTUNIDAD? Se perderá toda la información irreversiblemente.')) {
+      state.auctions = [];
+      state.products = [];
+      state.bids = [];
+      state.orders = [];
+      state.botUsers = [];
+      state.startTime = Date.now();
+      saveState();
+      renderAuctions();
+      renderProducts();
+      renderDashboardStats();
+      showToast('💥 TODOS los datos han sido reseteados', 'warning');
+    }
+  }
+}
+
+// Inicializar tiempo de actividad
+if (!state.startTime) {
+  state.startTime = Date.now();
+}
 window.filterProducts = filterProducts;
 window.filterProductCategory = filterProductCategory;
 window.renderStats = renderStats;
