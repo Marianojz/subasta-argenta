@@ -2452,6 +2452,8 @@ function startRealtimeListener() {
         // Verificar si hay cambios en las subastas
         let hasChanges = false;
         let featuredNeedsUpdate = false;
+              // Verificar si hay cambios que afecten al dashboard
+      let dashboardNeedsUpdate = false;
         
         updatedAuctions.forEach(updatedAuction => {
           const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
