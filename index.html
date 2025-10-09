@@ -2367,35 +2367,43 @@ function updateUI() {
   const balance = document.getElementById('balance');
   const adminPanel = document.getElementById('adminPanel');
   const openAdmin = document.getElementById('openAdmin');
+  const topupBtn = document.getElementById('topup');
   
+  // Verificar que los elementos existan antes de usarlos
   if (state.currentUser) {
     // USUARIO LOGUEADO
-    userInfo.textContent = state.currentUser.name;
-    userInfo.style.display = 'block';
-    authContainer.style.display = 'none';
-    logoutBtn.style.display = 'block';
-    profileBtn.style.display = 'block';
-    cartBtn.parentElement.style.display = 'block';
-    balance.textContent = `$${state.currentUser.balance}`;
+    if (userInfo) {
+      userInfo.textContent = state.currentUser.name;
+      userInfo.style.display = 'block';
+    }
+    if (authContainer) authContainer.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'block';
+    if (profileBtn) profileBtn.style.display = 'block';
+    if (cartBtn && cartBtn.parentElement) cartBtn.parentElement.style.display = 'block';
+    if (balance) balance.textContent = `$${state.currentUser.balance}`;
+    if (topupBtn) topupBtn.style.display = 'block';
     
     if (state.currentUser.role === 'admin') {
-      openAdmin.style.display = 'block';
-      adminPanel.classList.remove('hidden'); // Mostrar panel admin solo si es admin
+      if (openAdmin) openAdmin.style.display = 'block';
+      if (adminPanel) adminPanel.classList.remove('hidden');
     } else {
-      openAdmin.style.display = 'none';
-      adminPanel.classList.add('hidden'); // Ocultar panel admin si no es admin
+      if (openAdmin) openAdmin.style.display = 'none';
+      if (adminPanel) adminPanel.classList.add('hidden');
     }
   } else {
     // SIN SESIÓN
-    userInfo.textContent = '';
-    userInfo.style.display = 'none';
-    authContainer.style.display = 'flex';
-    logoutBtn.style.display = 'none';
-    profileBtn.style.display = 'none';
-    cartBtn.parentElement.style.display = 'none';
-    balance.textContent = '$0';
-    openAdmin.style.display = 'none';
-    adminPanel.classList.add('hidden'); // Asegurar que esté oculto
+    if (userInfo) {
+      userInfo.textContent = '';
+      userInfo.style.display = 'none';
+    }
+    if (authContainer) authContainer.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (profileBtn) profileBtn.style.display = 'none';
+    if (cartBtn && cartBtn.parentElement) cartBtn.parentElement.style.display = 'none';
+    if (balance) balance.textContent = '$0';
+    if (openAdmin) openAdmin.style.display = 'none';
+    if (adminPanel) adminPanel.classList.add('hidden');
+    if (topupBtn) topupBtn.style.display = 'none';
   }
   
   updateCategoryFilter();
