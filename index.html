@@ -3878,6 +3878,25 @@ function renderStats() {
   document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
 }
 function setupListeners() {
+    // Dashboard
+  safeAssign('dashboard-tab', 'onclick', renderDashboardStats);
+  safeAssign('exportExcel', 'onclick', exportToExcel);
+  safeAssign('resetStats', 'onclick', resetStats);
+  safeAssign('refreshDash', 'onclick', renderDashboardStats);
+  safeAssign('backupData', 'onclick', backupData);
+  
+  // Gestión de usuarios
+  safeAssign('users-tab', 'onclick', renderUsersList);
+  safeAssign('addTestUser', 'onclick', addTestUser);
+  safeAssign('searchUser', 'oninput', debounce(renderUsersList, 300));
+  safeAssign('filterUserStatus', 'onchange', renderUsersList);
+  safeAssign('sortUsers', 'onchange', renderUsersList);
+  
+  // Configuración
+  safeAssign('saveMPConfig', 'onclick', saveMPConfig);
+  safeAssign('saveGeneralConfig', 'onclick', saveGeneralConfig);
+  safeAssign('clearCache', 'onclick', clearCache);
+  safeAssign('resetAllData', 'onclick', resetAllData);
   // Helper para asignar eventos de forma segura
   const safeAssign = (id, event, handler) => {
     const element = document.getElementById(id);
