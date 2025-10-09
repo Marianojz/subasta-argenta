@@ -1287,6 +1287,11 @@ header .btn:hover::after {
               </button>
             </li>
             <li class="nav-item" role="presentation">
+              <button class="nav-link" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab">
+                <i class="fas fa-users mr-1"></i> Usuarios
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
               <button class="nav-link" id="bots-tab" data-bs-toggle="pill" data-bs-target="#bots" type="button" role="tab">
                 <i class="fas fa-robot mr-1"></i> Bots
               </button>
@@ -1296,36 +1301,116 @@ header .btn:hover::after {
                 <i class="fas fa-box mr-1"></i> Productos
               </button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="config-tab" data-bs-toggle="pill" data-bs-target="#config" type="button" role="tab">
+                <i class="fas fa-cog mr-1"></i> Config
+              </button>
+            </li>
           </ul>
           
           <div class="tab-content" id="adminTabContent">
+            <!-- ============================================ -->
             <!-- PESTAÑA DASHBOARD -->
+            <!-- ============================================ -->
             <div class="tab-pane fade show active" id="dashboard">
               <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
                 <div class="stats-card">
                   <i class="fas fa-gavel fa-2x mb-2" style="color: var(--primary);"></i>
-                  <div class="stats-value" id="totalAuctions">0</div>
+                  <div class="stats-value" id="dash_totalAuctions">0</div>
                   <div class="stats-label">Subastas Totales</div>
                 </div>
                 <div class="stats-card">
                   <i class="fas fa-fire fa-2x mb-2" style="color: var(--secondary);"></i>
-                  <div class="stats-value" id="activeAuctions">0</div>
+                  <div class="stats-value" id="dash_activeAuctions">0</div>
                   <div class="stats-label">Subastas Activas</div>
                 </div>
                 <div class="stats-card">
                   <i class="fas fa-box fa-2x mb-2" style="color: var(--accent);"></i>
-                  <div class="stats-value" id="totalProducts">0</div>
+                  <div class="stats-value" id="dash_totalProducts">0</div>
                   <div class="stats-label">Productos Totales</div>
                 </div>
                 <div class="stats-card">
                   <i class="fas fa-shopping-cart fa-2x mb-2" style="color: var(--success);"></i>
-                  <div class="stats-value" id="productsInStock">0</div>
+                  <div class="stats-value" id="dash_productsInStock">0</div>
                   <div class="stats-label">Productos en Stock</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-hand-holding-usd fa-2x mb-2" style="color: var(--warning);"></i>
+                  <div class="stats-value" id="dash_totalBids">0</div>
+                  <div class="stats-label">Ofertas Realizadas</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--success);"></i>
+                  <div class="stats-value" id="dash_totalOrders">0</div>
+                  <div class="stats-label">Órdenes Completadas</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-dollar-sign fa-2x mb-2" style="color: var(--primary);"></i>
+                  <div class="stats-value" id="dash_totalRevenue">$0</div>
+                  <div class="stats-label">Ingresos Totales</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-chart-line fa-2x mb-2" style="color: var(--secondary);"></i>
+                  <div class="stats-value" id="dash_avgBid">$0</div>
+                  <div class="stats-label">Puja Promedio</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-users fa-2x mb-2" style="color: var(--accent);"></i>
+                  <div class="stats-value" id="dash_totalUsers">0</div>
+                  <div class="stats-label">Usuarios Registrados</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-user-check fa-2x mb-2" style="color: var(--success);"></i>
+                  <div class="stats-value" id="dash_activeUsers">0</div>
+                  <div class="stats-label">Usuarios Activos</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-robot fa-2x mb-2" style="color: var(--primary);"></i>
+                  <div class="stats-value" id="dash_activeBots">0</div>
+                  <div class="stats-label">Bots Activos</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-clock fa-2x mb-2" style="color: var(--warning);"></i>
+                  <div class="stats-value" id="dash_timeActive">0h</div>
+                  <div class="stats-label">Tiempo Activo</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-pink-400"></i> Acciones Rápidas
+                  </h6>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button id="exportExcel" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button id="resetStats" class="btn btn-outline-danger btn-sm">
+                      <i class="fas fa-redo"></i> Reset Stats
+                    </button>
+                    <button id="refreshDash" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                    <button id="backupData" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-download"></i> Backup
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-trophy text-yellow-400"></i> Top Usuarios
+                  </h6>
+                  <div id="topUsersList" class="space-y-2 max-h-40 overflow-y-auto">
+                    <div class="text-center text-slate-400 py-4">No hay datos</div>
+                  </div>
                 </div>
               </div>
             </div>
 
+            <!-- ============================================ -->
             <!-- PESTAÑA CREAR -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="create">
               <form id="createAuctionForm" class="space-y-4">
                 <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título" required />
@@ -1350,12 +1435,46 @@ header .btn:hover::after {
               </form>
             </div>
 
+            <!-- ============================================ -->
             <!-- PESTAÑA GESTIONAR -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="manage">
               <div id="manageAuctionsList"></div>
             </div>
 
+            <!-- ============================================ -->
+            <!-- PESTAÑA USUARIOS -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="users">
+              <div class="glass-light p-4 rounded-xl mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h6 class="font-bold">Gestión de Usuarios</h6>
+                  <button id="addTestUser" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-user-plus"></i> Agregar Usuario de Prueba
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                  <input id="searchUser" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="Buscar usuario..." />
+                  <select id="filterUserStatus" class="form-control bg-transparent text-light border-slate-700 rounded-xl">
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="blocked">Bloqueados</option>
+                  </select>
+                  <select id="sortUsers" class="form-control bg-transparent text-light border-slate-700 rounded-xl">
+                    <option value="name">Por nombre</option>
+                    <option value="balance">Por saldo</option>
+                    <option value="date">Por fecha</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="usersList" class="space-y-3"></div>
+            </div>
+
+            <!-- ============================================ -->
             <!-- PESTAÑA BOTS -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="bots">
               <div class="glass-light p-4 rounded-xl mb-4">
                 <div class="flex items-center justify-between mb-3">
@@ -1395,7 +1514,9 @@ header .btn:hover::after {
               </button>
             </div>
 
+            <!-- ============================================ -->
             <!-- PESTAÑA PRODUCTOS -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="products">
               <h6 class="mb-3">Crear Producto</h6>
               <form id="createProductForm" class="space-y-4 mb-4">
@@ -1433,8 +1554,89 @@ header .btn:hover::after {
               <h6 class="mb-3">Gestionar Productos</h6>
               <div id="manageProductsList"></div>
             </div>
+
+            <!-- ============================================ -->
+            <!-- PESTAÑA CONFIGURACIÓN -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="config">
+              <div class="space-y-4">
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-credit-card text-blue-400"></i> Configuración MercadoPago
+                  </h6>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Alias de destino</label>
+                      <input id="mpAlias" type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="tu.alias.mp" />
+                    </div>
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Public Key</label>
+                      <input id="mpPublicKey" type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="TEST-..." />
+                    </div>
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Access Token</label>
+                      <input id="mpAccessToken" type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="APP_USR-..." />
+                    </div>
+                    <button id="saveMPConfig" class="btn btn-primary btn-sm w-full">
+                      <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-pink-400"></i> Configuración General
+                  </h6>
+                  <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded">
+                      <div>
+                        <div class="font-medium">Modo Mantenimiento</div>
+                        <div class="text-xs text-slate-400">Desactivar acceso público</div>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input type="checkbox" id="maintenanceMode" class="form-check-input">
+                      </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded">
+                      <div>
+                        <div class="font-medium">Registro de Usuarios</div>
+                        <div class="text-xs text-slate-400">Permitir nuevos registros</div>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input type="checkbox" id="allowRegistration" class="form-check-input" checked>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Comisión de la plataforma (%)</label>
+                      <input id="platformFee" type="number" min="0" max="100" step="0.1" value="10" class="form-control bg-transparent text-light border-slate-700 rounded-xl" />
+                    </div>
+
+                    <button id="saveGeneralConfig" class="btn btn-primary btn-sm w-full">
+                      <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2 text-red-400">
+                    <i class="fas fa-exclamation-triangle"></i> Zona de Peligro
+                  </h6>
+                  <div class="space-y-3">
+                    <button id="clearCache" class="btn btn-outline-warning btn-sm w-full">
+                      <i class="fas fa-trash"></i> Limpiar Caché
+                    </button>
+                    <button id="resetAllData" class="btn btn-outline-danger btn-sm w-full">
+                      <i class="fas fa-exclamation-circle"></i> Borrar Todos los Datos
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
 
         <!-- Contenido Principal para todos los usuarios -->
         <div class="glass p-5 rounded-2xl fade-in">
