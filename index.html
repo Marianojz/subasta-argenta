@@ -2490,9 +2490,17 @@ function startRealtimeListener() {
             }
           }
         });
+                });
+        
+        // 👈 AQUÍ AGREGA ESTAS LÍNEAS:
+        // Actualizar dashboard si hay cambios relevantes
+        if (dashboardNeedsUpdate && state.currentUser?.role === 'admin') {
+          renderDashboardStats();
+        }
         
         // Actualizar estado completo si hay cambios
         if (hasChanges) {
+        
           state.auctions = updatedAuctions;
           state.bids = data.bids || [];
           
