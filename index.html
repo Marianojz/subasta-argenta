@@ -2491,7 +2491,7 @@ function updateUI() {
     // USUARIO LOGUEADO
     userInfo.textContent = state.currentUser.name;
     userInfo.style.display = 'block';
-    authContainer.style.display = 'none'; // Ocultar contenedor de auth
+    authContainer.style.display = 'none';
     logoutBtn.style.display = 'block';
     profileBtn.style.display = 'block';
     cartBtn.parentElement.style.display = 'block';
@@ -2499,21 +2499,22 @@ function updateUI() {
     
     if (state.currentUser.role === 'admin') {
       openAdmin.style.display = 'block';
+      adminPanel.classList.remove('hidden'); // Mostrar panel admin solo si es admin
     } else {
       openAdmin.style.display = 'none';
-      adminPanel.classList.add('hidden');
+      adminPanel.classList.add('hidden'); // Ocultar panel admin si no es admin
     }
   } else {
     // SIN SESIÓN
     userInfo.textContent = '';
     userInfo.style.display = 'none';
-    authContainer.style.display = 'flex'; // Mostrar contenedor de auth
+    authContainer.style.display = 'flex';
     logoutBtn.style.display = 'none';
     profileBtn.style.display = 'none';
     cartBtn.parentElement.style.display = 'none';
     balance.textContent = '$0';
     openAdmin.style.display = 'none';
-    adminPanel.classList.add('hidden');
+    adminPanel.classList.add('hidden'); // Asegurar que esté oculto
   }
   
   updateCategoryFilter();
