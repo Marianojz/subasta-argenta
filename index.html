@@ -4383,6 +4383,13 @@ if (!state.startTime) {
 window.filterProducts = filterProducts;
 window.filterProductCategory = filterProductCategory;
 window.renderStats = renderStats;
+// Funciones globales para el panel admin
+window.rechargeUserBalance = rechargeUserBalance;
+window.toggleUserStatus = toggleUserStatus;
+window.promoteToAdmin = promoteToAdmin;
+window.deleteUser = deleteUser;
+window.renderDashboardStats = renderDashboardStats;
+window.renderUsersList = renderUsersList;
 function updateBotBalance(id, balance) {
   const bot = state.botUsers.find(b => b.id === id);
   if (bot && balance >= 0) {
