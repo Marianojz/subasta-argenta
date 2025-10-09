@@ -2463,6 +2463,14 @@ function startRealtimeListener() {
                 currentAuction.status !== updatedAuction.status ||
                 currentAuction.lastBidTime !== updatedAuction.lastBidTime) {
               hasChanges = true;
+                          if (currentAuction.currentBid !== updatedAuction.currentBid || 
+                currentAuction.status !== updatedAuction.status ||
+                currentAuction.lastBidTime !== updatedAuction.lastBidTime) {
+              hasChanges = true;
+              
+              // 👈 AQUÍ AGREGA ESTA LÍNEA:
+              dashboardNeedsUpdate = true;
+              
               
               // Verificar si la subasta que cambió es activa
               if (updatedAuction.status === 'active') {
