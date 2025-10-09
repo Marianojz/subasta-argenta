@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
   <meta name="description" content="Plataforma de subastas online con tienda virtual integrada">
   <meta name="theme-color" content="#ff3e7f">
@@ -280,12 +281,15 @@
   .price-tag {
     font-size: 1.25rem !important;
     line-height: 1.2 !important;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
+  .price-tag {
+  font-weight: 700;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
 /* Nuevo estilo para valores de subasta destacada */
 .featured-value {
@@ -1274,7 +1278,7 @@ header .btn:hover::after {
                 <i class="fas fa-store mr-1"></i> Tienda Virtual
               </button>
             </li>
- </ul>
+          </ul>
           
           <div class="tab-content" id="mainTabContent">
             <div class="tab-pane fade" id="auctions" role="tabpanel">
@@ -1335,10 +1339,10 @@ header .btn:hover::after {
             </div>
 
             <div class="tab-pane fade show active" id="store" role="tabpanel">
-              <!-- Subasta Destacada -->
-              <div id="featuredAuction" class="mb-6"></div>
-              
-              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+  <!-- Subasta Destacada -->
+  <div id="featuredAuction" class="mb-6"></div>
+  
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
                   <h2 class="text-lg font-bold flex items-center gap-2">
                     <i class="fas fa-store text-blue-400"></i> Tienda Virtual
@@ -1379,55 +1383,7 @@ header .btn:hover::after {
           </div>
         </div>
 
-        <div id="adminPanel" class="glass p-5 rounded-2xl hidden">
-  <div class="flex justify-between items-center mb-4">
-    <h3 class="font-bold text-lg flex items-center gap-2">
-      <i class="fas fa-user-shield text-pink-400"></i> Panel Admin
-    </h3>
-    <button id="exportCsv" class="btn btn-outline-light btn-sm">
-      <i class="fas fa-file-export"></i> Exportar
-    </button>
-  </div>
-  
-  <ul class="nav nav-tabs mb-4" id="adminTabs">
-    <li class="nav-item">
-      <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard">
-        <i class="fas fa-tachometer-alt"></i> Dashboard
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create">
-        <i class="fas fa-plus"></i> Crear
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage">
-        <i class="fas fa-edit"></i> Gestionar
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users">
-        <i class="fas fa-users"></i> Usuarios
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="bots-tab" data-bs-toggle="tab" data-bs-target="#bots">
-        <i class="fas fa-robot"></i> Bots
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products">
-        <i class="fas fa-box"></i> Productos
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config">
-        <i class="fas fa-cog"></i> Configuración
-      </button>
-    </li>
-  </ul>
-  
-  <div class="tab-content">
+        <div class="tab-content">
     <!-- ============================================ -->
     <!-- PESTAÑA DASHBOARD -->
     <!-- ============================================ -->
@@ -1539,7 +1495,7 @@ header .btn:hover::after {
           <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
           <div class="text-slate-400">Arrastra imagen aquí</div>
           <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
-          <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+          <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1646,7 +1602,7 @@ header .btn:hover::after {
           <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
           <div class="text-slate-400">Arrastra imagen aquí</div>
           <input type="file" id="productImageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
-          <img <img id="productImagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+          <img id="productImagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1754,7 +1710,9 @@ header .btn:hover::after {
       </div>
     </div>
   </div>
+  </div>
 </div>
+      </main>
 
       <aside class="space-y-6">
         <div class="glass p-5 rounded-2xl sticky top-4">
@@ -1789,15 +1747,15 @@ header .btn:hover::after {
               <option value="all">Todas las categorías</option>
             </select>
             <select id="filterTime" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
-  <option value="all">Cualquier tiempo</option>
-  <option value="short">&lt; 10 min</option>
-  <option value="1hour">&lt; 1 hora</option>
-</select>
+              <option value="all">Cualquier tiempo</option>
+              <option value="short">< 10 min</option>
+              <option value="1hour">< 1 hora</option>
+            </select>
           </div>
         </div>
       </aside>
     </div>
-  </main>
+  </div>
 
   <div class="mobile-menu md:hidden">
     <div class="mobile-menu-item active" data-target="auctions">
@@ -2089,10 +2047,7 @@ let state = {
   botSettings: { enabled: true, delayGlobal: 2, probability: 70 },
   currentIncrement: 500,
   imageUploaded: false,
-  uploadedImageUrl: null,
-  uploadedProductImageUrl: null,
-  allUsers: [],
-  startTime: Date.now()
+  uploadedImageUrl: null
 };
 
 let selectedPaymentMethod = null;
@@ -3185,127 +3140,6 @@ function checkout() {
   showToast('✅ Compra exitosa', 'success');
 }
 
-function showTopupModal() {
-  if (!state.currentUser) {
-    showLoginModal();
-    return;
-  }
-  
-  // Reset del modal
-  document.getElementById('topupAmountSelection').style.display = 'block';
-  document.getElementById('topupPaymentMethods').classList.add('hidden');
-  document.getElementById('topupLoading').classList.add('hidden');
-  document.getElementById('topupSuccess').classList.add('hidden');
-  document.getElementById('customTopupAmount').value = '';
-  document.getElementById('proceedToPayment').disabled = true;
-  topupAmount = 0;
-  
-  new bootstrap.Modal(document.getElementById('topupModal')).show();
-  
-  // Listeners para montos predefinidos
-  document.querySelectorAll('.topup-amount-btn').forEach(btn => {
-    btn.onclick = function() {
-      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      topupAmount = parseInt(this.dataset.amount);
-      document.getElementById('customTopupAmount').value = '';
-      document.getElementById('proceedToPayment').disabled = false;
-    };
-  });
-  
-  // Listener para monto personalizado
-  document.getElementById('customTopupAmount').oninput = function() {
-    const value = parseFloat(this.value);
-    if (value > 0) {
-      topupAmount = value;
-      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('proceedToPayment').disabled = false;
-    } else {
-      document.getElementById('proceedToPayment').disabled = true;
-    }
-  };
-  
-  // Listener para continuar al pago
-  document.getElementById('proceedToPayment').onclick = showTopupPaymentMethods;
-}
-
-function showTopupPaymentMethods() {
-  if (topupAmount <= 0) return;
-  
-  document.getElementById('topupAmountSelection').style.display = 'none';
-  document.getElementById('topupPaymentMethods').classList.remove('hidden');
-  
-  // Selección de método de pago
-  document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(method => {
-    method.onclick = function() {
-      document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(m => m.classList.remove('selected'));
-      this.classList.add('selected');
-      selectedPaymentMethod = this.dataset.method;
-      document.getElementById('confirmTopupPayment').disabled = false;
-    };
-  });
-  
-  document.getElementById('confirmTopupPayment').onclick = processTopup;
-}
-
-function processTopup() {
-  if (!selectedPaymentMethod || topupAmount <= 0) return;
-  
-  document.getElementById('topupPaymentMethods').classList.add('hidden');
-  document.getElementById('topupLoading').classList.remove('hidden');
-  
-  setTimeout(() => {
-    state.currentUser.balance += topupAmount;
-    
-    document.getElementById('topupLoading').classList.add('hidden');
-    document.getElementById('topupSuccess').classList.remove('hidden');
-    document.getElementById('topupDetails').innerHTML = `
-      <div class="glass-light p-3 rounded mt-3">
-        <div><strong>Monto:</strong> $${topupAmount}</div>
-        <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
-        <div><strong>Nuevo saldo:</strong> $${state.currentUser.balance}</div>
-      </div>
-    `;
-    
-    saveState();
-    updateUI();
-    
-    setTimeout(() => {
-      createConfetti();
-      bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
-      showToast('✅ Recarga exitosa', 'success');
-    }, 2500);
-  }, 2000);
-}
-
-// Continúa con checkout...
-function checkout() {
-function renderPaymentSummary() {
-  const itemsContainer = document.getElementById('paymentItems');
-  const totalContainer = document.getElementById('paymentTotal');
-  
-  if (!state.cart.length) return;
-  
-  let total = 0;
-  itemsContainer.innerHTML = state.cart.map(item => {
-    const product = state.products.find(p => p.id === item.productId);
-    if (!product) return '';
-    const itemTotal = item.quantity * item.price;
-    total += itemTotal;
-    return `
-      <div class="flex justify-between py-2 border-b border-slate-700">
-        <div>
-          <div class="font-medium">${sanitizeHTML(product.title)}</div>
-          <div class="text-xs text-slate-400">${item.quantity} x $${item.price}</div>
-        </div>
-        <div class="font-semibold">$${itemTotal}</div>
-      </div>
-    `;
-  }).join('');
-  
-  totalContainer.textContent = `$${total}`;
-}
-
 // ======================
 // MERCADOPAGO
 // ======================
@@ -3610,12 +3444,6 @@ function filterProducts() {
   renderProducts(filtered);
 }
 
-function filterProductCategory() {
-  filterProducts();
-}
-
-// ======================
-
 // ======================
 // ADMIN & BOTS
 // ======================
@@ -3677,7 +3505,7 @@ if (buyNow && buyNow <= start) {
     document.getElementById('imagePreview').classList.add('hidden');
     state.imageUploaded = false;
     state.uploadedImageUrl = null;
-    state.uploadedProductImageUrl = null;
+    uploadedProductImageUrl: null
     
     await saveState();
     renderAuctions();
@@ -4019,438 +3847,6 @@ function renderStats() {
   
   document.getElementById('activeBots').textContent = state.botUsers.filter(b => b.active).length;
 }
-// ======================
-// NUEVAS FUNCIONES ADMIN
-// ======================
-
-// Renderizar Dashboard
-function renderDashboard() {
-  // Estadísticas básicas
-  document.getElementById('dash_totalAuctions').textContent = state.auctions.length;
-  document.getElementById('dash_activeAuctions').textContent = state.auctions.filter(a => a.status === 'active').length;
-  document.getElementById('dash_totalProducts').textContent = state.products.length;
-  document.getElementById('dash_productsInStock').textContent = state.products.filter(p => p.stock > 0).length;
-  document.getElementById('dash_totalBids').textContent = state.bids.length;
-  document.getElementById('dash_totalOrders').textContent = state.orders.length;
-  
-  // Ingresos totales
-  const revenue = state.orders.reduce((sum, o) => sum + o.total, 0);
-  document.getElementById('dash_totalRevenue').textContent = `$${revenue}`;
-  
-  // Puja promedio
-  const avgBid = state.bids.length > 0 
-    ? Math.round(state.bids.reduce((sum, b) => sum + b.amount, 0) / state.bids.length)
-    : 0;
-  document.getElementById('dash_avgBid').textContent = `$${avgBid}`;
-  
-  // Usuarios (simulado - en producción vendría de Firestore)
-  document.getElementById('dash_totalUsers').textContent = state.allUsers ? state.allUsers.length : 2;
-  document.getElementById('dash_activeUsers').textContent = state.currentUser ? 1 : 0;
-  
-  // Bots activos
-  document.getElementById('dash_activeBots').textContent = state.botUsers.filter(b => b.active).length;
-  
-  // Tiempo activo (simulado)
-  const uptime = Math.floor((Date.now() - (state.startTime || Date.now())) / 3600000);
-  document.getElementById('dash_timeActive').textContent = `${uptime}h`;
-  
-  // Top usuarios
-  renderTopUsers();
-}
-
-function renderTopUsers() {
-  const container = document.getElementById('topUsersList');
-  
-  // Crear lista de usuarios con sus pujas
-  const userStats = {};
-  
-  state.bids.forEach(bid => {
-    if (!userStats[bid.userId]) {
-      userStats[bid.userId] = {
-        id: bid.userId,
-        totalBids: 0,
-        totalAmount: 0
-      };
-    }
-    userStats[bid.userId].totalBids++;
-    userStats[bid.userId].totalAmount += bid.amount;
-  });
-  
-  // Convertir a array y ordenar
-  const sortedUsers = Object.values(userStats)
-    .sort((a, b) => b.totalAmount - a.totalAmount)
-    .slice(0, 5);
-  
-  if (sortedUsers.length === 0) {
-    container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay datos</div>';
-    return;
-  }
-  
-  container.innerHTML = sortedUsers.map((userStat, index) => {
-    let userName = 'Usuario';
-    const bot = state.botUsers.find(b => b.id === userStat.id);
-    if (bot) {
-      userName = bot.name;
-    } else if (state.currentUser && state.currentUser.id === userStat.id) {
-      userName = state.currentUser.name;
-    }
-    
-    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
-    
-    return `
-      <div class="flex justify-between items-center p-2 bg-slate-800/30 rounded">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">${medal}</span>
-          <div>
-            <div class="font-medium text-sm">${sanitizeHTML(userName)}</div>
-            <div class="text-xs text-slate-400">${userStat.totalBids} pujas</div>
-          </div>
-        </div>
-        <div class="text-sm font-bold text-pink-400">$${userStat.totalAmount}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-// Exportar a Excel
-function exportToExcel() {
-  showLoading('Generando Excel...');
-  
-  try {
-    // Crear CSV con todas las subastas
-    const headers = ['ID', 'Título', 'Categoría', 'Precio Inicial', 'Puja Actual', 'Compra Directa', 'Estado', 'Fecha Fin', 'Total Pujas'];
-    const rows = state.auctions.map(a => [
-      a.id,
-      a.title,
-      a.category,
-      a.startPrice,
-      a.currentBid || a.startPrice,
-      a.buyNowPrice || 'N/A',
-      a.status,
-      new Date(a.endTime).toLocaleString(),
-      a.bids.length
-    ]);
-    
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    
-    // Agregar productos
-    const productHeaders = ['\n\nPRODUCTOS', 'ID', 'Título', 'Categoría', 'Precio', 'Stock'];
-    const productRows = state.products.map(p => ['', p.id, p.title, p.category, p.price, p.stock]);
-    const productCsv = [productHeaders, ...productRows].map(row => row.join(',')).join('\n');
-    
-    // Agregar órdenes
-    const orderHeaders = ['\n\nÓRDENES', 'ID', 'Usuario', 'Total', 'Fecha'];
-    const orderRows = state.orders.map(o => ['', o.id, o.userId, o.total, new Date(o.timestamp).toLocaleString()]);
-    const orderCsv = [orderHeaders, ...orderRows].map(row => row.join(',')).join('\n');
-    
-    const fullCsv = csv + productCsv + orderCsv;
-    
-    const blob = new Blob([fullCsv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `subasta_argenta_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    showToast('✅ Excel exportado', 'success');
-  } catch (error) {
-    handleError(error, 'Exportar');
-  } finally {
-    hideLoading();
-  }
-}
-
-// Reset de estadísticas
-function resetStatistics() {
-  if (!confirm('⚠️ ¿Borrar todas las estadísticas? Esto eliminará:\n\n• Todas las pujas\n• Todas las órdenes\n• El historial de transacciones\n\n⚠️ Las subastas y productos NO se borrarán.')) {
-    return;
-  }
-  
-  if (!confirm('🔴 ÚLTIMA CONFIRMACIÓN: ¿Estás completamente seguro?')) {
-    return;
-  }
-  
-  showLoading('Reseteando...');
-  
-  try {
-    state.bids = [];
-    state.orders = [];
-    
-    // Limpiar historial de pujas en subastas
-    state.auctions.forEach(auction => {
-      auction.bids = [];
-    });
-    
-    saveState();
-    renderDashboard();
-    showToast('✅ Estadísticas reseteadas', 'success');
-  } catch (error) {
-    handleError(error, 'Reset');
-  } finally {
-    hideLoading();
-  }
-}
-
-// Backup de datos
-function backupData() {
-  try {
-    const backup = {
-      timestamp: new Date().toISOString(),
-      version: '1.0',
-      data: {
-        auctions: state.auctions,
-        products: state.products,
-        bids: state.bids,
-        orders: state.orders,
-        botUsers: state.botUsers,
-        botSettings: state.botSettings
-      }
-    };
-    
-    const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `backup_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    showToast('✅ Backup descargado', 'success');
-  } catch (error) {
-    handleError(error, 'Backup');
-  }
-}
-
-// Gestión de usuarios
-function renderUsersList() {
-  const container = document.getElementById('usersList');
-  
-  if (!state.allUsers) {
-    state.allUsers = [];
-  }
-  
-  // Agregar usuario actual si existe
-  if (state.currentUser && !state.allUsers.find(u => u.id === state.currentUser.id)) {
-    state.allUsers.push({
-      ...state.currentUser,
-      status: 'active',
-      registeredAt: new Date().toISOString()
-    });
-  }
-  
-  if (state.allUsers.length === 0) {
-    container.innerHTML = '<div class="text-center py-10 text-slate-400">No hay usuarios registrados</div>';
-    return;
-  }
-  
-  const search = document.getElementById('searchUser')?.value.toLowerCase() || '';
-  const statusFilter = document.getElementById('filterUserStatus')?.value || 'all';
-  
-  let filtered = state.allUsers.filter(user => {
-    const matchSearch = user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search);
-    const matchStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-  
-  container.innerHTML = filtered.map(user => `
-    <div class="glass-light p-4 rounded-xl">
-      <div class="flex justify-between items-start mb-3">
-        <div class="flex gap-3 items-center">
-          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
-            ${user.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div class="font-bold">${sanitizeHTML(user.name)}</div>
-            <div class="text-sm text-slate-400">${sanitizeHTML(user.email)}</div>
-            <div class="text-xs text-slate-500">ID: ${user.id}</div>
-          </div>
-        </div>
-        <span class="badge ${user.status === 'active' ? 'bg-success' : 'bg-danger'}">
-          ${user.status === 'active' ? 'ACTIVO' : 'BLOQUEADO'}
-        </span>
-      </div>
-      
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-        <div class="text-center p-2 bg-slate-800/30 rounded">
-          <div class="text-xs text-slate-400">Saldo</div>
-          <div class="font-bold text-pink-400">$${user.balance || 0}</div>
-        </div>
-        <div class="text-center p-2 bg-slate-800/30 rounded">
-          <div class="text-xs text-slate-400">Rol</div>
-          <div class="font-bold">${user.role === 'admin' ? '👑 Admin' : '👤 Usuario'}</div>
-        </div>
-        <div class="text-center p-2 bg-slate-800/30 rounded">
-          <div class="text-xs text-slate-400">Pujas</div>
-          <div class="font-bold">${state.bids.filter(b => b.userId === user.id).length}</div>
-        </div>
-        <div class="text-center p-2 bg-slate-800/30 rounded">
-          <div class="text-xs text-slate-400">Compras</div>
-          <div class="font-bold">${state.orders.filter(o => o.userId === user.id).length}</div>
-        </div>
-      </div>
-      
-      <div class="flex gap-2">
-        <button class="btn btn-outline-light btn-sm flex-1" onclick="rechargeUserBalance('${user.id}')">
-          <i class="fas fa-plus"></i> Recargar
-        </button>
-        <button class="btn ${user.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'} btn-sm flex-1" 
-                onclick="toggleUserStatus('${user.id}')">
-          <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i> 
-          ${user.status === 'active' ? 'Bloquear' : 'Desbloquear'}
-        </button>
-        ${user.role !== 'admin' ? `
-          <button class="btn btn-outline-warning btn-sm" onclick="toggleUserRole('${user.id}')">
-            <i class="fas fa-crown"></i>
-          </button>
-        ` : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-function rechargeUserBalance(userId) {
-  const user = state.allUsers.find(u => u.id === userId);
-  if (!user) return;
-  
-  const amount = prompt(`💰 Recargar saldo para ${user.name}\n\nIngresa el monto a agregar:`, '1000');
-  if (!amount || isNaN(amount)) return;
-  
-  const numAmount = parseFloat(amount);
-  if (numAmount <= 0) {
-    showToast('❌ Monto inválido', 'error');
-    return;
-  }
-  
-  user.balance = (user.balance || 0) + numAmount;
-  
-  // Si es el usuario actual, actualizar también
-  if (state.currentUser && state.currentUser.id === userId) {
-    state.currentUser.balance = user.balance;
-  }
-  
-  saveState();
-  renderUsersList();
-  updateUI();
-  showToast(`✅ Se agregaron $${numAmount} a ${user.name}`, 'success');
-}
-
-function toggleUserStatus(userId) {
-  const user = state.allUsers.find(u => u.id === userId);
-  if (!user) return;
-  
-  const newStatus = user.status === 'active' ? 'blocked' : 'active';
-  const action = newStatus === 'blocked' ? 'bloquear' : 'desbloquear';
-  
-  if (!confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} a ${user.name}?`)) {
-    return;
-  }
-  
-  user.status = newStatus;
-  
-  // Si es el usuario actual y se bloquea, cerrar sesión
-  if (state.currentUser && state.currentUser.id === userId && newStatus === 'blocked') {
-    showToast('⚠️ Tu cuenta ha sido bloqueada', 'error');
-    setTimeout(() => logout(), 2000);
-  }
-  
-  saveState();
-  renderUsersList();
-  showToast(`✅ Usuario ${action === 'bloquear' ? 'bloqueado' : 'desbloqueado'}`, 'success');
-}
-
-function toggleUserRole(userId) {
-  const user = state.allUsers.find(u => u.id === userId);
-  if (!user) return;
-  
-  if (!confirm(`¿Convertir a ${user.name} en administrador?`)) {
-    return;
-  }
-  
-  user.role = 'admin';
-  
-  if (state.currentUser && state.currentUser.id === userId) {
-    state.currentUser.role = 'admin';
-  }
-  
-  saveState();
-  renderUsersList();
-  updateUI();
-  showToast('✅ Usuario promovido a admin', 'success');
-}
-
-function addTestUser() {
-  const id = 'user_' + Date.now();
-  const num = state.allUsers.length + 1;
-  
-  state.allUsers.push({
-    id: id,
-    name: `Usuario Test ${num}`,
-    email: `test${num}@demo.com`,
-    balance: 5000,
-    role: 'user',
-    status: 'active',
-    registeredAt: new Date().toISOString()
-  });
-  
-  saveState();
-  renderUsersList();
-  showToast('✅ Usuario de prueba creado', 'success');
-}
-
-// Configuración
-function saveMPConfig() {
-  const mpConfig = {
-    alias: document.getElementById('mpAlias').value,
-    publicKey: document.getElementById('mpPublicKey').value,
-    accessToken: document.getElementById('mpAccessToken').value
-  };
-  
-  if (!mpConfig.alias || !mpConfig.publicKey || !mpConfig.accessToken) {
-    showToast('⚠️ Completa todos los campos', 'error');
-    return;
-  }
-  
-  state.mpConfig = mpConfig;
-  saveState();
-  showToast('✅ Configuración de MP guardada', 'success');
-}
-
-function saveGeneralConfig() {
-  state.config = {
-    maintenanceMode: document.getElementById('maintenanceMode').checked,
-    allowRegistration: document.getElementById('allowRegistration').checked,
-    platformFee: parseFloat(document.getElementById('platformFee').value) || 10
-  };
-  
-  saveState();
-  showToast('✅ Configuración guardada', 'success');
-}
-
-function clearCache() {
-  if (!confirm('¿Limpiar la caché local?')) return;
-  
-  localStorage.removeItem('subastaArgenta_backup');
-  showToast('✅ Caché limpiada', 'success');
-}
-
-function resetAllData() {
-  if (!confirm('⚠️ PELIGRO: Esto borrará TODOS los datos permanentemente.\n\n¿Continuar?')) {
-    return;
-  }
-  
-  if (!confirm('🔴 ÚLTIMA ADVERTENCIA: Se borrarán subastas, productos, usuarios, órdenes y toda la información.\n\n¿Estás COMPLETAMENTE seguro?')) {
-    return;
-  }
-  
-  showLoading('Borrando todo...');
-  
-  setTimeout(() => {
-    localStorage.clear();
-    location.reload();
-  }, 1000);
-}
 function setupListeners() {
   // Helper para asignar eventos de forma segura
   const safeAssign = (id, event, handler) => {
@@ -4510,8 +3906,9 @@ function setupListeners() {
   // Admin
   safeAssign('btnCreateDemo', 'onclick', createDemoData);
   safeAssign('openAdmin', 'onclick', toggleAdminPanel);
-  safeAssign('topup', 'onclick', showTopupModal);
+  safeAssign('topup', 'onclick', () => showToast('Función en desarrollo', 'info'));
   safeAssign('addBotUser', 'onclick', addBotUser);
+  safeAssign('exportCsv', 'onclick', exportToCsv);
   
   // Formularios
   safeAssign('createAuctionForm', 'onsubmit', createAuction);
@@ -4533,7 +3930,13 @@ function setupListeners() {
     renderManageProducts();
     setupProductImageUpload();
   });
-  
+  // Actualizar subasta destacada al cambiar a pestaña de tienda
+  safeAssign('store-tab', 'onclick', () => {
+    setTimeout(() => {
+      renderFeaturedAuction();
+      renderProducts();
+    }, 100);
+  });
   // Actualizar subasta destacada al cambiar a pestaña de tienda
   safeAssign('store-tab', 'onclick', () => {
     setTimeout(() => {
@@ -4566,42 +3969,45 @@ function setupListeners() {
     };
   }
   
-  // Nuevos listeners del dashboard
-  safeAssign('dashboard-tab', 'onclick', renderDashboard);
-  safeAssign('exportExcel', 'onclick', exportToExcel);
-  safeAssign('resetStats', 'onclick', resetStatistics);
-  safeAssign('refreshDash', 'onclick', renderDashboard);
-  safeAssign('backupData', 'onclick', backupData);
-  
-  // Listeners de usuarios
-  safeAssign('users-tab', 'onclick', renderUsersList);
-  safeAssign('addTestUser', 'onclick', addTestUser);
-  safeAssign('searchUser', 'oninput', debounce(renderUsersList, 300));
-  safeAssign('filterUserStatus', 'onchange', renderUsersList);
-  safeAssign('sortUsers', 'onchange', renderUsersList);
-  
-  // Listeners de configuración
-  safeAssign('config-tab', 'onclick', () => {
-    // Cargar configuración actual
-    if (state.mpConfig) {
-      document.getElementById('mpAlias').value = state.mpConfig.alias || '';
-      document.getElementById('mpPublicKey').value = state.mpConfig.publicKey || '';
-      document.getElementById('mpAccessToken').value = state.mpConfig.accessToken || '';
-    }
-    if (state.config) {
-      document.getElementById('maintenanceMode').checked = state.config.maintenanceMode || false;
-      document.getElementById('allowRegistration').checked = state.config.allowRegistration !== false;
-      document.getElementById('platformFee').value = state.config.platformFee || 10;
-    }
-  });
-  safeAssign('saveMPConfig', 'onclick', saveMPConfig);
-  safeAssign('saveGeneralConfig', 'onclick', saveGeneralConfig);
-  safeAssign('clearCache', 'onclick', clearCache);
-  safeAssign('resetAllData', 'onclick', resetAllData);
-  
   console.log('✅ Listeners configurados');
 }
 
+// ======================
+// INICIALIZACIÓN
+// ======================
+
+document.addEventListener('DOMContentLoaded', async function() {
+  console.log('🚀 Subasta Argenta iniciando...');
+  showLoading('Cargando...');
+  try {
+    await loadState();
+    setupListeners();
+    setupMobileMenu();
+    setupImageUpload();
+    renderAuctions();
+    renderProducts();
+    updateUI();
+    initParticles();
+    startBotActivity();
+    console.log('✅ App lista');
+  } catch (error) {
+    console.error('Error:', error);
+    handleError(error, 'Init');
+  } finally {
+    hideLoading();
+  }
+});
+
+// Funciones globales para onclick
+window.updateCartQuantity = updateCartQuantity;
+window.removeFromCart = removeFromCart;
+window.deleteProduct = deleteProduct;
+window.toggleBotUser = toggleBotUser;
+window.updateBotName = updateBotName;
+window.updateBotDelay = updateBotDelay;
+window.deleteBotUser = deleteBotUser;
+window.deleteAuction = deleteAuction;
+window.updateBotBalance = updateBotBalance;
 // ======================
 // GESTIÓN DE PRODUCTOS
 // ======================
@@ -4686,6 +4092,7 @@ async function createProduct(e) {
     document.getElementById('createProductForm').reset();
     document.getElementById('productImagePreview').classList.add('hidden');
     state.uploadedProductImageUrl = null;
+    uploadedProductImageUrl: null
     
     await saveState();
     renderProducts();
@@ -4728,20 +4135,6 @@ function deleteProduct(id) {
   }
 }
 
-// Funciones globales para onclick
-window.updateCartQuantity = updateCartQuantity;
-window.removeFromCart = removeFromCart;
-window.deleteProduct = deleteProduct;
-window.toggleBotUser = toggleBotUser;
-window.updateBotName = updateBotName;
-window.updateBotDelay = updateBotDelay;
-window.deleteBotUser = deleteBotUser;
-window.deleteAuction = deleteAuction;
-window.updateBotBalance = updateBotBalance;
-window.rechargeUserBalance = rechargeUserBalance;
-window.toggleUserStatus = toggleUserStatus;
-window.toggleUserRole = toggleUserRole;
-
 window.onbeforeunload = () => {
   if (countdownInterval) clearInterval(countdownInterval);
   if (botActivityInterval) clearInterval(botActivityInterval);
@@ -4750,37 +4143,4 @@ window.onbeforeunload = () => {
 };
 
 console.log('✅ JavaScript cargado');
-
-// ======================
-// INICIALIZACIÓN
-// ======================
-(async function init() {
-  try {
-    showLoading('Inicializando...');
-    
-    await loadState();
-    setupListeners();
-    setupImageUpload();
-    setupProductImageUpload();
-    setupMobileMenu();
-    initParticles();
-    
-    // Cargar vista inicial
-    renderAuctions();
-    renderProducts();
-    renderFeaturedAuction();
-    updateUI();
-    
-    // Iniciar sistemas automáticos
-    startCountdown();
-    startBotActivity();
-    
-    console.log('🚀 Aplicación inicializada');
-  } catch (error) {
-    console.error('❌ Error en inicialización:', error);
-    showToast('Error al iniciar la aplicación', 'error');
-  } finally {
-    hideLoading();
-  }
-})();
-</script></body></html>
+</script>
