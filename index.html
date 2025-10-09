@@ -2452,8 +2452,7 @@ function startRealtimeListener() {
         // Verificar si hay cambios en las subastas
         let hasChanges = false;
         let featuredNeedsUpdate = false;
-              // Verificar si hay cambios que afecten al dashboard
-      let dashboardNeedsUpdate = false;
+        let dashboardNeedsUpdate = false;
         
         updatedAuctions.forEach(updatedAuction => {
           const currentAuction = state.auctions.find(a => a.id === updatedAuction.id);
@@ -2463,14 +2462,9 @@ function startRealtimeListener() {
                 currentAuction.status !== updatedAuction.status ||
                 currentAuction.lastBidTime !== updatedAuction.lastBidTime) {
               hasChanges = true;
-                          if (currentAuction.currentBid !== updatedAuction.currentBid || 
-                currentAuction.status !== updatedAuction.status ||
-                currentAuction.lastBidTime !== updatedAuction.lastBidTime) {
-              hasChanges = true;
               
-              // 👈 AQUÍ AGREGA ESTA LÍNEA:
+              // Marcar que el dashboard necesita actualización
               dashboardNeedsUpdate = true;
-              
               
               // Verificar si la subasta que cambió es activa
               if (updatedAuction.status === 'active') {
@@ -2489,10 +2483,8 @@ function startRealtimeListener() {
               }
             }
           }
-        };
-                });
+        });
         
-        // 👈 AQUÍ AGREGA ESTAS LÍNEAS:
         // Actualizar dashboard si hay cambios relevantes
         if (dashboardNeedsUpdate && state.currentUser?.role === 'admin') {
           renderDashboardStats();
@@ -2500,7 +2492,6 @@ function startRealtimeListener() {
         
         // Actualizar estado completo si hay cambios
         if (hasChanges) {
-        
           state.auctions = updatedAuctions;
           state.bids = data.bids || [];
           
