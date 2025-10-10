@@ -4593,26 +4593,38 @@ let currentProductDetail = null;
 
 function showProductDetail(productId) {
   const product = state.products.find(p => p.id === productId);
-  if (!product) return;
+  if (!product) {
+    console.error('Producto no encontrado:', productId);
+    return;
+  }
   
   currentProductDetail = product;
   
-  // Actualizar información del modal
-  document.getElementById('productDetailImage').src = product.image;
-  document.getElementById('productDetailTitle').textContent = product.title;
-  document.getElementById('productDetailCategory').textContent = product.category;
-  document.getElementById('productDetailDescription').textContent = product.description || 'Sin descripción disponible';
-  document.getElementById('productDetailPrice').textContent = `$${product.price}`;
-  document.getElementById('productDetailStock').textContent = product.stock;
-  
-  // Resetear cantidad
+  // Actualizar contenido del modal
+  const imgEl = document.getElementById('productDetailImage');
+  const titleEl = document.getElementById('productDetailTitle');
+  const categoryEl = document.getElementById('productDetailCategory');
+  const descEl = document.getElementById('productDetailDescription');
+  const priceEl = document.getElementById('productDetailPrice');
+  const stockEl = document.getElementById('productDetailStock');
   const quantityInput = document.getElementById('productDetailQuantity');
-  quantityInput.value = 1;
-  quantityInput.max = product.stock;
-  
-  // Deshabilitar botones si no hay stock
   const addToCartBtn = document.getElementById('productDetailAddToCart');
   const buyNowBtn = document.getElementById('productDetailBuyNow');
+  
+  if (!imgEl || !titleEl) {
+    console.error('⚠️ Elementos del modal no encontrados. ¿Agregaste el HTML del modal?');
+    return;
+  }
+  
+  imgEl.src = product.image;
+  titleEl.textContent = product.title;
+  categoryEl.textContent = product.category;
+  descEl.textContent = product.description || 'Sin descripción disponible';
+  priceEl.textContent = `$${product.price}`;
+  stockEl.textContent = product.stock;
+  
+  quantityInput.value = 1;
+  quantityInput.max = product.stock;
   
   if (product.stock <= 0) {
     addToCartBtn.disabled = true;
@@ -4624,23 +4636,34 @@ function showProductDetail(productId) {
     addToCartBtn.innerHTML = '<i class="fas fa-cart-plus"></i> Agregar al Carrito';
   }
   
-  // Mostrar modal
   new bootstrap.Modal(document.getElementById('productDetailModal')).show();
 }
 
 function setupProductDetailHandlers() {
+  const incrementBtn = document.getElementById('productDetailIncrement');
+  const decrementBtn = document.getElementById('productDetailDecrement');
+  const addToCartBtn = document.getElementById('productDetailAddToCart');
+  const buyNowBtn = document.getElementById('productDetailBuyNow');
+  
+  if (!incrementBtn || !decrementBtn || !addToCartBtn || !buyNowBtn) {
+    console.warn('⚠️ Modal de producto no cargado todavía');
+    return;
+  }
+  
   // Incrementar cantidad
-  document.getElementById('productDetailIncrement').onclick = () => {
+  incrementBtn.onclick = () => {
     const input = document.getElementById('productDetailQuantity');
     const max = parseInt(input.max);
     const current = parseInt(input.value);
     if (current < max) {
       input.value = current + 1;
+    } else {
+      showToast('⚠️ Stock máximo alcanzado', 'warning');
     }
   };
   
   // Decrementar cantidad
-  document.getElementById('productDetailDecrement').onclick = () => {
+  decrementBtn.onclick = () => {
     const input = document.getElementById('productDetailQuantity');
     const current = parseInt(input.value);
     if (current > 1) {
@@ -4649,7 +4672,13 @@ function setupProductDetailHandlers() {
   };
   
   // Agregar al carrito
-  document.getElementById('productDetailAddToCart').onclick = () => {
+  addToCartBtn.onclick = () => {
+    if (!state.currentUser) {
+      bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
+      showLoginModal();
+      return;
+    }
+    
     if (!currentProductDetail) return;
     
     const quantity = parseInt(document.getElementById('productDetailQuantity').value);
@@ -4658,16 +4687,14 @@ function setupProductDetailHandlers() {
       addToCart(currentProductDetail.id);
     }
     
-    // Cerrar modal
     bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
-    
-    // Mostrar mensaje
     showToast(`✅ ${quantity} producto(s) agregado(s) al carrito`, 'success');
   };
   
   // Comprar ahora
-  document.getElementById('productDetailBuyNow').onclick = () => {
+  buyNowBtn.onclick = () => {
     if (!state.currentUser) {
+      bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
       showLoginModal();
       return;
     }
@@ -4706,7 +4733,7 @@ function setupProductDetailHandlers() {
     // Cerrar modal
     bootstrap.Modal.getInstance(document.getElementById('productDetailModal')).hide();
     
-    // Actualizar UI
+    // Actualizar
     saveState();
     updateUI();
     renderProducts();
@@ -4715,7 +4742,13 @@ function setupProductDetailHandlers() {
     createConfetti();
     showToast(`🎉 ¡Compra exitosa! ${quantity} ${currentProductDetail.title}`, 'success');
   };
+  
+  console.log('✅ Handlers del modal de producto configurados');
 }
+
+// Hacer la función global para que funcione el onclick
+window.showProductDetail = showProductDetail;
+
 </script>
 <!-- MODAL DE DETALLES DEL PRODUCTO -->
 <div class="modal fade" id="productDetailModal" tabindex="-1">
