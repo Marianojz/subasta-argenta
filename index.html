@@ -4584,3 +4584,72 @@ window.onbeforeunload = () => {
 
 console.log('✅ JavaScript cargado');
 </script>
+<!-- MODAL DE DETALLES DEL PRODUCTO -->
+<div class="modal fade" id="productDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content glass border-0 rounded-2xl">
+      <div class="modal-header border-slate-700">
+        <h5 class="modal-title"><i class="fas fa-box-open text-blue-400"></i> Detalles del Producto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!-- Imagen del producto -->
+          <div class="col-md-6 mb-3 mb-md-0">
+            <img id="productDetailImage" src="" alt="Producto" class="w-100 rounded-xl" style="max-height: 400px; object-fit: cover;">
+          </div>
+          
+          <!-- Información del producto -->
+          <div class="col-md-6">
+            <h3 id="productDetailTitle" class="font-bold mb-3"></h3>
+            
+            <div class="mb-3">
+              <span class="badge bg-primary" id="productDetailCategory"></span>
+            </div>
+            
+            <p id="productDetailDescription" class="text-slate-300 mb-4"></p>
+            
+            <div class="glass-light p-4 rounded-xl mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-slate-400">Precio:</span>
+                <span id="productDetailPrice" class="price-tag" style="font-size: 1.75rem;"></span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-slate-400">Stock disponible:</span>
+                <span id="productDetailStock" class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;"></span>
+              </div>
+            </div>
+            
+            <!-- Selector de cantidad -->
+            <div class="mb-3">
+              <label class="text-sm text-slate-400 mb-2 d-block">Cantidad:</label>
+              <div class="d-flex align-items-center gap-3">
+                <button class="quantity-btn" id="productDetailDecrement">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <input type="number" id="productDetailQuantity" value="1" min="1" 
+                       class="form-control bg-transparent text-light border-slate-700 rounded-xl text-center" 
+                       style="max-width: 80px;">
+                <button class="quantity-btn" id="productDetailIncrement">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Botón de agregar al carrito -->
+            <button id="productDetailAddToCart" class="btn btn-primary w-100 btn-lg rounded-xl mb-2">
+              <i class="fas fa-cart-plus"></i> Agregar al Carrito
+            </button>
+            
+            <!-- Botón de comprar ahora -->
+            <button id="productDetailBuyNow" class="btn btn-outline-light w-100 rounded-xl">
+              <i class="fas fa-bolt"></i> Comprar Ahora
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
