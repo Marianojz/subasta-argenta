@@ -2824,7 +2824,7 @@ function renderProducts(products = null) {
   }
   
   list.innerHTML = items.map(p => `
-    <div class="product-card glass p-4 rounded-xl">
+  <div class="product-card glass p-4 rounded-xl" style="cursor: pointer;" onclick="showProductDetail(${p.id})">
       <div class="flex flex-col sm:flex-row gap-4">
         <img src="${p.image}" loading="lazy" alt="${sanitizeHTML(p.title)}" class="w-full sm:w-24 h-24 object-cover rounded-lg">
         <div class="flex-grow">
