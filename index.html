@@ -4110,18 +4110,24 @@ function setupListeners() {
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('🚀 Subasta Argenta iniciando...');
   showLoading('Cargando...');
+  
   try {
     await loadState();
+    
+    // ✅ IMPORTANTE: Configurar listener de autenticación PRIMERO
+    setupAuthListener();
+    
     setupListeners();
     setupMobileMenu();
     setupImageUpload();
     setupProductDetailHandlers();
-    setupAuctionDetailHandlers(); // 👈 AGREGAR ESTA LÍNEA
+    setupAuctionDetailHandlers();
     renderAuctions();
     renderProducts();
     updateUI();
     initParticles();
     startBotActivity();
+    
     console.log('✅ App lista');
   } catch (error) {
     console.error('Error:', error);
