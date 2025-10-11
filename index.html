@@ -4369,6 +4369,14 @@ function setupListeners() {
     e.preventDefault();
     switchToLogin();
   });
+  // Términos y condiciones
+  const termsLink = document.getElementById('openTermsLink');
+  if (termsLink) {
+    termsLink.onclick = (e) => {
+      e.preventDefault();
+      new bootstrap.Modal(document.getElementById('termsModal')).show();
+    };
+  }
   
   // Perfil
   safeAssign('profileBtn', 'onclick', () => {
