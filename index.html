@@ -3798,6 +3798,97 @@ async function placeBid(e) {
   if (!auction) return;
   
   const minBid = (auction.currentBid || auction.startPrice) + 500;
+  const roundedMin = Math.ceil(minBid / 500) * 500;
+
+  // Validar que sea múltiplo de 500
+  if (amount % 500 !== 0) {
+    showToast('❌ Solo se permiten incrementos de $500', 'error');
+    return;
+  }
+
+  if (amount < roundedMin) {
+    showToast(`❌ Mínimo: $${roundedMin}`, 'error');
+    return;
+  }
+  
+  // 💰 NUEVO: Debitar el monto de la puja del saldo
+  if (state.currentUser.balance < amount) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  showLoading('Procesando...');
+  
+  try {
+    const bidId = state.bids.length + 1;
+    const timestamp = new Date().toISOString();
+
+    // 💰 Debitar saldo del usuario
+    state.currentUser.balance -= amount;
+    
+    // Si había una puja anterior de este usuario en esta subasta, devolver ese monto
+    const previousBid = state.bids
+      .filter(b => b.auctionId === auctionId && b.userId === state.currentUser.id)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    
+    if (previousBid) {
+      state.currentUser.balance += previousBid.amount;
+      showToast(`💸 Se devolvió tu puja anterior de $${previousBid.amount}`, 'info');
+    }
+
+    state.bids.push({
+      id: bidId,
+      auctionId,
+      userId: state.currentUser.id,
+      amount,
+      timestamp
+    });
+
+    auction.bids.push(state.currentUser.id);
+    auction.currentBid = amount;
+    auction.lastBidTime = timestamp;
+    
+    // Actualizar saldo en Firestore
+    if (db && state.currentUser) {
+      await db.collection('users').doc(state.currentUser.id).update({
+        balance: state.currentUser.balance
+      });
+    }
+    
+    // Guardar INMEDIATAMENTE en Firestore
+    await saveState();
+    
+    bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+    createConfetti();
+    renderAuctions();
+    renderFeaturedAuction();
+    updateUI();
+    showToast('✅ Puja realizada', 'success');
+  } catch (error) {
+    // En caso de error, devolver el saldo
+    state.currentUser.balance += amount;
+    if (previousBid) {
+      state.currentUser.balance -= previousBid.amount;
+    }
+    handleError(error, 'Puja');
+  } finally {
+    hideLoading();
+  }
+}
+  e.preventDefault();
+  
+  if (!rateLimiter.check('placeBid')) {
+    showToast('⚠️ Espera un momento', 'error');
+    return;
+  }
+  
+  const auctionId = parseInt(document.getElementById('bidAuctionId').value);
+  const amount = parseFloat(document.getElementById('bidAmount').value);
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction) return;
+  
+  const minBid = (auction.currentBid || auction.startPrice) + 500;
 const roundedMin = Math.ceil(minBid / 500) * 500;
 
 // Validar que sea múltiplo de 500
