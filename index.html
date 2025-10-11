@@ -4749,6 +4749,269 @@ function setupProductDetailHandlers() {
 // Hacer la función global para que funcione el onclick
 window.showProductDetail = showProductDetail;
 
+// ======================
+// MODAL DE DETALLES DE SUBASTA
+// ======================
+
+let currentAuctionDetail = null;
+
+function showAuctionDetail(auctionId) {
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction) {
+    console.error('Subasta no encontrada:', auctionId);
+    return;
+  }
+  
+  currentAuctionDetail = auction;
+  
+  // Verificar que los elementos existan
+  const elements = {
+    title: document.getElementById('auctionDetailTitle'),
+    mainImage: document.getElementById('auctionDetailMainImage'),
+    status: document.getElementById('auctionDetailStatus'),
+    category: document.getElementById('auctionDetailCategory'),
+    description: document.getElementById('auctionDetailDescription'),
+    startPrice: document.getElementById('auctionDetailStartPrice'),
+    currentBid: document.getElementById('auctionDetailCurrentBid'),
+    buyNow: document.getElementById('auctionDetailBuyNow'),
+    timeRemaining: document.getElementById('auctionDetailTimeRemaining'),
+    bidHistory: document.getElementById('auctionBidHistory'),
+    liveIndicator: document.getElementById('auctionLiveIndicator'),
+    buyNowSection: document.getElementById('buyNowSection'),
+    buyNowBtn: document.getElementById('auctionDetailBuyNowBtn')
+  };
+  
+  if (!elements.title || !elements.mainImage) {
+    console.error('⚠️ Elementos del modal de subasta no encontrados');
+    return;
+  }
+  
+  // Actualizar información básica
+  elements.title.textContent = auction.title;
+  elements.mainImage.src = auction.image;
+  elements.category.textContent = auction.category || 'General';
+  elements.description.textContent = auction.description || 'Sin descripción disponible.';
+  elements.startPrice.textContent = `$${auction.startPrice}`;
+  elements.currentBid.textContent = `$${auction.currentBid || auction.startPrice}`;
+  elements.timeRemaining.textContent = formatTimeRemaining(auction.endTime);
+  elements.timeRemaining.dataset.end = auction.endTime;
+  
+  // Estado de la subasta
+  const isActive = auction.status === 'active' && new Date(auction.endTime) > new Date();
+  
+  if (isActive) {
+    elements.status.innerHTML = '<span class="badge bg-success">🔴 ACTIVA</span>';
+    elements.liveIndicator.style.display = 'inline-flex';
+  } else {
+    elements.status.innerHTML = '<span class="badge bg-secondary">⏸️ FINALIZADA</span>';
+    elements.liveIndicator.style.display = 'none';
+  }
+  
+  // Compra directa
+  if (auction.buyNowPrice && auction.buyNowPrice > (auction.currentBid || auction.startPrice) && isActive) {
+    elements.buyNowSection.style.display = 'block';
+    elements.buyNow.textContent = `$${auction.buyNowPrice}`;
+    elements.buyNowBtn.style.display = 'block';
+  } else {
+    elements.buyNowSection.style.display = 'none';
+    elements.buyNowBtn.style.display = 'none';
+  }
+  
+  // Galería de imágenes
+  const gallery = auction.images || [auction.image];
+  const galleryThumbs = document.getElementById('auctionGalleryThumbs');
+  const galleryIndicator = document.getElementById('auctionGalleryIndicator');
+  
+  if (gallery.length > 1) {
+    galleryIndicator.style.display = 'block';
+    document.getElementById('galleryCount').textContent = gallery.length;
+    
+    galleryThumbs.innerHTML = gallery.map((img, idx) => `
+      <img src="${img}" 
+           class="rounded cursor-pointer" 
+           style="width: 80px; height: 80px; object-fit: cover; border: 2px solid transparent; transition: all 0.3s;"
+           onclick="changeAuctionMainImage('${img}', this)"
+           onmouseover="this.style.borderColor='var(--primary)'"
+           onmouseout="this.style.borderColor='transparent'"
+           alt="Imagen ${idx + 1}">
+    `).join('');
+  } else {
+    galleryIndicator.style.display = 'none';
+    galleryThumbs.innerHTML = '';
+  }
+  
+  // Historial de pujas
+  renderAuctionBidHistory(auction);
+  
+  // Configurar incrementos rápidos
+  document.querySelectorAll('#auctionDetailModal .increment-btn').forEach(btn => {
+    btn.onclick = () => {
+      const increment = parseInt(btn.dataset.amount);
+      const currentBid = auction.currentBid || auction.startPrice;
+      quickBidFromModal(currentBid + increment);
+    };
+  });
+  
+  // Mostrar modal
+  new bootstrap.Modal(document.getElementById('auctionDetailModal')).show();
+  
+  // Iniciar countdown para este modal
+  startAuctionDetailCountdown();
+}
+
+function changeAuctionMainImage(imageSrc, thumbElement) {
+  document.getElementById('auctionDetailMainImage').src = imageSrc;
+  
+  // Resaltar miniatura seleccionada
+  document.querySelectorAll('#auctionGalleryThumbs img').forEach(img => {
+    img.style.borderColor = 'transparent';
+    img.style.transform = 'scale(1)';
+  });
+  thumbElement.style.borderColor = 'var(--primary)';
+  thumbElement.style.transform = 'scale(1.05)';
+}
+
+function renderAuctionBidHistory(auction) {
+  const historyContainer = document.getElementById('auctionBidHistory');
+  
+  const recentBids = state.bids
+    .filter(b => b.auctionId === auction.id)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 5);
+  
+  if (recentBids.length === 0) {
+    historyContainer.innerHTML = '<div class="text-center text-slate-400 py-3">Sin pujas todavía</div>';
+    return;
+  }
+  
+  historyContainer.innerHTML = recentBids.map(bid => {
+    const user = state.botUsers.find(b => b.id === bid.userId);
+    const userName = user ? user.name : (state.currentUser?.id === bid.userId ? state.currentUser.name : 'Usuario');
+    const isBot = user ? true : false;
+    const timeAgo = getTimeAgo(bid.timestamp);
+    
+    return `
+      <div class="d-flex justify-content-between align-items-center p-2 mb-2 glass-light rounded">
+        <div class="d-flex align-items-center gap-2">
+          <div class="bidder-avatar" style="position: relative; margin-right: 0;">
+            ${userName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div class="font-medium text-sm">
+              ${sanitizeHTML(userName)}
+              ${isBot ? '<span class="bot-badge">BOT</span>' : ''}
+            </div>
+            <div class="text-xs text-slate-400">${timeAgo}</div>
+          </div>
+        </div>
+        <div class="font-bold text-success">$${bid.amount}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const past = new Date(timestamp);
+  const diffMs = now - past;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Ahora';
+  if (diffMins < 60) return `Hace ${diffMins}m`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `Hace ${diffHours}h`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  return `Hace ${diffDays}d`;
+}
+
+function quickBidFromModal(amount) {
+  if (!state.currentUser) {
+    bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+    showLoginModal();
+    return;
+  }
+  
+  bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+  
+  setTimeout(() => {
+    openBidModal(currentAuctionDetail.id);
+    document.getElementById('bidAmount').value = amount;
+  }, 300);
+}
+
+let auctionDetailCountdownInterval = null;
+
+function startAuctionDetailCountdown() {
+  if (auctionDetailCountdownInterval) clearInterval(auctionDetailCountdownInterval);
+  
+  auctionDetailCountdownInterval = setInterval(() => {
+    const element = document.getElementById('auctionDetailTimeRemaining');
+    if (!element || !element.dataset.end) return;
+    
+    const timeText = formatTimeRemaining(element.dataset.end);
+    element.textContent = timeText;
+    
+    if (timeText === 'Finalizada') {
+      clearInterval(auctionDetailCountdownInterval);
+      const statusBadge = document.getElementById('auctionDetailStatus');
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="badge bg-secondary">⏸️ FINALIZADA</span>';
+      }
+      document.getElementById('auctionLiveIndicator').style.display = 'none';
+    }
+  }, 1000);
+}
+
+function setupAuctionDetailHandlers() {
+  const bidBtn = document.getElementById('auctionDetailBidBtn');
+  const buyNowBtn = document.getElementById('auctionDetailBuyNowBtn');
+  
+  if (!bidBtn || !buyNowBtn) {
+    console.warn('⚠️ Modal de subasta no cargado todavía');
+    return;
+  }
+  
+  bidBtn.onclick = () => {
+    if (!state.currentUser) {
+      bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+      showLoginModal();
+      return;
+    }
+    
+    if (!currentAuctionDetail) return;
+    
+    bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+    setTimeout(() => openBidModal(currentAuctionDetail.id), 300);
+  };
+  
+  buyNowBtn.onclick = () => {
+    if (!state.currentUser) {
+      bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+      showLoginModal();
+      return;
+    }
+    
+    if (!currentAuctionDetail) return;
+    
+    bootstrap.Modal.getInstance(document.getElementById('auctionDetailModal')).hide();
+    buyNow(currentAuctionDetail.id);
+  };
+  
+  const modal = document.getElementById('auctionDetailModal');
+  modal.addEventListener('hidden.bs.modal', () => {
+    if (auctionDetailCountdownInterval) {
+      clearInterval(auctionDetailCountdownInterval);
+    }
+  });
+  
+  console.log('✅ Handlers del modal de subasta configurados');
+}
+
+window.showAuctionDetail = showAuctionDetail;
+window.changeAuctionMainImage = changeAuctionMainImage;
+
 </script>
 <!-- MODAL DE DETALLES DEL PRODUCTO -->
 <div class="modal fade" id="productDetailModal" tabindex="-1">
