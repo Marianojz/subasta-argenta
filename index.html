@@ -3165,9 +3165,19 @@ function updateCartUI() {
   }
 }
 
-function showCartModal() {
-  renderCartItems();
-  new bootstrap.Modal(document.getElementById('cartModal')).show();
+function showTopupModal() {
+  // Resetear modal
+  document.getElementById('topupAmountSelection').style.display = 'block';
+  document.getElementById('topupPaymentMethods').classList.add('hidden');
+  document.getElementById('topupLoading').classList.add('hidden');
+  document.getElementById('topupSuccess').classList.add('hidden');
+  document.getElementById('customTopupAmount').value = '';
+  document.getElementById('proceedToPayment').disabled = true;
+  
+  // Quitar selección de botones
+  document.querySelectorAll('.topup-amount-btn').forEach(btn => btn.classList.remove('active'));
+  
+  new bootstrap.Modal(document.getElementById('topupModal')).show();
 }
 
 function renderCartItems() {
