@@ -2333,7 +2333,64 @@ function getPaymentMethodName(method) {
 // FIREBASE
 // ======================
 
+// ======================
+// PERSISTENCIA DE SESIÓN
+// ======================
+
+function setupAuthListener() {
+  if (!auth) {
+    console.warn("⚠️ Auth no disponible");
+    return;
+  }
+  
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      // Usuario autenticado - restaurar sesión
+      console.log("🔐 Sesión detectada:", user.email);
+      
+      try {
+        // Obtener datos del usuario desde Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (userDoc.exists) {
+          state.currentUser = { 
+            id: user.uid, 
+            ...userDoc.data() 
+          };
+        } else {
+          // Si no existe en Firestore, crear el documento
+          state.currentUser = {
+            id: user.uid,
+            name: user.displayName || 'Usuario',
+            email: user.email,
+            balance: 5000,
+            role: 'user'
+          };
+          await db.collection('users').doc(user.uid).set(state.currentUser);
+        }
+        
+        console.log("✅ Sesión restaurada:", state.currentUser.name);
+        updateUI();
+        
+        // Iniciar listener de tiempo real solo si hay usuario
+        startRealtimeListener();
+        
+      } catch (error) {
+        console.error("Error restaurando sesión:", error);
+        handleError(error, 'Restaurar sesión');
+      }
+    } else {
+      // No hay usuario autenticado
+      console.log("🚪 Sin sesión activa");
+      state.currentUser = null;
+      stopRealtimeListener();
+      updateUI();
+    }
+  });
+}
+
 let realtimeListener = null; // Variable global para el listener
+
 
 async function loadState() {
   try {
