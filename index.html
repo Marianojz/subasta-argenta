@@ -3567,8 +3567,54 @@ function renderCartItems() {
   total.textContent = `$${totalAmount}`;
 }
 
-function checkout() {
+async function checkout() {
   if (!state.currentUser || !state.cart.length) return;
+  
+  const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+  
+  if (state.currentUser.balance < total) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  showLoading('Procesando compra...');
+  
+  try {
+    state.currentUser.balance -= total;
+    state.cart.forEach(item => {
+      const p = state.products.find(pr => pr.id === item.productId);
+      if (p) p.stock -= item.quantity;
+    });
+    
+    state.orders.push({
+      id: Date.now(),
+      userId: state.currentUser.id,
+      items: [...state.cart],
+      total,
+      paymentMethod: 'balance',
+      timestamp: new Date().toISOString()
+    });
+    
+    // Actualizar saldo en Firestore
+    if (db && state.currentUser) {
+      await db.collection('users').doc(state.currentUser.id).update({
+        balance: state.currentUser.balance
+      });
+    }
+    
+    state.cart = [];
+    bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+    createConfetti();
+    updateUI();
+    renderProducts();
+    saveState();
+    showToast('✅ Compra exitosa', 'success');
+  } catch (error) {
+    handleError(error, 'Compra');
+  } finally {
+    hideLoading();
+  }
+}
   
   const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
   
