@@ -3193,25 +3193,42 @@ function showTopupModal() {
   new bootstrap.Modal(document.getElementById('topupModal')).show();
 }
 function processTopupPayment() {
-  if (!selectedPaymentMethod) {
-    showToast('⚠️ Selecciona método de pago', 'error');
+  if (!selectedPaymentMethod || selectedPaymentMethod !== 'mercadopago') {
+    showToast('⚠️ Error en el método de pago', 'error');
     return;
   }
   
   document.getElementById('topupPaymentMethods').classList.add('hidden');
   document.getElementById('topupLoading').classList.remove('hidden');
   
-  // Simular procesamiento con MercadoPago
+  // Simulación de procesamiento con MercadoPago
+  // TODO: Aquí se integrará la API real de MercadoPago
   setTimeout(() => {
+    // Simular transacción exitosa
     state.currentUser.balance += topupAmount;
+    
+    // Guardar transacción
+    state.orders.push({
+      id: Date.now(),
+      userId: state.currentUser.id,
+      type: 'topup',
+      items: [],
+      total: topupAmount,
+      paymentMethod: 'mercadopago',
+      timestamp: new Date().toISOString(),
+      status: 'completed'
+    });
     
     document.getElementById('topupLoading').classList.add('hidden');
     document.getElementById('topupSuccess').classList.remove('hidden');
     document.getElementById('topupDetails').innerHTML = `
       <div class="glass-light p-3 rounded mt-3">
-        <div><strong>Monto:</strong> $${topupAmount}</div>
-        <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
-        <div><strong>Estado:</strong> <span class="text-success">✅ Aprobado</span></div>
+        <div class="mb-2"><strong>💰 Monto recargado:</strong> $${topupAmount}</div>
+        <div class="mb-2"><strong>💳 Método:</strong> MercadoPago</div>
+        <div class="mb-2"><strong>✅ Estado:</strong> <span class="text-success">Aprobado</span></div>
+        <div class="text-xs text-slate-400 mt-2">
+          <i class="fas fa-info-circle"></i> Esta es una simulación. La integración real con MercadoPago se agregará próximamente.
+        </div>
       </div>
     `;
     
@@ -3221,10 +3238,12 @@ function processTopupPayment() {
     setTimeout(() => {
       createConfetti();
       bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
-      showToast(`💰 $${topupAmount} agregados exitosamente`, 'success');
+      showToast(`🎉 $${topupAmount} agregados a tu saldo`, 'success');
+      
+      // Resetear
       topupAmount = 0;
       selectedPaymentMethod = null;
-    }, 2500);
+    }, 3000);
   }, 2000);
 }
 
