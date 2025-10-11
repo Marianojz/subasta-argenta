@@ -2979,11 +2979,18 @@ showToast(`👋 Bienvenido ${state.currentUser.name}`, 'success');
   }
 }
 
-function logout() {
-  state.currentUser = null;
-  stopRealtimeListener(); // Detener listener
-  updateUI();
-  showToast('👋 Sesión cerrada', 'info');
+async function logout() {
+  try {
+    if (auth) {
+      await auth.signOut();
+    }
+    state.currentUser = null;
+    stopRealtimeListener();
+    updateUI();
+    showToast('👋 Sesión cerrada', 'info');
+  } catch (error) {
+    handleError(error, 'Logout');
+  }
 }
 // ======================
 // REGISTRO DE USUARIOS
