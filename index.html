@@ -2970,8 +2970,11 @@ async function handleLogin(e) {
     }
     
     updateUI();
-bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-showToast(`👋 Bienvenido ${state.currentUser.name}`, 'success');
+    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    showToast(`👋 Bienvenido ${state.currentUser.name}`, 'success');
+    
+    // Iniciar listener después del login
+    startRealtimeListener();
   } catch (error) {
     handleError(error, 'Login');
   } finally {
