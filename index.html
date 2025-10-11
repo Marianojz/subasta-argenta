@@ -4209,19 +4209,12 @@ function setupListeners() {
       showToast('❌ Monto mínimo $100', 'error');
       return;
     }
+    
     document.getElementById('topupAmountSelection').style.display = 'none';
     document.getElementById('topupPaymentMethods').classList.remove('hidden');
     
-    // Auto-seleccionar MercadoPago
-    selectedPaymentMethod = null;
-    document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(m => {
-      m.onclick = function() {
-        selectedPaymentMethod = this.dataset.method;
-        document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(pm => pm.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('confirmTopupPayment').disabled = false;
-      };
-    });
+    // MercadoPago ya está pre-seleccionado
+    selectedPaymentMethod = 'mercadopago';
   });
   
   safeAssign('confirmTopupPayment', 'onclick', processTopupPayment);
