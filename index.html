@@ -2709,7 +2709,12 @@ function renderAuctions(auctions = null) {
       <div class="auction-card glass p-4 rounded-xl" data-auction-id="${a.id}">
         <div class="flex flex-col sm:flex-row gap-4">
           ${a.status === 'active' ? '<div class="live-indicator mb-2"><span class="live-dot"></span>EN VIVO</div>' : ''}
-          <img src="${a.image}" loading="lazy" alt="${sanitizeHTML(a.title)}" class="w-full sm:w-24 h-24 object-cover rounded-lg">
+          <img src="${a.image}" loading="lazy" alt="${sanitizeHTML(a.title)}" 
+     class="w-full sm:w-24 h-24 object-cover rounded-lg" 
+     style="cursor: pointer; transition: all 0.3s ease;" 
+     onclick="event.stopPropagation(); showAuctionDetail(${a.id});"
+     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 5px 15px rgba(255,62,127,0.5)';"
+     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
           <div class="flex-grow">
             <div class="flex justify-between">
               <h3 class="font-semibold">${sanitizeHTML(a.title)}</h3>
