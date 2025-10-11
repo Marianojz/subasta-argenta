@@ -3989,7 +3989,73 @@ if (amount < roundedMin) {
   }
 }
 
-function buyNow(auctionId) {
+async function buyNow(auctionId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
+  
+  // Validar que buyNow siga siendo mayor que currentBid
+  if (auction.buyNowPrice <= auction.currentBid) {
+    showToast('❌ La puja actual superó el precio de compra directa', 'error');
+    renderAuctions();
+    return;
+  }
+  
+  if (state.currentUser.balance < auction.buyNowPrice) {
+    showToast('❌ Saldo insuficiente', 'error');
+    return;
+  }
+  
+  if (confirm(`¿Comprar por $${auction.buyNowPrice}?`)) {
+    showLoading('Procesando compra...');
+    
+    try {
+      state.currentUser.balance -= auction.buyNowPrice;
+      auction.status = 'ended';
+      auction.currentBid = auction.buyNowPrice;
+      auction.winnerId = state.currentUser.id;
+      
+      // Agregar orden
+      state.orders.push({
+        id: Date.now(),
+        userId: state.currentUser.id,
+        type: 'auction_buyNow',
+        auctionId: auction.id,
+        total: auction.buyNowPrice,
+        paymentMethod: 'balance',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Actualizar saldo en Firestore
+      if (db && state.currentUser) {
+        await db.collection('users').doc(state.currentUser.id).update({
+          balance: state.currentUser.balance
+        });
+      }
+      
+      broadcastUpdate('buy_now', {
+        auctionId: auctionId,
+        userId: state.currentUser.id,
+        userName: state.currentUser.name,
+        price: auction.buyNowPrice
+      });
+      
+      createConfetti();
+      saveState();
+      renderAuctions();
+      updateUI();
+      showToast('✅ Comprado con éxito', 'success');
+    } catch (error) {
+      handleError(error, 'Compra directa');
+    } finally {
+      hideLoading();
+    }
+  }
+}
   if (!state.currentUser) {
     showLoginModal();
     return;
