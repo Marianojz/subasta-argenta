@@ -4052,6 +4052,49 @@ function setupListeners() {
   safeAssign('cartBtn', 'onclick', showCartModal);
   safeAssign('checkoutBtn', 'onclick', checkout);
   safeAssign('mercadopagoBtn', 'onclick', showMercadoPagoModal);
+  // Listeners del modal de recarga
+  document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+    btn.onclick = function() {
+      topupAmount = parseInt(this.dataset.amount);
+      document.getElementById('customTopupAmount').value = '';
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('proceedToPayment').disabled = false;
+    };
+  });
+  
+  safeAssign('customTopupAmount', 'oninput', function() {
+    const val = parseInt(this.value);
+    if (val && val >= 100) {
+      topupAmount = val;
+      document.querySelectorAll('.topup-amount-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('proceedToPayment').disabled = false;
+    } else {
+      document.getElementById('proceedToPayment').disabled = true;
+    }
+  });
+  
+  safeAssign('proceedToPayment', 'onclick', () => {
+    if (!topupAmount || topupAmount < 100) {
+      showToast('❌ Monto mínimo $100', 'error');
+      return;
+    }
+    document.getElementById('topupAmountSelection').style.display = 'none';
+    document.getElementById('topupPaymentMethods').classList.remove('hidden');
+    
+    // Auto-seleccionar MercadoPago
+    selectedPaymentMethod = null;
+    document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(m => {
+      m.onclick = function() {
+        selectedPaymentMethod = this.dataset.method;
+        document.querySelectorAll('#topupPaymentMethods .payment-method').forEach(pm => pm.classList.remove('selected'));
+        this.classList.add('selected');
+        document.getElementById('confirmTopupPayment').disabled = false;
+      };
+    });
+  });
+  
+  safeAssign('confirmTopupPayment', 'onclick', processTopupPayment);
   
   // Admin
   safeAssign('btnCreateDemo', 'onclick', createDemoData);
