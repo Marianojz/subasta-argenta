@@ -3417,6 +3417,29 @@ function showTopupModal() {
   document.getElementById('customTopupAmount').value = '';
   document.getElementById('proceedToPayment').disabled = true;
   
+  // Mostrar saldo actual
+  const balanceInModal = document.getElementById('currentBalanceInModal');
+  if (balanceInModal && state.currentUser) {
+    balanceInModal.textContent = state.currentUser.balance;
+  }
+  
+  // Quitar selección de botones
+  document.querySelectorAll('.topup-amount-btn').forEach(btn => btn.classList.remove('active'));
+  
+  // Resetear variables
+  topupAmount = 0;
+  selectedPaymentMethod = null;
+  
+  new bootstrap.Modal(document.getElementById('topupModal')).show();
+}
+  // Resetear modal
+  document.getElementById('topupAmountSelection').style.display = 'block';
+  document.getElementById('topupPaymentMethods').classList.add('hidden');
+  document.getElementById('topupLoading').classList.add('hidden');
+  document.getElementById('topupSuccess').classList.add('hidden');
+  document.getElementById('customTopupAmount').value = '';
+  document.getElementById('proceedToPayment').disabled = true;
+  
   // Quitar selección de botones
   document.querySelectorAll('.topup-amount-btn').forEach(btn => btn.classList.remove('active'));
   
