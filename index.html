@@ -3179,6 +3179,41 @@ function showTopupModal() {
   
   new bootstrap.Modal(document.getElementById('topupModal')).show();
 }
+function processTopupPayment() {
+  if (!selectedPaymentMethod) {
+    showToast('⚠️ Selecciona método de pago', 'error');
+    return;
+  }
+  
+  document.getElementById('topupPaymentMethods').classList.add('hidden');
+  document.getElementById('topupLoading').classList.remove('hidden');
+  
+  // Simular procesamiento con MercadoPago
+  setTimeout(() => {
+    state.currentUser.balance += topupAmount;
+    
+    document.getElementById('topupLoading').classList.add('hidden');
+    document.getElementById('topupSuccess').classList.remove('hidden');
+    document.getElementById('topupDetails').innerHTML = `
+      <div class="glass-light p-3 rounded mt-3">
+        <div><strong>Monto:</strong> $${topupAmount}</div>
+        <div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div>
+        <div><strong>Estado:</strong> <span class="text-success">✅ Aprobado</span></div>
+      </div>
+    `;
+    
+    saveState();
+    updateUI();
+    
+    setTimeout(() => {
+      createConfetti();
+      bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+      showToast(`💰 $${topupAmount} agregados exitosamente`, 'success');
+      topupAmount = 0;
+      selectedPaymentMethod = null;
+    }, 2500);
+  }, 2000);
+}
 
 function renderCartItems() {
   const items = document.getElementById('cartItems');
