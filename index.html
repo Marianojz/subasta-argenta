@@ -3086,6 +3086,9 @@ async function handleRegister(e) {
     createConfetti();
     showToast(`🎉 ¡Bienvenido ${name}! Recibiste $5000 de regalo`, 'success');
     
+    // Iniciar listener después del registro
+    startRealtimeListener();
+    
   } catch (error) {
     // Manejar errores específicos
     const messages = {
