@@ -2487,9 +2487,13 @@ function loadDemoData() {
 }
 
 function startRealtimeListener() {
-  if (!db) {
-    console.warn("⚠️ Firestore no disponible, usando polling local");
-    startLocalPolling();
+  if (!db || !state.currentUser) {
+    console.warn("⚠️ Firestore o usuario no disponible");
+    if (!state.currentUser) {
+      console.log("ℹ️ Esperando autenticación...");
+    } else {
+      startLocalPolling();
+    }
     return;
   }
   
