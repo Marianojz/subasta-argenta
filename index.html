@@ -1926,32 +1926,41 @@ header .btn:hover::after {
     <div class="modal-dialog">
       <div class="modal-content glass border-0 rounded-2xl">
         <div class="modal-header border-slate-700">
-          <h5 class="modal-title"><i class="fas fa-wallet text-pink-400"></i> Recargar</h5>
+          <h5 class="modal-title"><i class="fas fa-wallet text-pink-400"></i> Recargar Saldo</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div id="topupAmountSelection">
+            <h6 class="mb-3 text-center">Selecciona el monto a recargar</h6>
             <div class="grid grid-cols-2 gap-3 mb-4">
               <button class="btn btn-outline-light topup-amount-btn" data-amount="500">$500</button>
               <button class="btn btn-outline-light topup-amount-btn" data-amount="1000">$1000</button>
               <button class="btn btn-outline-light topup-amount-btn" data-amount="2000">$2000</button>
               <button class="btn btn-outline-light topup-amount-btn" data-amount="5000">$5000</button>
             </div>
-            <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto">
-            <button id="proceedToPayment" class="btn btn-primary w-100" disabled>Continuar</button>
+            <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto (mínimo $100)" min="100">
+            <button id="proceedToPayment" class="btn btn-primary w-100" disabled>Continuar con MercadoPago</button>
           </div>
           <div id="topupPaymentMethods" class="hidden">
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="payment-method" data-method="credit_card">
-                <i class="fas fa-credit-card fa-2x mb-2"></i>
-                <div>Crédito</div>
-              </div>
-              <div class="payment-method" data-method="debit_card">
-                <i class="fas fa-money-check fa-2x mb-2"></i>
-                <div>Débito</div>
+            <h6 class="mb-3 text-center">Método de Pago</h6>
+            <div class="d-flex justify-content-center mb-4">
+              <div class="payment-method selected" data-method="mercadopago" style="max-width: 300px; width: 100%;">
+                <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
+                <div class="font-semibold text-lg">MercadoPago</div>
+                <small class="text-slate-400 mt-2 d-block">Todas las tarjetas de crédito y débito</small>
+                <div class="mt-2">
+                  <span class="badge bg-success me-1">Visa</span>
+                  <span class="badge bg-success me-1">Mastercard</span>
+                  <span class="badge bg-success">Amex</span>
+                </div>
               </div>
             </div>
-            <button id="confirmTopupPayment" class="btn btn-primary w-100" disabled>Pagar</button>
+            <div class="alert alert-info text-center" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
+              <i class="fas fa-info-circle"></i> Serás redirigido a MercadoPago para completar el pago de forma segura
+            </div>
+            <button id="confirmTopupPayment" class="btn btn-primary w-100 btn-lg">
+              <i class="fas fa-lock"></i> Pagar con MercadoPago
+            </button>
           </div>
           <div id="topupLoading" class="text-center py-4 hidden">
             <div class="spinner mb-3"></div>
