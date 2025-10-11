@@ -2409,8 +2409,7 @@ async function loadState() {
         });
         console.log("✅ Datos de Firebase cargados");
         
-        // Iniciar escucha en tiempo real
-        startRealtimeListener();
+        // NO iniciar listener aquí - se iniciará en setupAuthListener
         return;
       }
     }
