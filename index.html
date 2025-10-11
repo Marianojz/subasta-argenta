@@ -5193,6 +5193,97 @@ if (!state.startTime) {
 window.filterProducts = filterProducts;
 window.filterProductCategory = filterProductCategory;
 window.renderStats = renderStats;
+// ======================
+// HISTORIAL DE TRANSACCIONES
+// ======================
+
+function showTransactionsModal() {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const userTransactions = state.orders
+    .filter(o => o.userId === state.currentUser.id)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 20); // Últimas 20 transacciones
+  
+  let html = '';
+  
+  if (userTransactions.length === 0) {
+    html = '<div class="text-center py-4 text-slate-400">No hay transacciones todavía</div>';
+  } else {
+    html = userTransactions.map(tx => {
+      const date = new Date(tx.timestamp).toLocaleString('es-AR');
+      let icon, color, typeText;
+      
+      if (tx.type === 'topup') {
+        icon = 'fa-plus-circle';
+        color = 'success';
+        typeText = 'Recarga de saldo';
+      } else if (tx.type === 'auction_buyNow') {
+        icon = 'fa-gavel';
+        color = 'warning';
+        typeText = 'Compra directa';
+      } else {
+        icon = 'fa-shopping-cart';
+        color = 'primary';
+        typeText = 'Compra en tienda';
+      }
+      
+      return `
+        <div class="glass-light p-3 rounded mb-2">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="fas ${icon} text-${color}"></i>
+                <span class="font-medium">${typeText}</span>
+              </div>
+              <div class="text-xs text-slate-400">${date}</div>
+              ${tx.paymentMethod ? `<div class="text-xs text-slate-400 mt-1">
+                <i class="fas fa-credit-card"></i> ${getPaymentMethodName(tx.paymentMethod)}
+              </div>` : ''}
+            </div>
+            <div class="text-end">
+              <div class="price-tag ${tx.type === 'topup' ? 'text-success' : ''}" style="font-size: 1.1rem;">
+                ${tx.type === 'topup' ? '+' : '-'}$${tx.total}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Crear o actualizar modal
+  let modal = document.getElementById('transactionsModal');
+  if (!modal) {
+    // Crear modal si no existe
+    const modalHTML = `
+      <div class="modal fade" id="transactionsModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content glass border-0 rounded-2xl">
+            <div class="modal-header border-slate-700">
+              <h5 class="modal-title">
+                <i class="fas fa-history text-blue-400"></i> Historial de Transacciones
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionsContent" style="max-height: 60vh; overflow-y: auto;">
+              ${html}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    modal = document.getElementById('transactionsModal');
+  } else {
+    document.getElementById('transactionsContent').innerHTML = html;
+  }
+  
+  new bootstrap.Modal(modal).show();
+}
 // Funciones globales para el panel admin
 window.rechargeUserBalance = rechargeUserBalance;
 window.toggleUserStatus = toggleUserStatus;
