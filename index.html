@@ -1947,48 +1947,70 @@ header .btn:hover::after {
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div id="topupAmountSelection">
-            <h6 class="mb-3 text-center">Selecciona el monto a recargar</h6>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <button class="btn btn-outline-light topup-amount-btn" data-amount="500">$500</button>
-              <button class="btn btn-outline-light topup-amount-btn" data-amount="1000">$1000</button>
-              <button class="btn btn-outline-light topup-amount-btn" data-amount="2000">$2000</button>
-              <button class="btn btn-outline-light topup-amount-btn" data-amount="5000">$5000</button>
-            </div>
-            <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto (mínimo $100)" min="100">
-            <button id="proceedToPayment" class="btn btn-primary w-100" disabled>Continuar con MercadoPago</button>
-          </div>
-          <div id="topupPaymentMethods" class="hidden">
-            <h6 class="mb-3 text-center">Método de Pago</h6>
-            <div class="d-flex justify-content-center mb-4">
-              <div class="payment-method selected" data-method="mercadopago" style="max-width: 300px; width: 100%;">
-                <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
-                <div class="font-semibold text-lg">MercadoPago</div>
-                <small class="text-slate-400 mt-2 d-block">Todas las tarjetas de crédito y débito</small>
-                <div class="mt-2">
-                  <span class="badge bg-success me-1">Visa</span>
-                  <span class="badge bg-success me-1">Mastercard</span>
-                  <span class="badge bg-success">Amex</span>
-                </div>
-              </div>
-            </div>
-            <div class="alert alert-info text-center" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
-              <i class="fas fa-info-circle"></i> Serás redirigido a MercadoPago para completar el pago de forma segura
-            </div>
-            <button id="confirmTopupPayment" class="btn btn-primary w-100 btn-lg">
-              <i class="fas fa-lock"></i> Pagar con MercadoPago
-            </button>
-          </div>
-          <div id="topupLoading" class="text-center py-4 hidden">
-            <div class="spinner mb-3"></div>
-            <div>Procesando...</div>
-          </div>
-          <div id="topupSuccess" class="text-center py-4 hidden">
-            <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
-            <h4 style="color: var(--success);">¡Éxito!</h4>
-            <div id="topupDetails"></div>
-          </div>
+  <div id="topupAmountSelection">
+    <div class="alert alert-info text-center mb-4" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
+      <i class="fas fa-wallet"></i> Tu saldo actual: <strong class="price-tag" style="font-size: 1.2rem;">$<span id="currentBalanceInModal">0</span></strong>
+    </div>
+    
+    <h6 class="mb-3 text-center">Selecciona el monto a recargar</h6>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <button class="btn btn-outline-light topup-amount-btn" data-amount="500">
+        <div>$500</div>
+        <small class="text-slate-400">Básico</small>
+      </button>
+      <button class="btn btn-outline-light topup-amount-btn" data-amount="1000">
+        <div>$1000</div>
+        <small class="text-slate-400">Recomendado</small>
+      </button>
+      <button class="btn btn-outline-light topup-amount-btn" data-amount="2000">
+        <div>$2000</div>
+        <small class="text-slate-400">Plus</small>
+      </button>
+      <button class="btn btn-outline-light topup-amount-btn" data-amount="5000">
+        <div>$5000</div>
+        <small class="text-slate-400">Premium</small>
+      </button>
+    </div>
+    <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto (mínimo $100)" min="100">
+    <button id="proceedToPayment" class="btn btn-primary w-100" disabled>
+      <i class="fas fa-arrow-right"></i> Continuar con MercadoPago
+    </button>
+  </div>
+  
+  <div id="topupPaymentMethods" class="hidden">
+    <h6 class="mb-3 text-center">Método de Pago</h6>
+    <div class="d-flex justify-content-center mb-4">
+      <div class="payment-method selected" data-method="mercadopago" style="max-width: 300px; width: 100%;">
+        <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
+        <div class="font-semibold text-lg">MercadoPago</div>
+        <small class="text-slate-400 mt-2 d-block">Todas las tarjetas de crédito y débito</small>
+        <div class="mt-2">
+          <span class="badge bg-success me-1">Visa</span>
+          <span class="badge bg-success me-1">Mastercard</span>
+          <span class="badge bg-success">Amex</span>
         </div>
+      </div>
+    </div>
+    <div class="alert alert-info text-center" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
+      <i class="fas fa-info-circle"></i> Serás redirigido a MercadoPago para completar el pago de forma segura
+    </div>
+    <button id="confirmTopupPayment" class="btn btn-primary w-100 btn-lg">
+      <i class="fas fa-lock"></i> Pagar con MercadoPago
+    </button>
+  </div>
+  
+  <div id="topupLoading" class="text-center py-4 hidden">
+    <div class="spinner mb-3"></div>
+    <div>Procesando pago...</div>
+    <small class="text-slate-400">Por favor espera</small>
+  </div>
+  
+  <div id="topupSuccess" class="text-center py-4 hidden">
+    <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
+    <h4 style="color: var(--success);">¡Éxito!</h4>
+    <div id="topupDetails"></div>
+  </div>
+</div>
       </div>
     </div>
   </div>
