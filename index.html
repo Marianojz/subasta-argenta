@@ -4817,5 +4817,115 @@ window.showProductDetail = showProductDetail;
     </div>
   </div>
 </div>
+<!-- MODAL DE DETALLES DE SUBASTA -->
+<div class="modal fade" id="auctionDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content glass border-0 rounded-2xl">
+      <div class="modal-header border-slate-700">
+        <h5 class="modal-title">
+          <i class="fas fa-gavel text-pink-400"></i> 
+          <span id="auctionDetailTitle"></span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!-- Galería de Imágenes -->
+          <div class="col-lg-6 mb-4 mb-lg-0">
+            <!-- Imagen Principal -->
+            <div class="position-relative mb-3">
+              <img id="auctionDetailMainImage" src="" alt="Subasta" 
+                   class="w-100 rounded-xl" 
+                   style="max-height: 450px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+              
+              <!-- Badge de estado -->
+              <div id="auctionDetailStatus" class="position-absolute top-0 start-0 m-3">
+                <span class="badge" style="font-size: 0.9rem; padding: 0.5rem 1rem;">EN VIVO</span>
+              </div>
+              
+              <!-- Indicador de galería -->
+              <div id="auctionGalleryIndicator" class="position-absolute bottom-0 end-0 m-3 badge bg-dark" style="display: none;">
+                <i class="fas fa-images"></i> <span id="galleryCount">1</span> fotos
+              </div>
+            </div>
+            
+            <!-- Miniaturas de galería -->
+            <div id="auctionGalleryThumbs" class="d-flex gap-2 overflow-auto" style="max-height: 100px;">
+              <!-- Se llenarán dinámicamente -->
+            </div>
+          </div>
+          
+          <!-- Información de la Subasta -->
+          <div class="col-lg-6">
+            <!-- Categoría -->
+            <div class="mb-3">
+              <span class="badge bg-primary" id="auctionDetailCategory" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;"></span>
+              <span class="live-indicator ms-2" id="auctionLiveIndicator">
+                <span class="live-dot"></span>EN VIVO
+              </span>
+            </div>
+            
+            <!-- Descripción -->
+            <div class="glass-light p-3 rounded-xl mb-3">
+              <h6 class="font-bold mb-2"><i class="fas fa-info-circle text-blue-400"></i> Descripción</h6>
+              <p id="auctionDetailDescription" class="text-slate-300 mb-0" style="line-height: 1.6;"></p>
+            </div>
+            
+            <!-- Información de Precio -->
+            <div class="glass-light p-4 rounded-xl mb-3">
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="text-slate-400 text-sm mb-1">Precio Inicial</div>
+                  <div class="text-xl font-bold" id="auctionDetailStartPrice">$0</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-slate-400 text-sm mb-1">Puja Actual</div>
+                  <div class="price-tag" style="font-size: 1.75rem;" id="auctionDetailCurrentBid">$0</div>
+                </div>
+                <div class="col-6" id="buyNowSection" style="display: none;">
+                  <div class="text-slate-400 text-sm mb-1">Compra Directa</div>
+                  <div class="text-lg font-bold text-success" id="auctionDetailBuyNow">$0</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-slate-400 text-sm mb-1">Tiempo Restante</div>
+                  <div class="countdown text-lg font-bold" id="auctionDetailTimeRemaining">--</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Historial de Pujas -->
+            <div class="glass-light p-3 rounded-xl mb-3">
+              <h6 class="font-bold mb-3"><i class="fas fa-history text-yellow-400"></i> Actividad Reciente</h6>
+              <div id="auctionBidHistory" style="max-height: 150px; overflow-y: auto;">
+                <!-- Se llenará dinámicamente -->
+              </div>
+            </div>
+            
+            <!-- Incrementos Rápidos -->
+            <div class="mb-3" id="quickBidsSection">
+              <label class="text-sm text-slate-400 mb-2 d-block">Incrementos Rápidos:</label>
+              <div class="increment-buttons">
+                <button class="increment-btn" data-amount="500">+$500</button>
+                <button class="increment-btn" data-amount="1000">+$1000</button>
+                <button class="increment-btn" data-amount="2000">+$2000</button>
+                <button class="increment-btn" data-amount="5000">+$5000</button>
+              </div>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2">
+              <button id="auctionDetailBidBtn" class="btn btn-primary flex-grow-1 btn-lg rounded-xl">
+                <i class="fas fa-gavel"></i> Ofertar
+              </button>
+              <button id="auctionDetailBuyNowBtn" class="btn btn-outline-light flex-grow-1 rounded-xl" style="display: none;">
+                <i class="fas fa-bolt"></i> Comprar Ya
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
