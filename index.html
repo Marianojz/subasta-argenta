@@ -4792,6 +4792,8 @@ function setupListeners() {
   safeAssign('botProbability', 'onchange', updateBotSettings);
   
   console.log('✅ Listeners configurados');
+  // Botón para ver historial de transacciones
+safeAssign('viewTransactions', 'onclick', showTransactionsModal);
 }
 
 // ======================
