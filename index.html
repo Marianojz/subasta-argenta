@@ -3186,6 +3186,10 @@ function showTopupModal() {
   // Quitar selección de botones
   document.querySelectorAll('.topup-amount-btn').forEach(btn => btn.classList.remove('active'));
   
+  // Resetear variables
+  topupAmount = 0;
+  selectedPaymentMethod = null;
+  
   new bootstrap.Modal(document.getElementById('topupModal')).show();
 }
 function processTopupPayment() {
