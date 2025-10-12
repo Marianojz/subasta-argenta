@@ -3417,7 +3417,16 @@ function updateCartUI() {
   }
 }
 
-
+function showTopupModal() {
+  if (!state.currentUser) {
+    showToast('❌ Inicia sesión primero', 'error');
+    showLoginModal();
+    return;
+  }
+  
+  // Mostrar saldo actual en el modal
+  document.getElementById('currentBalanceInModal').textContent = state.currentUser.balance;
+  
   // Resetear modal
   document.getElementById('topupAmountSelection').style.display = 'block';
   document.getElementById('topupPaymentMethods').classList.add('hidden');
@@ -3434,6 +3443,7 @@ function updateCartUI() {
   selectedPaymentMethod = null;
   
   new bootstrap.Modal(document.getElementById('topupModal')).show();
+}
 
 async function processTopupPayment() {
   if (!selectedPaymentMethod || selectedPaymentMethod !== 'mercadopago') {
