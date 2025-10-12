@@ -3841,41 +3841,7 @@ function openBidModal(auctionId) {
   
   new bootstrap.Modal(document.getElementById('bidModal')).show();
 }
-async function placeBid(e) {
-  e.preventDefault();
-  
-  if (!rateLimiter.check('placeBid')) {
-    showToast('⚠️ Espera un momento', 'error');
-    return;
-  }
-  
-  const auctionId = parseInt(document.getElementById('bidAuctionId').value);
-  const amount = parseFloat(document.getElementById('bidAmount').value);
-  
-  const auction = state.auctions.find(a => a.id === auctionId);
-  if (!auction) return;
-  
-  const minBid = (auction.currentBid || auction.startPrice) + 500;
-  const roundedMin = Math.ceil(minBid / 500) * 500;
 
-  // Validar que sea múltiplo de 500
-  if (amount % 500 !== 0) {
-    showToast('❌ Solo se permiten incrementos de $500', 'error');
-    return;
-  }
-
-  if (amount < roundedMin) {
-    showToast(`❌ Mínimo: $${roundedMin}`, 'error');
-    return;
-  }
-  
-  // 💰 Debitar el monto de la puja del saldo
-  if (state.currentUser.balance < amount) {
-    showToast('❌ Saldo insuficiente', 'error');
-    return;
-  }
-  
-  showLoading('Procesando...');
   
   try {
     const bidId = state.bids.length + 1;
