@@ -3856,24 +3856,65 @@ function openBidModal(auctionId) {
   new bootstrap.Modal(document.getElementById('bidModal')).show();
 }
 
+// ✅ FUNCIÓN COMPLETA PARA ENVIAR PUJAS
+async function submitBid() {
+  const bidInput = document.getElementById('bidAmount');
+  const amount = parseInt(bidInput.value);
+  const auctionId = parseInt(document.getElementById('bidAuctionId').value);
+  
+  if (!state.currentUser) {
+    showToast('❌ Debes iniciar sesión para pujar', 'error');
+    return;
+  }
+  
+  if (!amount || amount <= 0) {
+    showToast('❌ Ingresa un monto válido', 'error');
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction) {
+    showToast('❌ Subasta no encontrada', 'error');
+    return;
+  }
+  
+  // Validar monto mínimo
+  const currentBid = auction.currentBid || auction.startPrice;
+  const minBid = currentBid + 500;
+  
+  if (amount < minBid) {
+    showToast(`❌ La puja mínima es $${minBid}`, 'error');
+    return;
+  }
+  
+  // Validar saldo suficiente
+  if (state.currentUser.balance < amount) {
+    showToast('❌ Saldo insuficiente', 'error');
+    showAddFundsModal();
+    return;
+  }
+  
+  showLoading();
   
   try {
     const bidId = state.bids.length + 1;
     const timestamp = new Date().toISOString();
 
-    // 💰 Debitar saldo del usuario
-    state.currentUser.balance -= amount;
-    
-    // Si había una puja anterior de este usuario en esta subasta, devolver ese monto
+    // Buscar puja anterior del usuario en esta subasta
     const previousBid = state.bids
       .filter(b => b.auctionId === auctionId && b.userId === state.currentUser.id)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
     
+    // 💰 Debitar saldo del usuario
+    state.currentUser.balance -= amount;
+    
+    // Si había una puja anterior, devolver ese monto
     if (previousBid) {
       state.currentUser.balance += previousBid.amount;
       showToast(`💸 Se devolvió tu puja anterior de $${previousBid.amount}`, 'info');
     }
 
+    // Agregar nueva puja
     state.bids.push({
       id: bidId,
       auctionId,
@@ -3882,37 +3923,47 @@ function openBidModal(auctionId) {
       timestamp
     });
 
+    // Actualizar subasta
+    if (!auction.bids) auction.bids = [];
     auction.bids.push(state.currentUser.id);
     auction.currentBid = amount;
     auction.lastBidTime = timestamp;
     
-    // Actualizar saldo en Firestore
+    // Actualizar saldo en Firestore si está disponible
     if (db && state.currentUser) {
       await db.collection('users').doc(state.currentUser.id).update({
         balance: state.currentUser.balance
       });
     }
     
-    // Guardar INMEDIATAMENTE en Firestore
+    // Guardar estado
     await saveState();
     
-    bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+    // Cerrar modal y mostrar feedback
+    const bidModal = bootstrap.Modal.getInstance(document.getElementById('bidModal'));
+    if (bidModal) bidModal.hide();
+    
     createConfetti();
     renderAuctions();
     renderFeaturedAuction();
     updateUI();
-    showToast('✅ Puja realizada', 'success');
+    showToast('✅ Puja realizada exitosamente', 'success');
+    
   } catch (error) {
-    // En caso de error, devolver el saldo
-    state.currentUser.balance += amount;
-    if (previousBid) {
-      state.currentUser.balance -= previousBid.amount;
-    }
-    handleError(error, 'Puja');
+    console.error('Error en submitBid:', error);
+    showToast('❌ Error al realizar la puja', 'error');
   } finally {
     hideLoading();
   }
 }
+
+// 🔗 Conectar el botón "Ofertar" del modal a la función
+document.addEventListener('DOMContentLoaded', function() {
+  const bidButton = document.querySelector('#bidModal .btn-primary');
+  if (bidButton) {
+    bidButton.onclick = submitBid;
+  }
+});
 
 async function placeBid(e) {
   e.preventDefault();
