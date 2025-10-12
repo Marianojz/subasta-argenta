@@ -3029,7 +3029,7 @@ function renderAuctions(auctions = null) {
   ${a.status === 'active' ? `
     <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${a.id}"><i class="fas fa-gavel"></i> Ofertar</button>
     ${a.buyNowPrice && a.buyNowPrice > (a.currentBid || a.startPrice) ? 
-      <button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${a.id}">Comprar ($${a.buyNowPrice})</button> 
+      `<button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${a.id}">Comprar ($${a.buyNowPrice})</button>` 
       : ''}
   ` : '<button class="btn btn-secondary btn-sm" disabled>Finalizada</button>'}
 </div>
@@ -3987,7 +3987,7 @@ async function placeBid(e) {
         balance: state.currentUser.balance
       });
     }
-    
+
     // Guardar INMEDIATAMENTE en Firestore
     await saveState();
     
