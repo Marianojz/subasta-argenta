@@ -3975,45 +3975,7 @@ async function buyNow(auctionId) {
     }
   }
 }
-  if (!state.currentUser) {
-    showLoginModal();
-    return;
-  }
-  
-  const auction = state.auctions.find(a => a.id === auctionId);
-  if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
-  
-  // Validar que buyNow siga siendo mayor que currentBid
-  if (auction.buyNowPrice <= auction.currentBid) {
-    showToast('❌ La puja actual superó el precio de compra directa', 'error');
-    renderAuctions(); // Actualizar vista
-    return;
-  }
-  
-  if (confirm(`¿Comprar por $${auction.buyNowPrice}?`)) {
-    state.currentUser.balance -= auction.buyNowPrice;
-    auction.status = 'ended';
-    auction.currentBid = auction.buyNowPrice;
-    // 🔥 BROADCAST: Notificar compra inmediata
-broadcastUpdate('buy_now', {
-  auctionId: auctionId,
-  userId: state.currentUser.id,
-  userName: state.currentUser.name,
-  price: auction.buyNowPrice
-});// 🔥 BROADCAST: Notificar compra inmediata
-broadcastUpdate('buy_now', {
-  auctionId: auctionId,
-  userId: state.currentUser.id,
-  userName: state.currentUser.name,
-  price: auction.buyNowPrice
-});
-    createConfetti();
-    saveState();
-    renderAuctions();
-    updateUI();
-    showToast('✅ Comprado', 'success');
-  }
-}
+
 
 // ======================
 // FILTROS
