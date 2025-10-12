@@ -3673,7 +3673,7 @@ function renderCartItems() {
   total.textContent = `$${totalAmount}`;
 }
 
-function checkout() {
+async function checkout() {
   if (!state.currentUser || !state.cart.length) return;
   
   const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
