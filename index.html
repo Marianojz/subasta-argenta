@@ -3514,6 +3514,100 @@ function showCartModal() {
   renderCartItems();
   new bootstrap.Modal(document.getElementById('cartModal')).show();
 }
+// ======================
+// MERCADOPAGO
+// ======================
+
+function showMercadoPagoModal() {
+  if (!state.currentUser || !state.cart.length) {
+    showToast('Carrito vacío', 'error');
+    return;
+  }
+  renderPaymentSummary();
+  
+  // Auto-seleccionar MercadoPago
+  selectedPaymentMethod = 'mercadopago';
+  
+  document.getElementById('paymentMethods').innerHTML = `
+    <div class="payment-method selected" data-method="mercadopago">
+      <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
+      <div class="font-semibold">MercadoPago</div>
+      <small class="text-slate-400">Tarjetas de crédito y débito</small>
+    </div>
+  `;
+  
+  document.getElementById('confirmPayment').disabled = false;
+  document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar con MercadoPago';
+  
+  new bootstrap.Modal(document.getElementById('mpModal')).show();
+  
+  document.getElementById('confirmPayment').onclick = processCartPayment;
+  document.getElementById('cancelPayment').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+  };
+}
+
+function processCartPayment() {
+  if (!selectedPaymentMethod) {
+    showToast('⚠️ Selecciona método', 'error');
+    return;
+  }
+  
+  document.getElementById('paymentSummary').style.display = 'none';
+  document.getElementById('paymentMethods').style.display = 'none';
+  document.getElementById('paymentActions').style.display = 'none';
+  document.getElementById('paymentLoading').classList.remove('hidden');
+  
+  setTimeout(() => {
+    const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+    
+    state.cart.forEach(item => {
+      const p = state.products.find(pr => pr.id === item.productId);
+      if (p) p.stock -= item.quantity;
+    });
+    
+    state.orders.push({
+      id: Date.now(),
+      userId: state.currentUser.id,
+      items: [...state.cart],
+      total,
+      paymentMethod: selectedPaymentMethod,
+      timestamp: new Date().toISOString()
+    });
+    
+    state.cart = [];
+    
+    document.getElementById('paymentLoading').classList.add('hidden');
+    document.getElementById('paymentSuccess').classList.remove('hidden');
+    document.getElementById('paymentDetails').innerHTML = `<div class="glass-light p-3 rounded mt-3"><div><strong>ID:</strong> #${Date.now()}</div><div><strong>Método:</strong> ${getPaymentMethodName(selectedPaymentMethod)}</div><div><strong>Total:</strong> $${total}</div></div>`;
+    
+    updateCartUI();
+    renderProducts();
+    saveState();
+    
+    const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+    if (cartModal) cartModal.hide();
+    
+    setTimeout(() => {
+      createConfetti();
+      bootstrap.Modal.getInstance(document.getElementById('mpModal')).hide();
+      resetPaymentModal();
+      showToast('✅ Pago exitoso', 'success');
+    }, 2500);
+  }, 2000);
+}
+
+function resetPaymentModal() {
+  selectedPaymentMethod = null;
+  document.getElementById('paymentSummary').style.display = 'block';
+  document.getElementById('paymentMethods').style.display = 'block';
+  document.getElementById('paymentActions').style.display = 'flex';
+  document.getElementById('paymentLoading').classList.add('hidden');
+  document.getElementById('paymentSuccess').classList.add('hidden');
+  document.getElementById('confirmPayment').disabled = true;
+  document.getElementById('confirmPayment').innerHTML = '<i class="fas fa-lock"></i> Pagar';
+  document.querySelectorAll('#mpModal .payment-method').forEach(m => m.classList.remove('selected'));
+}
 
 function renderCartItems() {
   const items = document.getElementById('cartItems');
