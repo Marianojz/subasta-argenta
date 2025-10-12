@@ -1760,33 +1760,36 @@ header .btn:hover::after {
 
       <aside class="space-y-6">
         <!-- Saldo del usuario -->
-        <div class="glass p-5 rounded-2xl sticky top-4">
-          <div class="flex justify-between items-center mb-4">
-            <div>
-              <div class="text-sm text-slate-400">Saldo</div>
-              <div class="mt-4 text-sm">
-  <div class="mb-2 font-medium">💡 Cómo funciona tu saldo</div>
-  <div class="space-y-2 text-xs text-slate-400">
-    <div class="p-2 rounded bg-slate-800/30">
-      <i class="fas fa-plus-circle text-success"></i> Las recargas se acreditan al instante
+        <div class="glass p-5 rounded-2xl sticky top-4" id="balanceSection">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <div class="text-sm text-slate-400">Saldo</div>
+      <div id="balance" class="text-2xl font-bold price-tag">$0</div>
     </div>
-    <div class="p-2 rounded bg-slate-800/30">
-      <i class="fas fa-gavel text-pink-400"></i> Las pujas reservan fondos temporalmente
-    </div>
-    <div class="p-2 rounded bg-slate-800/30">
-      <i class="fas fa-shopping-cart text-blue-400"></i> Las compras debitan inmediatamente
+    <div id="balanceButtons">
+      <button id="topup" class="btn btn-outline-light btn-sm glow" style="display: none;">
+        <i class="fas fa-plus"></i> Cargar
+      </button>
     </div>
   </div>
+  <div class="mt-4 text-sm">
+    <div class="mb-2 font-medium">💡 Cómo funciona tu saldo</div>
+    <div class="space-y-2 text-xs text-slate-400">
+      <div class="p-2 rounded bg-slate-800/30">
+        <i class="fas fa-plus-circle text-success"></i> Las recargas se acreditan al instante
+      </div>
+      <div class="p-2 rounded bg-slate-800/30">
+        <i class="fas fa-gavel text-pink-400"></i> Las pujas reservan fondos temporalmente
+      </div>
+      <div class="p-2 rounded bg-slate-800/30">
+        <i class="fas fa-shopping-cart text-blue-400"></i> Las compras debitan inmediatamente
+      </div>
+    </div>
+  </div>
+  <button id="viewTransactions" class="btn btn-outline-light btn-sm w-full mt-3" style="display: none;">
+    <i class="fas fa-history"></i> Historial
+  </button>
 </div>
-              <div id="balance" class="text-2xl font-bold price-tag">$0</div>
-            </div>
-            <button id="topup" class="btn btn-outline-light btn-sm glow">
-              <button id="viewTransactions" class="btn btn-outline-light btn-sm" style="margin-top: 0.5rem;">
-  <i class="fas fa-history"></i> Historial
-</button>
-              <i class="fas fa-plus"></i> Cargar
-            </button>
-          </div>
         </div>
 
         <!-- Filtros -->
