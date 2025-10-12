@@ -3027,7 +3027,7 @@ function renderAuctions(auctions = null) {
             </div>
             <div class="flex gap-2 mt-4">
   ${a.status === 'active' ? `
-    <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${a.id}" onclick="event.stopPropagation();"><i class="fas fa-gavel"></i> Ofertar</button>
+    <button class="bid-btn btn btn-primary btn-sm flex-1" data-id="${a.id}"><i class="fas fa-gavel"></i> Ofertar</button>
     ${a.buyNowPrice && a.buyNowPrice > (a.currentBid || a.startPrice) ? 
       `<button class="buynow-btn btn btn-outline-light btn-sm flex-1" data-id="${a.id}" onclick="event.stopPropagation();">Comprar ($${a.buyNowPrice})</button>` 
       : ''}
