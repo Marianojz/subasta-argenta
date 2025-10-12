@@ -3942,7 +3942,7 @@ async function placeBid(e) {
     return;
   }
   
-  // 💰 NUEVO: Debitar el monto de la puja del saldo
+  // 💰 Validar saldo
   if (state.currentUser.balance < amount) {
     showToast('❌ Saldo insuficiente', 'error');
     return;
@@ -3950,75 +3950,62 @@ async function placeBid(e) {
   
   showLoading('Procesando...');
   
+  let previousBid = null; // 🔥 DECLARAR AQUÍ FUERA DEL TRY
   
-}
-  
+  try {
+    const bidId = state.bids.length + 1;
+    const timestamp = new Date().toISOString();
 
-async function buyNow(auctionId) {
-  if (!state.currentUser) {
-    showLoginModal();
-    return;
-  }
-  
-  const auction = state.auctions.find(a => a.id === auctionId);
-  if (!auction || !auction.buyNowPrice || auction.status !== 'active') return;
-  
-  // Validar que buyNow siga siendo mayor que currentBid
-  if (auction.buyNowPrice <= auction.currentBid) {
-    showToast('❌ La puja actual superó el precio de compra directa', 'error');
-    renderAuctions();
-    return;
-  }
-  
-  if (state.currentUser.balance < auction.buyNowPrice) {
-    showToast('❌ Saldo insuficiente', 'error');
-    return;
-  }
-  
-  if (confirm(`¿Comprar por $${auction.buyNowPrice}?`)) {
-    showLoading('Procesando compra...');
+    // 💰 Debitar saldo del usuario
+    state.currentUser.balance -= amount;
     
-    try {
-      state.currentUser.balance -= auction.buyNowPrice;
-      auction.status = 'ended';
-      auction.currentBid = auction.buyNowPrice;
-      auction.winnerId = state.currentUser.id;
-      
-      // Agregar orden
-      state.orders.push({
-        id: Date.now(),
-        userId: state.currentUser.id,
-        type: 'auction_buyNow',
-        auctionId: auction.id,
-        total: auction.buyNowPrice,
-        paymentMethod: 'balance',
-        timestamp: new Date().toISOString()
-      });
-      
-      // Actualizar saldo en Firestore
-      if (db && state.currentUser) {
-        await db.collection('users').doc(state.currentUser.id).update({
-          balance: state.currentUser.balance
-        });
-      }
-      
-      broadcastUpdate('buy_now', {
-        auctionId: auctionId,
-        userId: state.currentUser.id,
-        userName: state.currentUser.name,
-        price: auction.buyNowPrice
-      });
-      
-      createConfetti();
-      saveState();
-      renderAuctions();
-      updateUI();
-      showToast('✅ Comprado con éxito', 'success');
-    } catch (error) {
-      handleError(error, 'Compra directa');
-    } finally {
-      hideLoading();
+    // Si había una puja anterior de este usuario en esta subasta, devolver ese monto
+    previousBid = state.bids
+      .filter(b => b.auctionId === auctionId && b.userId === state.currentUser.id)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    
+    if (previousBid) {
+      state.currentUser.balance += previousBid.amount;
+      showToast(`💸 Se devolvió tu puja anterior de $${previousBid.amount}`, 'info');
     }
+
+    state.bids.push({
+      id: bidId,
+      auctionId,
+      userId: state.currentUser.id,
+      amount,
+      timestamp
+    });
+
+    auction.bids.push(state.currentUser.id);
+    auction.currentBid = amount;
+    auction.lastBidTime = timestamp;
+    
+    // Actualizar saldo en Firestore
+    if (db && state.currentUser) {
+      await db.collection('users').doc(state.currentUser.id).update({
+        balance: state.currentUser.balance
+      });
+    }
+    
+    // Guardar INMEDIATAMENTE en Firestore
+    await saveState();
+    
+    bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
+    createConfetti();
+    renderAuctions();
+    renderFeaturedAuction();
+    updateUI();
+    showToast('✅ Puja realizada', 'success');
+  } catch (error) {
+    // En caso de error, devolver el saldo
+    state.currentUser.balance += amount;
+    if (previousBid) {
+      state.currentUser.balance -= previousBid.amount;
+    }
+    handleError(error, 'Puja');
+  } finally {
+    hideLoading();
   }
 }
 
