@@ -3673,11 +3673,6 @@ function renderCartItems() {
   total.textContent = `$${totalAmount}`;
 }
 
-async function checkout() {
-  if (!state.currentUser || !state.cart.length) return;
-  
-  
-
 function checkout() {
   if (!state.currentUser || !state.cart.length) return;
   
