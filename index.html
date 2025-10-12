@@ -2908,6 +2908,8 @@ function updateUI() {
   const adminPanel = document.getElementById('adminPanel');
   const openAdmin = document.getElementById('openAdmin');
   const topupBtn = document.getElementById('topup');
+  const viewTransactionsBtn = document.getElementById('viewTransactions');
+  const balanceSection = document.getElementById('balanceSection');
   
   // Verificar que los elementos existan antes de usarlos
   if (state.currentUser) {
@@ -2922,6 +2924,8 @@ function updateUI() {
     if (cartBtn && cartBtn.parentElement) cartBtn.parentElement.style.display = 'block';
     if (balance) balance.textContent = `$${state.currentUser.balance}`;
     if (topupBtn) topupBtn.style.display = 'block';
+    if (viewTransactionsBtn) viewTransactionsBtn.style.display = 'block';
+    if (balanceSection) balanceSection.style.display = 'block';
     
     if (state.currentUser.role === 'admin') {
       if (openAdmin) openAdmin.style.display = 'block';
@@ -2944,6 +2948,8 @@ function updateUI() {
     if (openAdmin) openAdmin.style.display = 'none';
     if (adminPanel) adminPanel.classList.add('hidden');
     if (topupBtn) topupBtn.style.display = 'none';
+    if (viewTransactionsBtn) viewTransactionsBtn.style.display = 'none';
+    if (balanceSection) balanceSection.style.display = 'none';
   }
   
   updateCategoryFilter();
