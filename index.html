@@ -4006,38 +4006,7 @@ if (amount < roundedMin) {
   
   showLoading('Procesando...');
   
-  try {
-    const bidId = state.bids.length + 1;
-    const timestamp = new Date().toISOString();
-
-    state.bids.push({
-      id: bidId,
-      auctionId,
-      userId: state.currentUser.id,
-      amount,
-      timestamp
-    });
-
-    auction.bids.push(state.currentUser.id);
-    auction.currentBid = amount;
-    auction.lastBidTime = timestamp;
-    
-    // Guardar INMEDIATAMENTE en Firestore
-    await saveState();
-    
-    // Notificar visualmente
-    // Notificar visualmente
-    bootstrap.Modal.getInstance(document.getElementById('bidModal')).hide();
-    createConfetti();
-    renderAuctions();
-    renderFeaturedAuction(); // 👈 AGREGAR ESTA LÍNEA
-    updateUI();
-    showToast('✅ Puja realizada', 'success');
-  } catch (error) {
-    handleError(error, 'Puja');
-  } finally {
-    hideLoading();
-  }
+  
 }
 
 async function buyNow(auctionId) {
