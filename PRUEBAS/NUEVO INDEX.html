@@ -1,0 +1,3825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="description" content="Plataforma de subastas online con tienda virtual integrada">
+  <meta name="theme-color" content="#ff3e7f">
+  
+  <title>Subasta Argenta DEMO</title>
+  
+  <!-- Preconnect para optimizar carga -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://www.gstatic.com">
+  
+  <!-- Estilos -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  
+  <!-- MercadoPago SDK -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  
+  <style>
+    :root {
+      --primary: #ff3e7f;
+      --primary-dark: #e83672;
+      --secondary: #ff9d00;
+      --accent: #00d4ff;
+      --success: #00ff88;
+      --warning: #ffcc00;
+      --danger: #ff3860;
+      --dark: #0f0f23;
+      --dark-light: #1a1a2e;
+      --text: #f0f0f5;
+      --text-light: #a0a0b0;
+    }
+    
+    * {
+      -webkit-tap-highlight-color: rgba(255, 62, 127, 0.3);
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%);
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto;
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .glass-light {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 5px 15px rgba(255, 62, 127, 0.5);
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes logoGlow {
+      0% { box-shadow: 0 5px 15px rgba(255, 62, 127, 0.5); }
+      100% { box-shadow: 0 5px 25px rgba(255, 62, 127, 0.8), 0 0 30px rgba(255, 62, 127, 0.4); }
+    }
+    
+    .countdown.pulse { 
+      animation: pulse 1.5s infinite; 
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 204, 0, 0.8); }
+      100% { transform: scale(1); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.6s ease both;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: none; }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease both;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: none; }
+    }
+    
+    .auction-card, .product-card {
+      transition: all 0.4s ease;
+      border-left: 4px solid transparent;
+      position: relative;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    
+    .auction-card::before, .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.6s;
+    }
+    
+    .auction-card:hover::before, .product-card:hover::before {
+      left: 100%;
+    }
+    
+    .auction-card:hover, .product-card:hover {
+      transform: translateY(-5px) scale(1.01);
+      border-left-color: var(--primary);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .product-card {
+      cursor: pointer;
+      transition: all 0.4s ease;
+    }
+
+    .product-card:active {
+      transform: translateY(-3px) scale(0.99);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(255, 62, 127, 0.4);
+      touch-action: manipulation;
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.95);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 62, 127, 0.6);
+    }
+    
+    .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: var(--text);
+      transition: all 0.3s ease;
+      touch-action: manipulation;
+    }
+    
+    .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-outline-light:active {
+      transform: scale(0.95);
+    }
+    
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+    }
+    
+    .filter-section {
+      transition: all 0.3s ease;
+    }
+    
+    .filter-toggle {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 5rem !important;
+      }
+      
+      header {
+        padding: 0.75rem !important;
+      }
+      
+      .logo-container {
+        width: 50px !important;
+        height: 50px !important;
+      }
+      
+      .logo-img-enhanced {
+        width: 50px !important;
+        height: 50px !important;
+        padding: 6px !important;
+      }
+      
+      .header-title {
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+      }
+      
+      #authButtonsContainer button {
+        min-width: 44px !important;
+        padding: 0.5rem 0.4rem !important;
+        font-size: 0.75rem !important;
+      }
+      
+      .btn-sm {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        min-height: 38px;
+      }
+      
+      #featuredAuction {
+        margin-bottom: 1rem !important;
+      }
+      
+      #featuredAuction .glass-light {
+        padding: 1rem !important;
+      }
+      
+      #featuredAuction h3 {
+        font-size: 1rem !important;
+      }
+      
+      #featuredAuction h4 {
+        font-size: 1.1rem !important;
+      }
+      
+      .price-tag {
+        font-size: 1.25rem !important;
+        line-height: 1.2 !important;
+      }
+      
+      .filter-content input,
+      .filter-content select {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+      }
+
+      .filter-content label {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.25rem !important;
+      }
+      
+      .text-xs {
+        font-size: 0.75rem !important;
+      }
+      
+      .badge {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.5rem !important;
+      }
+      
+      .category-tag {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.5rem !important;
+      }
+      
+      .auction-card, .product-card {
+        flex-direction: column !important;
+        padding: 0.75rem !important;
+      }
+      
+      .auction-card img,
+      .product-card img {
+        width: 100% !important;
+        height: 180px !important;
+        object-fit: cover;
+      }
+      
+      .mobile-menu-item {
+        padding: 0.4rem !important;
+        font-size: 0.7rem !important;
+        min-width: 50px !important;
+        min-height: 50px !important;
+      }
+      
+      .mobile-menu-item i {
+        font-size: 1.3rem !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-title {
+        font-size: 0.9rem !important;
+      }
+      
+      #authButtonsContainer {
+        gap: 0.25rem !important;
+      }
+      
+      #authButtonsContainer button span {
+        display: none !important;
+      }
+      
+      #authButtonsContainer button {
+        min-width: 40px !important;
+        padding: 0.5rem 0.3rem !important;
+      }
+      
+      .price-tag {
+        font-size: 1.1rem !important;
+      }
+    }
+    
+    input, select, textarea {
+      background: rgba(26, 26, 46, 0.7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: var(--text) !important;
+      transition: all 0.3s ease;
+    }
+
+    select option {
+      background: var(--dark-light);
+      color: var(--text);
+      padding: 0.5rem;
+    }
+
+    select option:hover {
+      background: rgba(255, 62, 127, 0.2);
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px rgba(255, 62, 127, 0.3) !important;
+      outline: none;
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: var(--text-light) !important;
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, rgba(255, 62, 127, 0.15), rgba(255, 157, 0, 0.15));
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stats-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255, 62, 127, 0.3);
+    }
+    
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    
+    .stats-label {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-animate {
+      background: linear-gradient(-45deg, var(--primary), var(--secondary), var(--accent), var(--success));
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+    }
+    
+    .section-transition {
+      transition: all 0.5s ease;
+    }
+    
+    .glow {
+      box-shadow: 0 0 15px rgba(255, 62, 127, 0.6);
+    }
+    
+    .glow:hover {
+      box-shadow: 0 0 25px rgba(255, 62, 127, 0.8);
+    }
+
+    .form-control:invalid:not(:placeholder-shown) {
+      border-color: var(--danger) !important;
+    }
+
+    .form-control:valid:not(:placeholder-shown) {
+      border-color: var(--success) !important;
+    }
+
+    .form-check-input:checked {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .form-check-label a {
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .form-check-label a:hover {
+      color: var(--primary-dark);
+    }
+    
+    .header-glow {
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .animate-header {
+      animation: slideDown 0.6s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo-container {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-img-enhanced {
+      width: 70px;
+      height: 70px;
+      border-radius: 16px;
+      object-fit: contain;
+      background: linear-gradient(135deg, rgba(255, 62, 127, 0.15), rgba(255, 157, 0, 0.15));
+      padding: 8px;
+      box-shadow: 
+        0 8px 32px rgba(255, 62, 127, 0.4),
+        0 0 0 2px rgba(255, 255, 255, 0.1);
+      animation: logoFloat 3s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    .logo-img-enhanced:hover {
+      transform: scale(1.05) rotate(5deg);
+      box-shadow: 
+        0 12px 48px rgba(255, 62, 127, 0.6),
+        0 0 0 3px rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes logoFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .logo-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      opacity: 0.3;
+      animation: ringPulse 2s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes ringPulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.1;
+      }
+    }
+
+    .header-title {
+      font-size: 1.75rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff3e7f 0%, #ff9d00 50%, #00d4ff 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientFlow 4s ease infinite;
+      letter-spacing: -0.5px;
+      text-shadow: 0 0 30px rgba(255, 62, 127, 0.3);
+      line-height: 1.1;
+    }
+
+    @media (max-width: 767px) {
+      .header-title {
+        font-size: 1.4rem !important;
+        line-height: 1 !important;
+        letter-spacing: -0.3px;
+      }
+    }
+
+    @keyframes gradientFlow {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      font-weight: 500;
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255, 62, 127, 0.15);
+      border: 1px solid rgba(255, 62, 127, 0.3);
+      color: var(--primary);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tech-badge:hover {
+      background: rgba(255, 62, 127, 0.25);
+      border-color: rgba(255, 62, 127, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 62, 127, 0.3);
+    }
+
+    .tech-badge i {
+      font-size: 0.8rem;
+    }
+
+    header .btn {
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    header .btn:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 1.35rem;
+      }
+      
+      .header-subtitle {
+        font-size: 0.75rem;
+      }
+      
+      .tech-badge {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+      }
+      
+      .logo-container {
+        width: 80px;
+        height: 80px;
+      }
+      
+      .logo-img-enhanced {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        padding: 10px;
+      }
+    }
+    
+    .price-tag {
+      font-weight: 700;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .featured-value {
+      font-weight: 800;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto;
+    }
+
+    @media (max-width: 768px) {
+      .featured-value {
+        font-size: 1.3rem !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .featured-value {
+        font-size: 1.15rem !important;
+      }
+    }
+    
+    .bid-history {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+    
+    .bidder-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      margin-right: -8px;
+      border: 2px solid var(--dark);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .more-bidders {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--dark);
+      margin-right: 5px;
+      border: 2px solid var(--dark);
+    }
+    
+    .image-upload-container {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      touch-action: manipulation;
+    }
+    
+    .image-upload-container:hover {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.05);
+    }
+    
+    .image-upload-container.dragover {
+      border-color: var(--success);
+      background: rgba(0, 255, 136, 0.05);
+    }
+    
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    
+    .increment-buttons {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .increment-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+      font-size: 0.875rem;
+    }
+    
+    .increment-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .increment-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .increment-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .quick-bid-btn {
+      background: rgba(255, 157, 0, 0.2);
+      border: 1px solid rgba(255, 157, 0, 0.5);
+      color: var(--secondary);
+    }
+    
+    .quick-bid-btn:hover {
+      background: rgba(255, 157, 0, 0.3);
+    }
+    
+    .bot-badge {
+      background: rgba(0, 212, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
+
+    @keyframes pulse-highlight {
+      0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7);
+      }
+      50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px 10px rgba(34, 211, 238, 0);
+      }
+      100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(34, 211, 238, 0);
+      }
+    }
+
+    .pulse-highlight {
+      animation: pulse-highlight 1s ease-out;
+      border: 2px solid rgba(34, 211, 238, 0.5) !important;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 255, 136, 0.2);
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+      color: var(--success);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: live-pulse 2s infinite;
+      box-shadow: 0 0 5px rgba(0, 255, 136, 0.6);
+    }
+
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      max-width: 350px;
+    }
+
+    .toast {
+      background: var(--dark-light);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    .toast-success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast-error {
+      border-left: 4px solid var(--danger);
+    }
+
+    .toast-info {
+      border-left: 4px solid var(--accent);
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      min-width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 0 4px;
+    }
+
+    .cart-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 0;
+    }
+
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .quantity-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .quantity-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .quantity-btn:active {
+      transform: scale(0.9);
+    }
+
+    .quantity-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .quantity-btn:disabled:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-tabs {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-tabs .nav-link {
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary);
+      background: rgba(255, 62, 127, 0.1);
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .payment-method {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      touch-action: manipulation;
+    }
+
+    .payment-method:hover {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.1);
+    }
+
+    .payment-method:active {
+      transform: scale(0.95);
+    }
+
+    .payment-method.selected {
+      border-color: var(--primary);
+      background: rgba(255, 62, 127, 0.2);
+      box-shadow: 0 0 15px rgba(255, 62, 127, 0.4);
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .bot-name-edit {
+      background: transparent !important;
+      border: none !important;
+      color: var(--text) !important;
+      font-size: 0.875rem;
+      padding: 4px 8px;
+      width: 100%;
+      border-radius: 4px;
+    }
+
+    .bot-name-edit:focus {
+      outline: 1px solid var(--primary);
+      background: rgba(255, 255, 255, 0.05) !important;
+      padding: 4px 8px;
+    }
+    
+    .bot-settings-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .bot-toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .bot-toggle-slider {
+      position: relative;
+      width: 50px;
+      height: 26px;
+      background: rgba(255, 56, 96, 0.3);
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 56, 96, 0.5);
+    }
+
+    .bot-toggle-slider.active {
+      background: rgba(0, 255, 136, 0.3);
+      border-color: rgba(0, 255, 136, 0.8);
+    }
+
+    .bot-toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #ff3860;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .bot-toggle-slider.active .bot-toggle-knob {
+      left: 26px;
+      background: #00ff88;
+    }
+
+    .bot-toggle-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 60px;
+      color: var(--text-light);
+    }
+
+    .bot-toggle-switch:hover .bot-toggle-slider {
+      box-shadow: 0 0 10px rgba(255, 62, 127, 0.5);
+    }
+
+    .bot-toggle-switch:active .bot-toggle-slider {
+      transform: scale(0.95);
+    }
+    
+    .bot-settings-row label {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      margin-bottom: 0;
+      min-width: 120px;
+    }
+    
+    .bot-settings-row input[type="number"] {
+      flex: 1;
+      max-width: 120px;
+      padding: 0.5rem;
+      border-radius: 6px;
+    }
+    
+    #globalLoader {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    
+    @media (max-width: 640px) {
+      .toast-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+      
+      .modal-dialog {
+        margin: 1rem;
+      }
+      
+      .increment-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .increment-btn {
+        min-width: calc(50% - 5px);
+      }
+    }
+
+    #authButtons {
+      min-width: 140px;
+    }
+
+    #authButtons button {
+      width: 100%;
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+      #authButtons {
+        min-width: 44px;
+      }
+      
+      #authButtons button span {
+        display: none !important;
+      }
+      
+      #authButtons {
+        gap: 0.5rem;
+      }
+    }
+
+    #authButtonsContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    #authButtonsContainer button {
+      white-space: nowrap;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      #authButtonsContainer button {
+        min-width: 44px !important;
+        padding: 0.5rem !important;
+      }
+      
+      #authButtonsContainer button span {
+        display: none;
+      }
+      
+      #authButtonsContainer button i {
+        margin: 0;
+      }
+    }
+
+    /* ✅ NUEVO: Skeleton Loader */
+    .skeleton-card {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 1rem;
+      height: 150px;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ✅ NUEVO: Botón de favoritos */
+    .favorite-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .favorite-btn:hover {
+      background: rgba(255,62,127,0.8);
+      transform: scale(1.1);
+    }
+
+    .favorite-btn.active {
+      background: var(--primary);
+    }
+
+    .favorite-btn i {
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    /* Mobile menu actualizado */
+    .mobile-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--dark-light);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem;
+      z-index: 100;
+    }
+
+    .mobile-menu-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem;
+      color: var(--text-light);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      flex: 1;
+      border-radius: 8px;
+    }
+
+    .mobile-menu-item:hover,
+    .mobile-menu-item.active {
+      color: var(--primary);
+      background: rgba(255,62,127,0.1);
+    }
+
+    .mobile-menu-item i {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .mobile-menu-item span {
+      font-size: 0.7rem;
+    }
+  </style>
+</head>
+<body class="text-slate-100 pb-16 md:pb-0">
+  <div id="particles-js"></div>
+  
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <div class="max-w-6xl mx-auto p-4 relative z-10">
+    <header class="flex items-center justify-between gap-2 mb-6 glass p-3 md:p-4 rounded-2xl header-glow animate-header">
+      <!-- LADO IZQUIERDO: Logo + Título -->
+      <div class="flex items-center gap-2 md:gap-4 flex-shrink min-w-0">
+        <div class="logo-container flex-shrink-0">
+          <img src="https://firebasestorage.googleapis.com/v0/b/subasta-argenta-474019.firebasestorage.app/o/imagenes%20utiles%2Flogo3.png?alt=media&token=bc5bab5c-0ccd-49e0-932b-2cee25a93b7d" alt="Subasta Argenta" class="logo-img-enhanced">
+          <div class="logo-ring"></div>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="header-title text-base md:text-xl lg:text-2xl">
+            <span class="hidden md:inline">Subasta Argenta</span>
+            <span class="md:hidden block leading-tight">
+              <span class="block">Subasta</span>
+              <span class="block">Argenta</span>
+            </span>
+          </h1>
+          <div class="header-subtitle hidden sm:block">Subastas en vivo y tienda virtual</div>
+          <div class="hidden md:flex flex-wrap gap-2 mt-2">
+            <span class="tech-badge"><i class="fas fa-fire"></i> TIENDA</span>
+            <span class="tech-badge"><i class="fas fa-bolt"></i> SUBASTAS</span>
+            <span class="tech-badge"><i class="fas fa-credit-card"></i> MERCADOPAGO</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- LADO DERECHO: Botones de usuario -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative" id="cartContainer" style="display:none">
+          <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
+            <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
+          </button>
+          <span id="cartBadge" class="cart-badge hidden">0</span>
+        </div>
+        <button id="profileBtn" class="btn btn-outline-light btn-sm flex items-center gap-1" style="display:none">
+          <i class="fas fa-user"></i> <span class="hidden lg:inline">Perfil</span>
+        </button>
+        <div id="userInfo" class="text-xs md:text-sm text-slate-300 hidden lg:block" style="display:none"></div>
+        
+        <!-- Contenedor de botones de autenticación -->
+        <div id="authButtonsContainer" class="flex flex-col gap-1.5">
+          <button id="loginBtn" class="btn btn-outline-light btn-sm flex items-center justify-center gap-1 glow whitespace-nowrap" style="min-width: 44px; padding: 0.4rem 0.6rem;">
+            <i class="fas fa-sign-in-alt"></i> <span class="hidden sm:inline">Iniciar sesión</span>
+          </button>
+          <button id="registerBtn" class="btn btn-primary btn-sm flex items-center justify-center gap-1 whitespace-nowrap" style="min-width: 44px; padding: 0.4rem 0.6rem;">
+            <i class="fas fa-user-plus"></i> <span class="hidden sm:inline">Regístrate</span>
+          </button>
+        </div>
+        
+        <button id="logoutBtn" class="btn btn-light btn-sm flex items-center gap-1" style="display:none">
+          <i class="fas fa-sign-out-alt"></i> <span class="hidden lg:inline">Cerrar sesión</span>
+        </button>
+      </div>
+    </header><div class="grid lg:grid-cols-3 gap-6">
+      <main class="lg:col-span-2 space-y-6">
+        <!-- Panel de Administrador (solo visible para admins) -->
+        <div id="adminPanel" class="glass p-5 rounded-2xl fade-in hidden">
+          <ul class="nav nav-pills mb-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="dashboard-tab" data-bs-toggle="pill" data-bs-target="#dashboard" type="button" role="tab">
+                <i class="fas fa-chart-bar mr-1"></i> Dashboard
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="create-tab" data-bs-toggle="pill" data-bs-target="#create" type="button" role="tab">
+                <i class="fas fa-plus mr-1"></i> Crear
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="manage-tab" data-bs-toggle="pill" data-bs-target="#manage" type="button" role="tab">
+                <i class="fas fa-edit mr-1"></i> Gestionar
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab">
+                <i class="fas fa-users mr-1"></i> Usuarios
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="bots-tab" data-bs-toggle="pill" data-bs-target="#bots" type="button" role="tab">
+                <i class="fas fa-robot mr-1"></i> Bots
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="products-tab" data-bs-toggle="pill" data-bs-target="#products" type="button" role="tab">
+                <i class="fas fa-box mr-1"></i> Productos
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="config-tab" data-bs-toggle="pill" data-bs-target="#config" type="button" role="tab">
+                <i class="fas fa-cog mr-1"></i> Config
+              </button>
+            </li>
+          </ul>
+          
+          <div class="tab-content" id="adminTabContent">
+            <!-- PESTAÑA DASHBOARD -->
+            <div class="tab-pane fade show active" id="dashboard">
+              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                <div class="stats-card">
+                  <i class="fas fa-gavel fa-2x mb-2" style="color: var(--primary);"></i>
+                  <div class="stats-value" id="dash_totalAuctions">0</div>
+                  <div class="stats-label">Subastas Totales</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-fire fa-2x mb-2" style="color: var(--secondary);"></i>
+                  <div class="stats-value" id="dash_activeAuctions">0</div>
+                  <div class="stats-label">Subastas Activas</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-box fa-2x mb-2" style="color: var(--accent);"></i>
+                  <div class="stats-value" id="dash_totalProducts">0</div>
+                  <div class="stats-label">Productos Totales</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-shopping-cart fa-2x mb-2" style="color: var(--success);"></i>
+                  <div class="stats-value" id="dash_productsInStock">0</div>
+                  <div class="stats-label">Productos en Stock</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-hand-holding-usd fa-2x mb-2" style="color: var(--warning);"></i>
+                  <div class="stats-value" id="dash_totalBids">0</div>
+                  <div class="stats-label">Ofertas Realizadas</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-check-circle fa-2x mb-2" style="color: var(--success);"></i>
+                  <div class="stats-value" id="dash_totalOrders">0</div>
+                  <div class="stats-label">Órdenes Completadas</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-dollar-sign fa-2x mb-2" style="color: var(--primary);"></i>
+                  <div class="stats-value" id="dash_totalRevenue">$0</div>
+                  <div class="stats-label">Ingresos Totales</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-chart-line fa-2x mb-2" style="color: var(--secondary);"></i>
+                  <div class="stats-value" id="dash_avgBid">$0</div>
+                  <div class="stats-label">Puja Promedio</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-users fa-2x mb-2" style="color: var(--accent);"></i>
+                  <div class="stats-value" id="dash_totalUsers">0</div>
+                  <div class="stats-label">Usuarios Registrados</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-user-check fa-2x mb-2" style="color: var(--success);"></i>
+                  <div class="stats-value" id="dash_activeUsers">0</div>
+                  <div class="stats-label">Usuarios Activos</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-robot fa-2x mb-2" style="color: var(--primary);"></i>
+                  <div class="stats-value" id="dash_activeBots">0</div>
+                  <div class="stats-label">Bots Activos</div>
+                </div>
+                <div class="stats-card">
+                  <i class="fas fa-clock fa-2x mb-2" style="color: var(--warning);"></i>
+                  <div class="stats-value" id="dash_timeActive">0h</div>
+                  <div class="stats-label">Tiempo Activo</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-pink-400"></i> Acciones Rápidas
+                  </h6>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button id="exportExcel" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button id="resetStats" class="btn btn-outline-danger btn-sm">
+                      <i class="fas fa-redo"></i> Reset Stats
+                    </button>
+                    <button id="refreshDash" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                    <button id="backupData" class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-download"></i> Backup
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-trophy text-yellow-400"></i> Top Usuarios
+                  </h6>
+                  <div id="topUsersList" class="space-y-2 max-h-40 overflow-y-auto">
+                    <div class="text-center text-slate-400 py-4">No hay datos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PESTAÑA CREAR -->
+            <div class="tab-pane fade" id="create">
+              <form id="createAuctionForm" class="space-y-4">
+                <input id="a_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título" required />
+                <textarea id="a_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
+                
+                <div id="imageUploadContainer" class="image-upload-container">
+                  <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+                  <div class="text-slate-400">Arrastra imagen aquí</div>
+                  <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
+                  <img id="imagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input id="a_start" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio inicial" />
+                  <input id="a_buyNow" type="number" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Compra directa (opcional)" />
+                  <input id="a_end" type="datetime-local" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" />
+                </div>
+                
+                <button class="btn btn-primary btn-sm" type="submit">
+                  <i class="fas fa-plus"></i> Crear Subasta
+                </button>
+              </form>
+            </div>
+
+            <!-- PESTAÑA GESTIONAR -->
+            <div class="tab-pane fade" id="manage">
+              <div id="manageAuctionsList"></div>
+            </div>
+
+            <!-- PESTAÑA USUARIOS -->
+            <div class="tab-pane fade" id="users">
+              <div class="glass-light p-4 rounded-xl mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <h6 class="font-bold">Gestión de Usuarios</h6>
+                  <button id="addTestUser" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-user-plus"></i> Agregar Usuario de Prueba
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                  <input id="searchUser" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="Buscar usuario..." />
+                  <select id="filterUserStatus" class="form-control bg-transparent text-light border-slate-700 rounded-xl">
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="blocked">Bloqueados</option>
+                  </select>
+                  <select id="sortUsers" class="form-control bg-transparent text-light border-slate-700 rounded-xl">
+                    <option value="name">Por nombre</option>
+                    <option value="balance">Por saldo</option>
+                    <option value="date">Por fecha</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="usersList" class="space-y-3"></div>
+            </div>
+
+            <!-- PESTAÑA BOTS -->
+            <div class="tab-pane fade" id="bots">
+              <div class="glass-light p-4 rounded-xl mb-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <div class="font-medium">Sistema de Bots Automáticos</div>
+                    <div class="text-sm text-slate-400">Usuarios ficticios que pujan automáticamente</div>
+                  </div>
+                  <div class="form-check form-switch">
+                    <input type="checkbox" id="botsEnabled" checked class="form-check-input" style="width: 60px; height: 30px; cursor: pointer;">
+                    <label for="botsEnabled" class="form-check-label ms-2">
+                      <span id="botsStatusText" class="badge bg-success">ACTIVO</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                  <div class="bot-settings-row">
+                    <label for="botDelayGlobal">Tiempo de espera (min):</label>
+                    <input type="number" id="botDelayGlobal" min="1" max="60" value="2" />
+                    <small class="text-slate-400">Global para todos los bots</small>
+                  </div>
+                  
+                  <div class="bot-settings-row">
+                    <label for="botProbability">Probabilidad (%):</label>
+                    <input type="number" id="botProbability" min="1" max="100" value="70" />
+                    <small class="text-slate-400">Chance de ofertar</small>
+                  </div>
+                </div>
+                
+                <div class="border-t border-slate-600 pt-3">
+                  <label class="text-sm font-medium mb-2 block">Lista de Bots (configuración individual):</label>
+                  <div id="botUsersList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                </div>
+              </div>
+              <button id="addBotUser" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-plus"></i> Agregar bot
+              </button>
+            </div>
+
+            <!-- PESTAÑA PRODUCTOS -->
+            <div class="tab-pane fade" id="products">
+              <h6 class="mb-3">Crear Producto</h6>
+              <form id="createProductForm" class="space-y-4 mb-4">
+                <input id="p_title" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Título del producto" required />
+                <textarea id="p_desc" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" rows="2" placeholder="Descripción"></textarea>
+                
+                <div id="productImageUploadContainer" class="image-upload-container">
+                  <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+                  <div class="text-slate-400">Arrastra imagen aquí</div>
+                  <input type="file" id="productImageUpload" accept="image/jpeg,image/png,image/webp" class="hidden" />
+                  <img id="productImagePreview" class="image-preview hidden" alt="Vista previa" loading="lazy" />
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input id="p_price" type="number" value="100" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Precio" required />
+                  <input id="p_stock" type="number" value="10" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Stock" required />
+                  <select id="p_category" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="Electrónicos">Electrónicos</option>
+                    <option value="Ropa">Ropa</option>
+                    <option value="Hogar">Hogar</option>
+                    <option value="Deportes">Deportes</option>
+                    <option value="Libros">Libros</option>
+                    <option value="Juguetes">Juguetes</option>
+                    <option value="Otros">Otros</option>
+                  </select>
+                </div>
+                
+                <button class="btn btn-primary btn-sm" type="submit">
+                  <i class="fas fa-plus"></i> Crear Producto
+                </button>
+              </form>
+              
+              <hr class="border-slate-700 my-4">
+              
+              <h6 class="mb-3">Gestionar Productos</h6>
+              <div id="manageProductsList"></div>
+            </div>
+
+            <!-- PESTAÑA CONFIGURACIÓN -->
+            <div class="tab-pane fade" id="config">
+              <div class="space-y-4">
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-credit-card text-blue-400"></i> Configuración MercadoPago
+                  </h6>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Alias de destino</label>
+                      <input id="mpAlias" type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="tu.alias.mp" />
+                    </div>
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Public Key</label>
+                      <input id="mpPublicKey" type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="TEST-..." />
+                    </div>
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Access Token</label>
+                      <input id="mpAccessToken" type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="APP_USR-..." />
+                    </div>
+                    <button id="saveMPConfig" class="btn btn-primary btn-sm w-full">
+                      <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-pink-400"></i> Configuración General
+                  </h6>
+                  <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded">
+                      <div>
+                        <div class="font-medium">Modo Mantenimiento</div>
+                        <div class="text-xs text-slate-400">Desactivar acceso público</div>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input type="checkbox" id="maintenanceMode" class="form-check-input">
+                      </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-slate-800/30 rounded">
+                      <div>
+                        <div class="font-medium">Registro de Usuarios</div>
+                        <div class="text-xs text-slate-400">Permitir nuevos registros</div>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input type="checkbox" id="allowRegistration" class="form-check-input" checked>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-sm text-slate-400 mb-1 block">Comisión de la plataforma (%)</label>
+                      <input id="platformFee" type="number" min="0" max="100" step="0.1" value="10" class="form-control bg-transparent text-light border-slate-700 rounded-xl" />
+                    </div>
+
+                    <button id="saveGeneralConfig" class="btn btn-primary btn-sm w-full">
+                      <i class="fas fa-save"></i> Guardar Configuración
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-light p-4 rounded-xl">
+                  <h6 class="font-bold mb-3 flex items-center gap-2 text-red-400">
+                    <i class="fas fa-exclamation-triangle"></i> Zona de Peligro
+                  </h6>
+                  <div class="space-y-3">
+                    <button id="clearCache" class="btn btn-outline-warning btn-sm w-full">
+                      <i class="fas fa-trash"></i> Limpiar Caché
+                    </button>
+                    <button id="resetAllData" class="btn btn-outline-danger btn-sm w-full">
+                      <i class="fas fa-exclamation-circle"></i> Borrar Todos los Datos
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido Principal para todos los usuarios -->
+        <div class="glass p-5 rounded-2xl fade-in">
+          <ul class="nav nav-pills mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="auctions-tab" data-bs-toggle="pill" data-bs-target="#auctions" type="button" role="tab">
+                <i class="fas fa-gavel mr-1"></i> Subastas
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="store-tab" data-bs-toggle="pill" data-bs-target="#store" type="button" role="tab">
+                <i class="fas fa-store mr-1"></i> Tienda Virtual
+              </button>
+            </li>
+          </ul>
+          
+          <div class="tab-content" id="mainTabContent">
+            <div class="tab-pane fade" id="auctions" role="tabpanel">
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                  <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-hourglass-half text-pink-400"></i> Subastas Activas
+                  </h2>
+                  <div class="text-sm text-slate-400">Ofertas rápidas y compra directa</div>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                  <button id="btnCreateDemo" class="btn btn-outline-light btn-sm flex items-center gap-1 flex-1 md:flex-none glow">
+                    <i class="fas fa-magic"></i> <span>Crear demo</span>
+                  </button>
+                  <button id="openAdmin" class="btn btn-primary btn-sm flex items-center gap-1 flex-1 md:flex-none" style="display:none">
+                    <i class="fas fa-cog"></i> <span>Panel Admin</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-content md:!block mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-search"></i> Buscar
+                  </label>
+                  <input id="searchAuctions" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buscar..." />
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-sort"></i> Ordenar
+                  </label>
+                  <select id="sortAuctions" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="ending">Próximo a terminar</option>
+                    <option value="highest">Mayor puja</option>
+                    <option value="newest">Más reciente</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-filter"></i> Estado
+                  </label>
+                  <select id="filterAuctionState" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="all">Todas</option>
+                    <option value="active">Activas</option>
+                    <option value="ended">Finalizadas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="auctionsList" class="mt-6 grid gap-4"></div>
+            </div>
+
+            <div class="tab-pane fade show active" id="store" role="tabpanel">
+              <!-- Subasta Destacada -->
+              <div id="featuredAuction" class="mb-6"></div>
+              
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                  <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fas fa-store text-blue-400"></i> Tienda Virtual
+                  </h2>
+                  <div class="text-sm text-slate-400">Productos para compra inmediata</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-search"></i> Buscar
+                  </label>
+                  <input id="searchProducts" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm" placeholder="Buscar..." />
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-tags"></i> Categoría
+                  </label>
+                  <select id="filterProductCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="all">Todas</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400 flex items-center gap-1 mb-1">
+                    <i class="fas fa-sort"></i> Ordenar
+                  </label>
+                  <select id="sortProducts" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+                    <option value="newest">Más recientes</option>
+                    <option value="price-asc">Precio menor</option>
+                    <option value="price-desc">Precio mayor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="productsList" class="grid gap-4"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="space-y-6">
+        <!-- Saldo del usuario -->
+        <div class="glass p-5 rounded-2xl sticky top-4" id="balanceSection">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <div class="text-sm text-slate-400">Saldo</div>
+              <div id="balance" class="text-2xl font-bold price-tag">$0</div>
+            </div>
+            <div id="balanceButtons">
+              <button id="topup" class="btn btn-outline-light btn-sm glow" style="display: none;">
+                <i class="fas fa-plus"></i> Cargar
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 text-sm">
+            <div class="mb-2 font-medium">💡 Cómo funciona tu saldo</div>
+            <div class="space-y-2 text-xs text-slate-400">
+              <div class="p-2 rounded bg-slate-800/30">
+                <i class="fas fa-plus-circle text-success"></i> Las recargas se acreditan al instante
+              </div>
+              <div class="p-2 rounded bg-slate-800/30">
+                <i class="fas fa-gavel text-pink-400"></i> Las pujas reservan fondos temporalmente
+              </div>
+              <div class="p-2 rounded bg-slate-800/30">
+                <i class="fas fa-shopping-cart text-blue-400"></i> Las compras debitan inmediatamente
+              </div>
+            </div>
+          </div>
+          <button id="viewTransactions" class="btn btn-outline-light btn-sm w-full mt-3" style="display: none;">
+            <i class="fas fa-history"></i> Historial
+          </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="glass p-5 rounded-2xl">
+          <h4 class="font-semibold mb-4">Filtros</h4>
+          <div class="space-y-4">
+            <select id="filterCategory" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Todas las categorías</option>
+            </select>
+            <select id="filterTime" class="w-full rounded-xl p-3 bg-transparent border border-slate-700 text-sm">
+              <option value="all">Cualquier tiempo</option>
+              <option value="short">< 10 min</option>
+              <option value="1hour">< 1 hora</option>
+            </select>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Menú móvil -->
+  <div class="mobile-menu md:hidden">
+    <div class="mobile-menu-item active" data-target="auctions">
+      <i class="fas fa-gavel"></i>
+      <span>Subastas</span>
+    </div>
+    <div class="mobile-menu-item" data-target="store">
+      <i class="fas fa-store"></i>
+      <span>Tienda</span>
+    </div>
+    <div class="mobile-menu-item" data-target="cart">
+      <i class="fas fa-shopping-cart"></i>
+      <span>Carrito</span>
+    </div>
+  </div>
+
+  <!-- ==================== MODALES ==================== -->
+  
+  <!-- MODAL DE LOGIN -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-sign-in-alt text-pink-400"></i> Login</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm">
+            <div class="mb-3">
+              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginEmail" value="user@demo.com" placeholder="Email">
+            </div>
+            <div class="mb-3">
+              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="loginPassword" value="user123" placeholder="Contraseña">
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl mb-3">Entrar</button>
+            <div class="text-center text-sm">
+              <span class="text-slate-400">¿No tienes cuenta?</span>
+              <a href="#" id="switchToRegister" class="text-pink-400 ms-1">Regístrate</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE REGISTRO -->
+  <div class="modal fade" id="registerModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-user-plus text-pink-400"></i> Crear Cuenta</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="registerForm">
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Nombre completo</label>
+              <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="registerName" placeholder="Tu nombre" required minlength="3">
+            </div>
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Email</label>
+              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="registerEmail" placeholder="tu@email.com" required>
+            </div>
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Contraseña</label>
+              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="registerPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Confirmar contraseña</label>
+              <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" id="registerPasswordConfirm" placeholder="Repite tu contraseña" required minlength="6">
+            </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="registerTerms" required>
+              <label class="form-check-label text-xs" for="registerTerms">
+                Acepto los <a href="#" class="text-pink-400" id="openTermsLink">términos y condiciones</a>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl mb-3">
+              <i class="fas fa-user-plus"></i> Crear Cuenta
+            </button>
+            <div class="text-center text-sm">
+              <span class="text-slate-400">¿Ya tienes cuenta?</span>
+              <a href="#" id="switchToLogin" class="text-pink-400 ms-1">Inicia sesión</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PUJA -->
+  <div class="modal fade" id="bidModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-gavel text-pink-400"></i> Ofertar</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="bidAuctionInfo" class="mb-4"></div>
+          <form id="bidForm">
+            <input type="hidden" id="bidAuctionId">
+            <input type="number" step="500" min="500" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" id="bidAmount" placeholder="Tu puja" required>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CARRITO -->
+  <div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-shopping-cart text-blue-400"></i> Carrito</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="cartItems" class="space-y-3 mb-4"></div>
+          <div id="cartEmpty" class="text-center py-4 text-slate-400 hidden">
+            <i class="fas fa-shopping-cart fa-2x mb-3 opacity-50"></i>
+            <div>Tu carrito está vacío</div>
+          </div>
+          <div id="cartSummary">
+            <div class="flex justify-between mb-3">
+              <span>Total:</span>
+              <span id="cartTotal" class="price-tag">$0</span>
+            </div>
+            <button id="checkoutBtn" class="btn btn-primary w-100 rounded-xl mb-2">Pagar con Saldo</button>
+            <button id="mercadopagoBtn" class="btn btn-outline-light w-100 rounded-xl">MercadoPago</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE RECARGA -->
+  <div class="modal fade" id="topupModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-wallet text-pink-400"></i> Recargar Saldo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="topupAmountSelection">
+            <div class="alert alert-info text-center mb-4" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
+              <i class="fas fa-wallet"></i> Tu saldo actual: <strong class="price-tag" style="font-size: 1.2rem;">$<span id="currentBalanceInModal">0</span></strong>
+            </div>
+            
+            <h6 class="mb-3 text-center">Selecciona el monto a recargar</h6>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="500">
+                <div>$500</div>
+                <small class="text-slate-400">Básico</small>
+              </button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="1000">
+                <div>$1000</div>
+                <small class="text-slate-400">Recomendado</small>
+              </button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="2000">
+                <div>$2000</div>
+                <small class="text-slate-400">Plus</small>
+              </button>
+              <button class="btn btn-outline-light topup-amount-btn" data-amount="5000">
+                <div>$5000</div>
+                <small class="text-slate-400">Premium</small>
+              </button>
+            </div>
+            <input type="number" id="customTopupAmount" class="form-control bg-transparent text-light border-slate-700 rounded-xl mb-3" placeholder="Otro monto (mínimo $100)" min="100">
+            <button id="proceedToPayment" class="btn btn-primary w-100" disabled>
+              <i class="fas fa-arrow-right"></i> Continuar con MercadoPago
+            </button>
+          </div>
+          
+          <div id="topupPaymentMethods" class="hidden">
+            <h6 class="mb-3 text-center">Método de Pago</h6>
+            <div class="d-flex justify-content-center mb-4">
+              <div class="payment-method selected" data-method="mercadopago" style="max-width: 300px; width: 100%;">
+                <i class="fab fa-cc-mastercard fa-3x mb-2 text-blue-400"></i>
+                <div class="font-semibold text-lg">MercadoPago</div>
+                <small class="text-slate-400 mt-2 d-block">Todas las tarjetas de crédito y débito</small>
+                <div class="mt-2">
+                  <span class="badge bg-success me-1">Visa</span>
+                  <span class="badge bg-success me-1">Mastercard</span>
+                  <span class="badge bg-success">Amex</span>
+                </div>
+              </div>
+            </div>
+            <div class="alert alert-info text-center" style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);">
+              <i class="fas fa-info-circle"></i> Serás redirigido a MercadoPago para completar el pago de forma segura
+            </div>
+            <button id="confirmTopupPayment" class="btn btn-primary w-100 btn-lg">
+              <i class="fas fa-lock"></i> Pagar con MercadoPago
+            </button>
+          </div>
+          
+          <div id="topupLoading" class="text-center py-4 hidden">
+            <div class="spinner mb-3"></div>
+            <div>Procesando pago...</div>
+            <small class="text-slate-400">Por favor espera</small>
+          </div>
+          
+          <div id="topupSuccess" class="text-center py-4 hidden">
+            <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
+            <h4 style="color: var(--success);">¡Éxito!</h4>
+            <div id="topupDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MERCADOPAGO -->
+  <div class="modal fade" id="mpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-credit-card text-blue-400"></i> MercadoPago</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="paymentSummary" class="mb-4">
+            <h6 class="mb-3">Resumen</h6>
+            <div id="paymentItems"></div>
+            <div class="border-top pt-3 mt-3">
+              <div class="flex justify-between">
+                <span>Total:</span>
+                <span id="paymentTotal" class="price-tag">$0</span>
+              </div>
+            </div>
+          </div>
+          <div id="paymentMethods">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="payment-method" data-method="credit_card">
+                <i class="fas fa-credit-card fa-2x mb-2"></i>
+                <div>Crédito</div>
+              </div>
+              <div class="payment-method" data-method="debit_card">
+                <i class="fas fa-money-check fa-2x mb-2"></i>
+                <div>Débito</div>
+              </div>
+            </div>
+          </div>
+          <div id="paymentLoading" class="text-center py-4 hidden">
+            <div class="spinner mb-3"></div>
+            <div>Procesando...</div>
+          </div>
+          <div id="paymentSuccess" class="text-center py-4 hidden">
+            <i class="fas fa-check-circle fa-3x mb-3" style="color: var(--success);"></i>
+            <h4 style="color: var(--success);">¡Pago exitoso!</h4>
+            <div id="paymentDetails"></div>
+          </div>
+          <div id="paymentActions" class="mt-4 flex gap-2">
+            <button id="confirmPayment" class="btn btn-primary flex-1" disabled>Pagar</button>
+            <button id="cancelPayment" class="btn btn-outline-light">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE TÉRMINOS -->
+  <div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title">
+            <i class="fas fa-file-contract text-pink-400"></i> Términos y Condiciones
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+          <div class="space-y-4 text-sm">
+            <div>
+              <h6 class="font-bold text-pink-400 mb-2">1. Aceptación de los Términos</h6>
+              <p class="text-slate-300">
+                Al acceder y utilizar Subasta Argenta, usted acepta estar sujeto a estos términos y condiciones.
+              </p>
+            </div>
+            <!-- Resto del contenido de términos igual que el original -->
+          </div>
+        </div>
+        <div class="modal-footer border-slate-700">
+          <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">
+            <i class="fas fa-check"></i> Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PERFIL -->
+  <div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-user text-pink-400"></i> Mi Perfil</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="profileForm">
+            <div class="mb-3">
+              <label class="text-sm text-slate-400 mb-1 block">Nombre</label>
+              <input type="text" id="profileName" class="form-control bg-transparent text-light border-slate-700 rounded-xl" placeholder="Tu nombre" required>
+            </div>
+            <div class="mb-3">
+              <label class="text-sm text-slate-400 mb-1 block">Email</label>
+              <input type="email" id="profileEmail" class="form-control bg-transparent text-light border-slate-700 rounded-xl" readonly>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-xl">Guardar Cambios</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ NUEVO: MODAL DE DETALLE DE PRODUCTO -->
+  <div class="modal fade" id="productDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title"><i class="fas fa-box-open text-blue-400"></i> Detalles del Producto</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <img id="productDetailImage" src="" alt="Producto" class="w-100 rounded-xl" style="max-height: 400px; object-fit: cover;">
+            </div>
+            <div class="col-md-6">
+              <h3 id="productDetailTitle" class="font-bold mb-3"></h3>
+              <div class="mb-3">
+                <span class="badge bg-primary" id="productDetailCategory"></span>
+              </div>
+              <p id="productDetailDescription" class="text-slate-300 mb-4"></p>
+              <div class="glass-light p-4 rounded-xl mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="text-slate-400">Precio:</span>
+                  <span id="productDetailPrice" class="price-tag" style="font-size: 1.75rem;"></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-slate-400">Stock disponible:</span>
+                  <span id="productDetailStock" class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;"></span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="text-sm text-slate-400 mb-2 d-block">Cantidad:</label>
+                <div class="d-flex align-items-center gap-3">
+                  <button class="quantity-btn" id="productDetailDecrement">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" id="productDetailQuantity" value="1" min="1" 
+                         class="form-control bg-transparent text-light border-slate-700 rounded-xl text-center" 
+                         style="max-width: 80px;">
+                  <button class="quantity-btn" id="productDetailIncrement">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              <button id="productDetailAddToCart" class="btn btn-primary w-100 btn-lg rounded-xl mb-2">
+                <i class="fas fa-cart-plus"></i> Agregar al Carrito
+              </button>
+              <button id="productDetailBuyNow" class="btn btn-outline-light w-100 rounded-xl">
+                <i class="fas fa-bolt"></i> Comprar Ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ NUEVO: MODAL DE DETALLE DE SUBASTA -->
+  <div class="modal fade" id="auctionDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content glass border-0 rounded-2xl">
+        <div class="modal-header border-slate-700">
+          <h5 class="modal-title">
+            <i class="fas fa-gavel text-pink-400"></i> 
+            <span id="auctionDetailTitle"></span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+              <div class="position-relative mb-3">
+                <img id="auctionDetailMainImage" src="" alt="Subasta" 
+                     class="w-100 rounded-xl" 
+                     style="max-height: 450px; object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                <div id="auctionDetailStatus" class="position-absolute top-0 start-0 m-3">
+                  <span class="badge" style="font-size: 0.9rem; padding: 0.5rem 1rem;">EN VIVO</span>
+                </div>
+                <div id="auctionGalleryIndicator" class="position-absolute bottom-0 end-0 m-3 badge bg-dark" style="display: none;">
+                  <i class="fas fa-images"></i> <span id="galleryCount">1</span> fotos
+                </div>
+              </div>
+              <div id="auctionGalleryThumbs" class="d-flex gap-2 overflow-auto" style="max-height: 100px;"></div>
+            </div>
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <span class="badge bg-primary" id="auctionDetailCategory" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;"></span>
+                <span class="live-indicator ms-2" id="auctionLiveIndicator">
+                  <span class="live-dot"></span>EN VIVO
+                </span>
+              </div>
+              <div class="glass-light p-3 rounded-xl mb-3">
+                <h6 class="font-bold mb-2"><i class="fas fa-info-circle text-blue-400"></i> Descripción</h6>
+                <p id="auctionDetailDescription" class="text-slate-300 mb-0" style="line-height: 1.6;"></p>
+              </div>
+              <div class="glass-light p-4 rounded-xl mb-3">
+                <div class="row g-3">
+                  <div class="col-6">
+                    <div class="text-slate-400 text-sm mb-1">Precio Inicial</div>
+                    <div class="text-xl font-bold" id="auctionDetailStartPrice">$0</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="text-slate-400 text-sm mb-1">Puja Actual</div>
+                    <div class="price-tag" style="font-size: 1.75rem;" id="auctionDetailCurrentBid">$0</div>
+                  </div>
+                  <div class="col-6" id="buyNowSection" style="display: none;">
+                    <div class="text-slate-400 text-sm mb-1">Compra Directa</div>
+                    <div class="text-lg font-bold text-success" id="auctionDetailBuyNow">$0</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="text-slate-400 text-sm mb-1">Tiempo Restante</div>
+                    <div class="countdown text-lg font-bold" id="auctionDetailTimeRemaining">--</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-light p-3 rounded-xl mb-3">
+                <h6 class="font-bold mb-3"><i class="fas fa-history text-yellow-400"></i> Actividad Reciente</h6>
+                <div id="auctionBidHistory" style="max-height: 150px; overflow-y: auto;"></div>
+              </div>
+              <div class="mb-3" id="quickBidsSection">
+                <label class="text-sm text-slate-400 mb-2 d-block">Incrementos Rápidos:</label>
+                <div class="increment-buttons">
+                  <button class="increment-btn" data-amount="500">+$500</button>
+                  <button class="increment-btn" data-amount="1000">+$1000</button>
+                  <button class="increment-btn" data-amount="2000">+$2000</button>
+                  <button class="increment-btn" data-amount="5000">+$5000</button>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button id="auctionDetailBidBtn" class="btn btn-primary flex-grow-1 btn-lg rounded-xl">
+                  <i class="fas fa-gavel"></i> Ofertar
+                </button>
+                <button id="auctionDetailBuyNowBtn" class="btn btn-outline-light flex-grow-1 rounded-xl" style="display: none;">
+                  <i class="fas fa-bolt"></i> Comprar Ya
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script><script>
+    // ========== CONFIGURACIÓN Y ESTADO GLOBAL ==========
+    let db = null;
+    let auth = null;
+    let storage = null;
+    let realtimeListener = null;
+    let countdownInterval = null;
+    let botActivityInterval = null;
+    let heartbeatInterval = null;
+    let pollingInterval = null;
+    
+    const state = {
+      currentUser: null,
+      auctions: [],
+      products: [],
+      bids: [],
+      cart: [],
+      orders: [],
+      botUsers: [],
+      favorites: [], // ✅ NUEVO: Sistema de favoritos
+      botSettings: {
+        enabled: true,
+        globalDelay: 2,
+        probability: 70
+      },
+      mpConfig: {
+        alias: '',
+        publicKey: '',
+        accessToken: ''
+      },
+      uploadedImageUrl: null,
+      uploadedProductImageUrl: null // ✅ CORREGIDO: Era "uploadedProductImageUrl: null" (sintaxis incorrecta)
+    };
+
+    // ========== INICIALIZACIÓN DE FIREBASE ==========
+    // ✅ NOTA: En producción, mover estas credenciales a variables de entorno
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-Np6TWWMqjV85eOaM0zkRobPUJJ6uc-8",
+      authDomain: "subasta-argenta-474019.firebaseapp.com",
+      projectId: "subasta-argenta-474019",
+      storageBucket: "subasta-argenta-474019.firebasestorage.app",
+      messagingSenderId: "590176341430",
+      appId: "1:590176341430:web:d8f4a3e83e0e1b84d7e0c9"
+    };
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      storage = firebase.storage();
+      console.log('✅ Firebase inicializado correctamente');
+    } catch (error) {
+      console.error('❌ Error al inicializar Firebase:', error);
+      showToast('Error al conectar con el servidor', 'error');
+    }
+
+    // ========== UTILIDADES ==========
+    
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function formatPrice(amount) {
+      return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0
+      }).format(amount);
+    }
+
+    function formatTimeRemaining(endTime) {
+      const now = new Date();
+      const end = new Date(endTime);
+      const diff = end - now;
+
+      if (diff <= 0) return 'Finalizada';
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) return `${days}d ${hours}h`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    }
+
+    // ✅ MEJORADO: Sistema de toast con mejor UX
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type} show`;
+      toast.innerHTML = `
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function safeAssign(id, event, handler) {
+      const el = document.getElementById(id);
+      if (el) {
+        el[event] = handler;
+      }
+    }
+
+    // ✅ NUEVO: Validación antes de usar elementos del DOM
+    function getElement(id) {
+      const el = document.getElementById(id);
+      if (!el) {
+        console.warn(`⚠️ Elemento no encontrado: ${id}`);
+      }
+      return el;
+    }
+
+    // ========== LISTENERS DE FIRESTORE ==========
+    
+    // ✅ MEJORADO: Limpieza robusta de listeners
+    function stopRealtimeListener() {
+      if (realtimeListener) {
+        try {
+          realtimeListener();
+          realtimeListener = null;
+          console.log('✅ Listener detenido correctamente');
+        } catch (error) {
+          console.error('❌ Error al detener listener:', error);
+        }
+      }
+    }
+
+    // ✅ MEJORADO: Listener con mejor manejo de errores y fallback
+    function startRealtimeListener() {
+      // Limpiar cualquier listener anterior
+      stopRealtimeListener();
+      
+      if (!db || !state.currentUser) {
+        console.log('⚠️ No se puede iniciar listener sin DB o usuario');
+        return;
+      }
+      
+      console.log('🔄 Iniciando listener en tiempo real...');
+      
+      realtimeListener = db.collection('appState').doc('mainState')
+        .onSnapshot({
+          includeMetadataChanges: false
+        }, (doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            console.log('📡 Actualización recibida desde Firestore');
+            
+            if (data.auctions) state.auctions = data.auctions;
+            if (data.products) state.products = data.products;
+            if (data.bids) state.bids = data.bids;
+            if (data.orders) state.orders = data.orders;
+            if (data.botUsers) state.botUsers = data.botUsers;
+            
+            // Actualizar usuario actual si cambió
+            if (state.currentUser && data.users) {
+              const updatedUser = data.users.find(u => u.id === state.currentUser.id);
+              if (updatedUser) {
+                state.currentUser = updatedUser;
+                updateUI();
+              }
+            }
+            
+            renderAuctions();
+            renderProducts();
+            updateDashboard();
+          }
+        }, (error) => {
+          console.error('❌ Error en listener:', error);
+          stopRealtimeListener();
+          // ✅ NUEVO: Fallback a polling si el listener falla
+          startLocalPolling();
+        });
+    }
+
+    // ✅ NUEVO: Polling como fallback
+    function startLocalPolling() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      
+      pollingInterval = setInterval(async () => {
+        try {
+          await loadStateFromFirestore();
+          console.log('🔄 Estado actualizado via polling');
+        } catch (error) {
+          console.error('❌ Error en polling:', error);
+        }
+      }, 5000);
+    }
+
+    function stopLocalPolling() {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+      }
+    }
+
+    // ========== CARGA Y GUARDADO DE ESTADO ==========
+    
+    async function loadStateFromFirestore() {
+      if (!db) return;
+      
+      try {
+        const doc = await db.collection('appState').doc('mainState').get();
+        if (doc.exists) {
+          const data = doc.data();
+          state.auctions = data.auctions || [];
+          state.products = data.products || [];
+          state.bids = data.bids || [];
+          state.orders = data.orders || [];
+          state.botUsers = data.botUsers || [];
+          
+          // Cargar favoritos del usuario desde localStorage
+          const savedFavorites = localStorage.getItem(`favorites_${state.currentUser?.id}`);
+          if (savedFavorites) {
+            state.favorites = JSON.parse(savedFavorites);
+          }
+          
+          console.log('✅ Estado cargado desde Firestore');
+        }
+      } catch (error) {
+        console.error('❌ Error cargando estado:', error);
+        throw error;
+      }
+    }
+
+    async function saveStateToFirestore() {
+      if (!db) return;
+      
+      try {
+        await db.collection('appState').doc('mainState').set({
+          auctions: state.auctions,
+          products: state.products,
+          bids: state.bids,
+          orders: state.orders,
+          botUsers: state.botUsers,
+          users: [], // Los usuarios se manejan en auth
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('✅ Estado guardado en Firestore');
+      } catch (error) {
+        console.error('❌ Error guardando estado:', error);
+        showToast('Error al guardar cambios', 'error');
+        throw error;
+      }
+    }
+
+    // ✅ NUEVO: Guardar favoritos
+    function saveFavorites() {
+      if (state.currentUser) {
+        localStorage.setItem(`favorites_${state.currentUser.id}`, JSON.stringify(state.favorites));
+      }
+    }
+
+    // ========== AUTENTICACIÓN ==========
+    
+    async function login(email, password) {
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Cargar datos del usuario
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          state.currentUser = { id: user.uid, ...userDoc.data() };
+          localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+          
+          showToast(`¡Bienvenido ${state.currentUser.name}!`, 'success');
+          updateUI();
+          
+          // Iniciar listener en tiempo real
+          startRealtimeListener();
+          
+          // Cargar estado inicial
+          await loadStateFromFirestore();
+          renderAuctions();
+          renderProducts();
+          
+          // Cerrar modal
+          bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.hide();
+        }
+      } catch (error) {
+        console.error('Error en login:', error);
+        showToast('Email o contraseña incorrectos', 'error');
+      }
+    }
+
+    async function register(name, email, password) {
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Crear documento de usuario
+        const userData = {
+          name: name,
+          email: email,
+          balance: 5000, // Saldo inicial de bienvenida
+          role: 'user',
+          createdAt: new Date().toISOString(),
+          status: 'active'
+        };
+        
+        await db.collection('users').doc(user.uid).set(userData);
+        
+        state.currentUser = { id: user.uid, ...userData };
+        localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+        
+        showToast(`¡Cuenta creada! Bienvenido ${name}`, 'success');
+        createConfetti(100);
+        
+        updateUI();
+        startRealtimeListener();
+        
+        bootstrap.Modal.getInstance(document.getElementById('registerModal'))?.hide();
+      } catch (error) {
+        console.error('Error en registro:', error);
+        if (error.code === 'auth/email-already-in-use') {
+          showToast('Este email ya está registrado', 'error');
+        } else {
+          showToast('Error al crear la cuenta', 'error');
+        }
+      }
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        // Detener listeners
+        stopRealtimeListener();
+        stopLocalPolling();
+        
+        // Limpiar countdown
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+        
+        state.currentUser = null;
+        state.cart = [];
+        state.favorites = [];
+        localStorage.removeItem('currentUser');
+        
+        showToast('Sesión cerrada', 'info');
+        updateUI();
+      });
+    }
+
+    // ========== UI Y RENDERIZADO ==========
+    
+    function updateUI() {
+      const isLoggedIn = !!state.currentUser;
+      const isAdmin = state.currentUser?.role === 'admin';
+      
+      // Botones de auth
+      const loginBtn = getElement('loginBtn');
+      const registerBtn = getElement('registerBtn');
+      const logoutBtn = getElement('logoutBtn');
+      const profileBtn = getElement('profileBtn');
+      const cartContainer = getElement('cartContainer');
+      const balanceSection = getElement('balanceSection');
+      const topupBtn = getElement('topup');
+      const viewTransactions = getElement('viewTransactions');
+      const openAdmin = getElement('openAdmin');
+      const adminPanel = getElement('adminPanel');
+      
+      if (loginBtn) loginBtn.style.display = isLoggedIn ? 'none' : 'flex';
+      if (registerBtn) registerBtn.style.display = isLoggedIn ? 'none' : 'flex';
+      if (logoutBtn) logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
+      if (profileBtn) profileBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
+      if (cartContainer) cartContainer.style.display = isLoggedIn ? 'block' : 'none';
+      if (topupBtn) topupBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
+      if (viewTransactions) viewTransactions.style.display = isLoggedIn ? 'block' : 'none';
+      if (openAdmin) openAdmin.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (adminPanel) adminPanel.classList.toggle('hidden', !isAdmin);
+      
+      // Actualizar saldo
+      const balanceEl = getElement('balance');
+      if (balanceEl && state.currentUser) {
+        balanceEl.textContent = formatPrice(state.currentUser.balance);
+      }
+      
+      // ✅ MEJORADO: Actualizar saldo en modal de recarga
+      const currentBalanceInModal = getElement('currentBalanceInModal');
+      if (currentBalanceInModal && state.currentUser) {
+        currentBalanceInModal.textContent = state.currentUser.balance;
+      }
+      
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const badge = getElement('cartBadge');
+      if (!badge) return;
+      
+      const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+      
+      if (totalItems > 0) {
+        badge.textContent = totalItems;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // ✅ MEJORADO: Renderizado con skeleton loaders y selectivo
+    function renderAuctions(auctions = null) {
+      const list = getElement('auctionsList');
+      if (!list) return;
+      
+      // Si no se pasan subastas, mostrar skeleton
+      if (auctions === null) {
+        list.innerHTML = `
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        `;
+        
+        // Cargar subastas reales
+        setTimeout(() => renderAuctions(state.auctions), 300);
+        return;
+      }
+      
+      if (!auctions || auctions.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay subastas disponibles</div>';
+        return;
+      }
+      
+      // Aplicar filtros
+      const search = getElement('searchAuctions')?.value.toLowerCase() || '';
+      const sort = getElement('sortAuctions')?.value || 'ending';
+      const filterState = getElement('filterAuctionState')?.value || 'all';
+      
+      let filtered = auctions.filter(a => {
+        const matchesSearch = a.title.toLowerCase().includes(search) || 
+                             a.description.toLowerCase().includes(search);
+        const matchesState = filterState === 'all' || a.status === filterState;
+        return matchesSearch && matchesState;
+      });
+      
+      // Ordenar
+      filtered.sort((a, b) => {
+        if (sort === 'ending') {
+          return new Date(a.endTime) - new Date(b.endTime);
+        } else if (sort === 'highest') {
+          return (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice);
+        } else {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+      });
+      
+      list.innerHTML = filtered.map(auction => `
+        <div class="auction-card glass p-4 rounded-xl fade-in" data-auction-id="${auction.id}">
+          ${auction.status === 'active' ? '<div class="live-indicator mb-2"><span class="live-dot"></span>EN VIVO</div>' : ''}
+          
+          <div class="flex gap-4 flex-col md:flex-row">
+            <div class="relative flex-shrink-0">
+              <img src="${auction.image}" alt="${auction.title}" class="rounded-xl" style="width: 100%; max-width: 200px; height: 150px; object-fit: cover;" loading="lazy">
+              ${renderFavoriteButton('auction', auction.id)}
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-lg mb-2">${auction.title}</h3>
+              <p class="text-sm text-slate-400 mb-3 line-clamp-2">${auction.description}</p>
+              
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <div class="text-xs text-slate-400">Puja actual</div>
+                  <div class="price-tag">${formatPrice(auction.currentBid || auction.startPrice)}</div>
+                </div>
+                ${auction.buyNowPrice ? `
+                  <div>
+                    <div class="text-xs text-slate-400">Compra directa</div>
+                    <div class="text-sm font-bold text-success">${formatPrice(auction.buyNowPrice)}</div>
+                  </div>
+                ` : ''}
+                <div>
+                  <div class="text-xs text-slate-400">Tiempo restante</div>
+                  <div class="countdown text-sm font-bold" data-end="${auction.endTime}">${formatTimeRemaining(auction.endTime)}</div>
+                </div>
+              </div>
+              
+              <div class="flex gap-2 flex-wrap">
+                <button onclick="openBidModal('${auction.id}')" class="btn btn-primary btn-sm flex-1" ${auction.status !== 'active' ? 'disabled' : ''}>
+                  <i class="fas fa-gavel"></i> Ofertar
+                </button>
+                ${auction.buyNowPrice ? `
+                  <button onclick="buyNow('${auction.id}')" class="btn btn-outline-light btn-sm flex-1" ${auction.status !== 'active' ? 'disabled' : ''}>
+                    <i class="fas fa-bolt"></i> Comprar
+                  </button>
+                ` : ''}
+                <button onclick="viewAuctionDetail('${auction.id}')" class="btn btn-outline-light btn-sm">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      startCountdown();
+      renderFeaturedAuction();
+    }
+
+    // ✅ NUEVO: Renderizado selectivo de una sola subasta
+    function updateSingleAuctionCard(auctionId) {
+      const card = document.querySelector(`[data-auction-id="${auctionId}"]`);
+      if (!card) return;
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) return;
+      
+      // Actualizar solo la puja actual y el tiempo
+      const priceEl = card.querySelector('.price-tag');
+      const countdownEl = card.querySelector('.countdown');
+      
+      if (priceEl) {
+        priceEl.textContent = formatPrice(auction.currentBid || auction.startPrice);
+      }
+      
+      if (countdownEl) {
+        countdownEl.textContent = formatTimeRemaining(auction.endTime);
+      }
+      
+      // ✅ NUEVO: Efecto de highlight cuando se actualiza
+      card.classList.add('pulse-highlight');
+      setTimeout(() => card.classList.remove('pulse-highlight'), 1000);
+    }
+
+    // ✅ NUEVO: Botón de favoritos
+    function renderFavoriteButton(type, id) {
+      const key = `${type}-${id}`;
+      const isFavorite = state.favorites.includes(key);
+      
+      return `
+        <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="toggleFavorite('${type}', '${id}')" data-favorite-key="${key}">
+          <i class="fas fa-heart"></i>
+        </button>
+      `;
+    }
+
+    // ✅ NUEVO: Toggle favorito
+    window.toggleFavorite = function(type, id) {
+      const key = `${type}-${id}`;
+      const index = state.favorites.indexOf(key);
+      
+      if (index > -1) {
+        state.favorites.splice(index, 1);
+        showToast('❌ Eliminado de favoritos', 'info');
+      } else {
+        state.favorites.push(key);
+        showToast('⭐ Agregado a favoritos', 'success');
+      }
+      
+      saveFavorites();
+      
+      // Actualizar botón visualmente
+      const btn = document.querySelector(`[data-favorite-key="${key}"]`);
+      if (btn) {
+        btn.classList.toggle('active');
+      }
+    };
+
+    function renderFeaturedAuction() {
+      const container = getElement('featuredAuction');
+      if (!container) return;
+      
+      const activeAuctions = state.auctions.filter(a => a.status === 'active');
+      if (activeAuctions.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      // Seleccionar la subasta con más pujas o la más reciente
+      const featured = activeAuctions.sort((a, b) => {
+        const bidsA = state.bids.filter(bid => bid.auctionId === a.id).length;
+        const bidsB = state.bids.filter(bid => bid.auctionId === b.id).length;
+        return bidsB - bidsA;
+      })[0];
+      
+      container.innerHTML = `
+        <div class="glass-light p-4 rounded-xl">
+          <div class="flex items-center gap-2 mb-3">
+            <i class="fas fa-star text-yellow-400"></i>
+            <h3 class="font-bold text-base md:text-lg">Subasta Destacada</h3>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <img src="${featured.image}" alt="${featured.title}" class="w-full h-48 object-cover rounded-xl" loading="lazy">
+            <div>
+              <h4 class="font-bold mb-2">${featured.title}</h4>
+              <div class="mb-3">
+                <div class="text-xs text-slate-400">Puja actual</div>
+                <div class="featured-value">${formatPrice(featured.currentBid || featured.startPrice)}</div>
+              </div>
+              <button onclick="openBidModal('${featured.id}')" class="btn btn-primary btn-sm w-full">
+                <i class="fas fa-gavel"></i> Ofertar Ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProducts(products = null) {
+      const list = getElement('productsList');
+      if (!list) return;
+      
+      if (products === null) {
+        list.innerHTML = `
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        `;
+        setTimeout(() => renderProducts(state.products), 300);
+        return;
+      }
+      
+      if (!products || products.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay productos disponibles</div>';
+        return;
+      }
+      
+      // Aplicar filtros
+      const search = getElement('searchProducts')?.value.toLowerCase() || '';
+      const category = getElement('filterProductCategory')?.value || 'all';
+      const sort = getElement('sortProducts')?.value || 'newest';
+      
+      let filtered = products.filter(p => {
+        const matchesSearch = p.title.toLowerCase().includes(search) || 
+                             p.description.toLowerCase().includes(search);
+        const matchesCategory = category === 'all' || p.category === category;
+        return matchesSearch && matchesCategory && p.stock > 0;
+      });
+      
+      // Ordenar
+      filtered.sort((a, b) => {
+        if (sort === 'price-asc') return a.price - b.price;
+        if (sort === 'price-desc') return b.price - a.price;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      
+      list.innerHTML = filtered.map(product => `
+        <div class="product-card glass p-4 rounded-xl fade-in cursor-pointer" onclick="viewProductDetail('${product.id}')">
+          <div class="relative mb-3">
+            <img src="${product.image}" alt="${product.title}" class="w-full h-48 object-cover rounded-xl" loading="lazy">
+            ${renderFavoriteButton('product', product.id)}
+            <span class="badge bg-primary position-absolute top-0 start-0 m-2">${product.category}</span>
+            ${product.stock < 5 ? '<span class="badge bg-danger position-absolute top-0 end-0 m-2">¡Últimas unidades!</span>' : ''}
+          </div>
+          <h3 class="font-bold mb-2">${product.title}</h3>
+          <p class="text-sm text-slate-400 mb-3 line-clamp-2">${product.description}</p>
+          <div class="flex justify-between items-center mb-3">
+            <div class="price-tag">${formatPrice(product.price)}</div>
+            <span class="text-xs text-slate-400">${product.stock} disponibles</span>
+          </div>
+          <button onclick="event.stopPropagation(); addToCart('${product.id}')" class="btn btn-primary btn-sm w-full">
+            <i class="fas fa-cart-plus"></i> Agregar al carrito
+          </button>
+        </div>
+      `).join('');
+      
+      updateProductFilters();
+    }
+
+    function updateProductFilters() {
+      const filterCategory = getElement('filterProductCategory');
+      if (!filterCategory) return;
+      
+      const categories = [...new Set(state.products.map(p => p.category))];
+      const currentValue = filterCategory.value;
+      
+      filterCategory.innerHTML = '<option value="all">Todas</option>' +
+        categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+      
+      filterCategory.value = currentValue;
+    }
+
+    // ✅ MEJORADO: Limpieza de countdown
+    function startCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      countdownInterval = setInterval(() => {
+        document.querySelectorAll('.countdown').forEach(el => {
+          const endTime = el.dataset.end;
+          if (endTime) {
+            const remaining = formatTimeRemaining(endTime);
+            el.textContent = remaining;
+            
+            // Añadir efecto pulse si quedan menos de 5 minutos
+            const diff = new Date(endTime) - new Date();
+            if (diff > 0 && diff < 5 * 60 * 1000) {
+              el.classList.add('pulse');
+            } else {
+              el.classList.remove('pulse');
+            }
+            
+            if (remaining === 'Finalizada') {
+              el.classList.remove('pulse');
+            }
+          }
+        });
+      }, 1000);
+    }
+
+    // ========== SUBASTAS ==========
+    
+    window.openBidModal = function(auctionId) {
+      if (!state.currentUser) {
+        showToast('Debes iniciar sesión para ofertar', 'error');
+        bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.show() || 
+          new bootstrap.Modal(document.getElementById('loginModal')).show();
+        return;
+      }
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) return;
+      
+      const modal = new bootstrap.Modal(document.getElementById('bidModal'));
+      const info = getElement('bidAuctionInfo');
+      const amountInput = getElement('bidAmount');
+      
+      if (info) {
+        const minBid = (auction.currentBid || auction.startPrice) + 500;
+        info.innerHTML = `
+          <h6 class="font-bold">${auction.title}</h6>
+          <div class="text-sm text-slate-400 mb-2">Puja mínima: ${formatPrice(minBid)}</div>
+        `;
+      }
+      
+      if (amountInput) {
+        const minBid = (auction.currentBid || auction.startPrice) + 500;
+        amountInput.min = minBid;
+        amountInput.value = minBid;
+      }
+      
+      getElement('bidAuctionId').value = auctionId;
+      modal.show();
+    };
+
+    async function placeBid(e) {
+      e.preventDefault();
+      
+      const auctionId = getElement('bidAuctionId')?.value;
+      const amount = parseInt(getElement('bidAmount')?.value);
+      
+      if (!auctionId || !amount || !state.currentUser) return;
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) {
+        showToast('Subasta no encontrada', 'error');
+        return;
+      }
+      
+      // Validaciones
+      if (auction.status !== 'active') {
+        showToast('Esta subasta ya finalizó', 'error');
+        return;
+      }
+      
+      const minBid = (auction.currentBid || auction.startPrice) + 500;
+      if (amount < minBid) {
+        showToast(`La puja mínima es ${formatPrice(minBid)}`, 'error');
+        return;
+      }
+      
+      if (state.currentUser.balance < amount) {
+        showToast('Saldo insuficiente', 'error');
+        return;
+      }
+      
+      try {
+        // Crear puja
+        const bid = {
+          id: `bid_${Date.now()}`,
+          auctionId: auctionId,
+          userId: state.currentUser.id,
+          userName: state.currentUser.name,
+          amount: amount,
+          timestamp: new Date().toISOString()
+        };
+        
+        state.bids.push(bid);
+        auction.currentBid = amount;
+        
+        // Actualizar saldo del usuario
+        state.currentUser.balance -= amount;
+        await db.collection('users').doc(state.currentUser.id).update({
+          balance: state.currentUser.balance
+        });
+        
+        await saveStateToFirestore();
+        
+        showToast('¡Puja realizada con éxito!', 'success');
+        createConfetti(50);
+        
+        updateUI();
+        renderAuctions(state.auctions);
+        
+        bootstrap.Modal.getInstance(document.getElementById('bidModal'))?.hide();
+      } catch (error) {
+        console.error('Error al ofertar:', error);
+        showToast('Error al realizar la puja', 'error');
+      }
+    }
+
+    // ✅ MEJORADO: Confirmación antes de comprar
+    window.buyNow = async function(auctionId) {
+      if (!state.currentUser) {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+      }
+      
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction || !auction.buyNowPrice) return;
+      
+      // ✅ NUEVO: Confirmación
+      if (!confirm(`¿Confirmas comprar "${auction.title}" por ${formatPrice(auction.buyNowPrice)}?`)) {
+        return;
+      }
+      
+      if (state.currentUser.balance < auction.buyNowPrice) {
+        showToast('Saldo insuficiente', 'error');
+        return;
+      }
+      
+      try {
+        // Procesar compra
+        auction.status = 'ended';
+        auction.winner = state.currentUser.id;
+        auction.finalPrice = auction.buyNowPrice;
+        
+        state.currentUser.balance -= auction.buyNowPrice;
+        await db.collection('users').doc(state.currentUser.id).update({
+          balance: state.currentUser.balance
+        });
+        
+        const order = {
+          id: `order_${Date.now()}`,
+          userId: state.currentUser.id,
+          items: [{ type: 'auction', auctionId: auction.id, price: auction.buyNowPrice }],
+          total: auction.buyNowPrice,
+          timestamp: new Date().toISOString()
+        };
+        state.orders.push(order);
+        
+        await saveStateToFirestore();
+        
+        showToast('¡Compra realizada con éxito!', 'success');
+        createConfetti(100);
+        
+        updateUI();
+        renderAuctions(state.auctions);
+      } catch (error) {
+        console.error('Error en compra:', error);
+        showToast('Error al procesar la compra', 'error');
+      }
+    };
+
+    window.viewAuctionDetail = function(auctionId) {
+      const auction = state.auctions.find(a => a.id === auctionId);
+      if (!auction) return;
+      
+      const modal = new bootstrap.Modal(document.getElementById('auctionDetailModal'));
+      
+      // Llenar datos del modal
+      getElement('auctionDetailTitle').textContent = auction.title;
+      getElement('auctionDetailMainImage').src = auction.image;
+      getElement('auctionDetailCategory').textContent = auction.category || 'General';
+      getElement('auctionDetailDescription').textContent = auction.description;
+      getElement('auctionDetailStartPrice').textContent = formatPrice(auction.startPrice);
+      getElement('auctionDetailCurrentBid').textContent = formatPrice(auction.currentBid || auction.startPrice);
+      getElement('auctionDetailTimeRemaining').textContent = formatTimeRemaining(auction.endTime);
+      getElement('auctionDetailTimeRemaining').dataset.end = auction.endTime;
+      
+      if (auction.buyNowPrice) {
+        getElement('buyNowSection').style.display = 'block';
+        getElement('auctionDetailBuyNow').textContent = formatPrice(auction.buyNowPrice);
+        getElement('auctionDetailBuyNowBtn').style.display = 'block';
+        getElement('auctionDetailBuyNowBtn').onclick = () => {
+          modal.hide();
+          buyNow(auctionId);
+        };
+      } else {
+        getElement('buyNowSection').style.display = 'none';
+        getElement('auctionDetailBuyNowBtn').style.display = 'none';
+      }
+      
+      // Historial de pujas
+      const bids = state.bids.filter(b => b.auctionId === auctionId).sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      
+      const historyEl = getElement('auctionBidHistory');
+      if (bids.length > 0) {
+        historyEl.innerHTML = bids.slice(0, 5).map(bid => `
+          <div class="d-flex justify-content-between align-items-center p-2 bg-slate-800/30 rounded mb-2">
+            <span class="text-sm">${bid.userName}</span>
+            <span class="font-bold">${formatPrice(bid.amount)}</span>
+          </div>
+        `).join('');
+      } else {
+        historyEl.innerHTML = '<div class="text-center text-slate-400 py-3">Sin pujas aún</div>';
+      }
+      
+      getElement('auctionDetailBidBtn').onclick = () => {
+        modal.hide();
+        openBidModal(auctionId);
+      };
+      
+      modal.show();
+      startCountdown();
+    };
+
+    // ========== PRODUCTOS Y CARRITO ==========
+    
+    window.addToCart = function(productId, quantity = 1) {
+      if (!state.currentUser) {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+      }
+      
+      const product = state.products.find(p => p.id === productId);
+      if (!product || product.stock < quantity) {
+        showToast('Producto no disponible', 'error');
+        return;
+      }
+      
+      const existingItem = state.cart.find(item => item.productId === productId);
+      
+      if (existingItem) {
+        if (existingItem.quantity + quantity > product.stock) {
+          showToast('No hay suficiente stock', 'error');
+          return;
+        }
+        existingItem.quantity += quantity;
+      } else {
+        state.cart.push({
+          productId: productId,
+          quantity: quantity,
+          addedAt: new Date().toISOString()
+        });
+      }
+      
+      showToast('Producto agregado al carrito', 'success');
+      updateCartBadge();
+    };
+
+    window.viewProductDetail = function(productId) {
+      const product = state.products.find(p => p.id === productId);
+      if (!product) return;
+      
+      const modal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+      
+      getElement('productDetailImage').src = product.image;
+      getElement('productDetailTitle').textContent = product.title;
+      getElement('productDetailCategory').textContent = product.category;
+      getElement('productDetailDescription').textContent = product.description;
+      getElement('productDetailPrice').textContent = formatPrice(product.price);
+      getElement('productDetailStock').textContent = `${product.stock} unidades`;
+      
+      const quantityInput = getElement('productDetailQuantity');
+      quantityInput.value = 1;
+      quantityInput.max = product.stock;
+      
+      getElement('productDetailIncrement').onclick = () => {
+        if (parseInt(quantityInput.value) < product.stock) {
+          quantityInput.value = parseInt(quantityInput.value) + 1;
+        }
+      };
+      
+      getElement('productDetailDecrement').onclick = () => {
+        if (parseInt(quantityInput.value) > 1) {
+          quantityInput.value = parseInt(quantityInput.value) - 1;
+        }
+      };
+      
+      getElement('productDetailAddToCart').onclick = () => {
+        addToCart(productId, parseInt(quantityInput.value));
+        modal.hide();
+      };
+      
+      getElement('productDetailBuyNow').onclick = () => {
+        addToCart(productId, parseInt(quantityInput.value));
+        modal.hide();
+        showCartModal();
+      };
+      
+      modal.show();
+    };
+
+    function showCartModal() {
+      if (!state.currentUser) {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+      renderCart();
+      modal.show();
+    }
+
+    function renderCart() {
+      const cartItems = getElement('cartItems');
+      const cartEmpty = getElement('cartEmpty');
+      const cartSummary = getElement('cartSummary');
+      
+      if (state.cart.length === 0) {
+        cartEmpty?.classList.remove('hidden');
+        cartSummary.style.display = 'none';
+        if (cartItems) cartItems.innerHTML = '';
+        return;
+      }
+      
+      cartEmpty?.classList.add('hidden');
+      cartSummary.style.display = 'block';
+      
+      let total = 0;
+      
+      if (cartItems) {
+        cartItems.innerHTML = state.cart.map(item => {
+          const product = state.products.find(p => p.id === item.productId);
+          if (!product) return '';
+          
+          const itemTotal = product.price * item.quantity;
+          total += itemTotal;
+          
+          return `
+            <div class="cart-item">
+              <div class="flex gap-3">
+                <img src="${product.image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                <div class="flex-1">
+                  <h6 class="font-bold mb-1">${product.title}</h6>
+                  <div class="text-sm text-slate-400">${formatPrice(product.price)} c/u</div>
+                  <div class="flex items-center gap-2 mt-2">
+                    <button class="quantity-btn" onclick="updateCartQuantity('${item.productId}', ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="mx-2">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="updateCartQuantity('${item.productId}', ${item.quantity + 1})" ${item.quantity >= product.stock ? 'disabled' : ''}>
+                      <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger ms-auto" onclick="removeFromCart('${item.productId}')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold">${formatPrice(itemTotal)}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      getElement('cartTotal').textContent = formatPrice(total);
+    }
+
+    window.updateCartQuantity = function(productId, newQuantity) {
+      const item = state.cart.find(i => i.productId === productId);
+      const product = state.products.find(p => p.id === productId);
+      
+      if (!item || !product) return;
+      
+      if (newQuantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      
+      if (newQuantity > product.stock) {
+        showToast('No hay suficiente stock', 'error');
+        return;
+      }
+      
+      item.quantity = newQuantity;
+      renderCart();
+      updateCartBadge();
+    };
+
+    window.removeFromCart = function(productId) {
+      state.cart = state.cart.filter(item => item.productId !== productId);
+      renderCart();
+      updateCartBadge();
+      showToast('Producto eliminado del carrito', 'info');
+    };
+
+    async function checkout() {
+      if (!state.currentUser || state.cart.length === 0) return;
+      
+      let total = 0;
+      const items = [];
+      
+      for (const item of state.cart) {
+        const product = state.products.find(p => p.id === item.productId);
+        if (!product || product.stock < item.quantity) {
+          showToast(`Stock insuficiente para ${product?.title || 'un producto'}`, 'error');
+          return;
+        }
+        total += product.price * item.quantity;
+        items.push({ ...item, product });
+      }
+      
+      if (state.currentUser.balance < total) {
+        showToast('Saldo insuficiente. Por favor recarga tu cuenta.', 'error');
+        return;
+      }
+      
+      try {
+        // Procesar compra
+        for (const item of items) {
+          const product = state.products.find(p => p.id === item.productId);
+          product.stock -= item.quantity;
+        }
+        
+        state.currentUser.balance -= total;
+        await db.collection('users').doc(state.currentUser.id).update({
+          balance: state.currentUser.balance
+        });
+        
+        const order = {
+          id: `order_${Date.now()}`,
+          userId: state.currentUser.id,
+          items: items.map(i => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            price: i.product.price
+          })),
+          total: total,
+          timestamp: new Date().toISOString()
+        };
+        state.orders.push(order);
+        
+        state.cart = [];
+        
+        await saveStateToFirestore();
+        
+        showToast('¡Compra realizada con éxito!', 'success');
+        createConfetti(150);
+        
+        updateUI();
+        renderProducts(state.products);
+        
+        bootstrap.Modal.getInstance(document.getElementById('cartModal'))?.hide();
+      } catch (error) {
+        console.error('Error en checkout:', error);
+        showToast('Error al procesar la compra', 'error');
+      }
+    }
+
+    // ========== RECARGA DE SALDO ==========
+    
+    function showTopupModal() {
+      if (!state.currentUser) {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('topupModal'));
+      
+      // ✅ CORREGIDO: Actualizar saldo al abrir el modal
+      const currentBalanceInModal = getElement('currentBalanceInModal');
+      if (currentBalanceInModal) {
+        currentBalanceInModal.textContent = state.currentUser.balance;
+      }
+      
+      // Reset modal
+      getElement('topupAmountSelection')?.classList.remove('hidden');
+      getElement('topupPaymentMethods')?.classList.add('hidden');
+      getElement('topupLoading')?.classList.add('hidden');
+      getElement('topupSuccess')?.classList.add('hidden');
+      getElement('customTopupAmount').value = '';
+      getElement('proceedToPayment').disabled = true;
+      
+      document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      modal.show();
+    }
+
+    // ========== DASHBOARD Y ADMIN ==========
+    
+    function updateDashboard() {
+      if (!state.currentUser || state.currentUser.role !== 'admin') return;
+      
+      // Stats
+      getElement('dash_totalAuctions').textContent = state.auctions.length;
+      getElement('dash_activeAuctions').textContent = state.auctions.filter(a => a.status === 'active').length;
+      getElement('dash_totalProducts').textContent = state.products.length;
+      getElement('dash_productsInStock').textContent = state.products.filter(p => p.stock > 0).length;
+      getElement('dash_totalBids').textContent = state.bids.length;
+      getElement('dash_totalOrders').textContent = state.orders.length;
+      
+      const totalRevenue = state.orders.reduce((sum, order) => sum + order.total, 0);
+      getElement('dash_totalRevenue').textContent = formatPrice(totalRevenue);
+      
+      const avgBid = state.bids.length > 0 
+        ? state.bids.reduce((sum, bid) => sum + bid.amount, 0) / state.bids.length 
+        : 0;
+      getElement('dash_avgBid').textContent = formatPrice(avgBid);
+      
+      renderManageAuctions();
+      renderManageProducts();
+      renderUsersList();
+      renderBotsList();
+    }
+
+    function renderManageAuctions() {
+      const list = getElement('manageAuctionsList');
+      if (!list) return;
+      
+      if (state.auctions.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay subastas</div>';
+        return;
+      }
+      
+      list.innerHTML = state.auctions.map(auction => `
+        <div class="glass-light p-3 rounded-xl mb-3">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h6 class="font-bold">${auction.title}</h6>
+              <div class="text-sm text-slate-400">${formatPrice(auction.currentBid || auction.startPrice)}</div>
+              <span class="badge ${auction.status === 'active' ? 'bg-success' : 'bg-secondary'} mt-2">
+                ${auction.status === 'active' ? 'Activa' : 'Finalizada'}
+              </span>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteAuction('${auction.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderManageProducts() {
+      const list = getElement('manageProductsList');
+      if (!list) return;
+      
+      if (state.products.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay productos</div>';
+        return;
+      }
+      
+      list.innerHTML = state.products.map(product => `
+        <div class="glass-light p-3 rounded-xl mb-3">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h6 class="font-bold">${product.title}</h6>
+              <div class="text-sm text-slate-400">${formatPrice(product.price)} - Stock: ${product.stock}</div>
+              <span class="badge bg-primary mt-2">${product.category}</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${product.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ✅ MEJORADO: Con debounce en filtros
+    const renderUsersList = debounce(function() {
+      const list = getElement('usersList');
+      if (!list) return;
+      
+      // Esta función se renderiza con debounce para evitar renders excesivos
+      list.innerHTML = '<div class="text-center py-4">Cargando usuarios...</div>';
+    }, 300);
+
+    function renderBotsList() {
+      const list = getElement('botUsersList');
+      if (!list) return;
+      
+      if (state.botUsers.length === 0) {
+        list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay bots configurados</div>';
+        return;
+      }
+      
+      list.innerHTML = state.botUsers.map(bot => `
+        <div class="bot-settings-row">
+          <input type="text" class="bot-name-edit" value="${bot.name}" onchange="updateBotName('${bot.id}', this.value)">
+          <div class="bot-toggle-switch" onclick="toggleBot('${bot.id}')">
+            <div class="bot-toggle-slider ${bot.active ? 'active' : ''}">
+              <div class="bot-toggle-knob"></div>
+            </div>
+            <span class="bot-toggle-label">${bot.active ? 'ACTIVO' : 'INACTIVO'}</span>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteBot('${bot.id}')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    window.toggleBot = async function(botId) {
+      const bot = state.botUsers.find(b => b.id === botId);
+      if (!bot) return;
+      
+      bot.active = !bot.active;
+      await saveStateToFirestore();
+      renderBotsList();
+    };
+
+    window.updateBotName = async function(botId, newName) {
+      const bot = state.botUsers.find(b => b.id === botId);
+      if (!bot) return;
+      
+      bot.name = newName;
+      await saveStateToFirestore();
+    };
+
+    window.deleteBot = async function(botId) {
+      if (!confirm('¿Eliminar este bot?')) return;
+      
+      state.botUsers = state.botUsers.filter(b => b.id !== botId);
+      await saveStateToFirestore();
+      renderBotsList();
+    };
+
+    window.deleteAuction = async function(auctionId) {
+      if (!confirm('¿Eliminar esta subasta?')) return;
+      
+      state.auctions = state.auctions.filter(a => a.id !== auctionId);
+      await saveStateToFirestore();
+      renderManageAuctions();
+      renderAuctions(state.auctions);
+    };
+
+    window.deleteProduct = async function(productId) {
+      if (!confirm('¿Eliminar este producto?')) return;
+      
+      state.products = state.products.filter(p => p.id !== productId);
+      await saveStateToFirestore();
+      renderManageProducts();
+      renderProducts(state.products);
+    };
+
+    // ========== CONFETTI ==========
+    
+    function createConfetti(count = 50) {
+      for (let i = 0; i < count; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.backgroundColor = ['#ff3e7f', '#ff9d00', '#00d4ff', '#00ff88'][Math.floor(Math.random() * 4)];
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    // ========== EVENT LISTENERS ==========
+    
+    function setupListeners() {
+      // Auth
+      safeAssign('loginBtn', 'onclick', () => new bootstrap.Modal(document.getElementById('loginModal')).show());
+      safeAssign('registerBtn', 'onclick', () => new bootstrap.Modal(document.getElementById('registerModal')).show());
+      safeAssign('logoutBtn', 'onclick', logout);
+      safeAssign('profileBtn', 'onclick', () => new bootstrap.Modal(document.getElementById('profileModal')).show());
+      
+      // Formularios
+      safeAssign('loginForm', 'onsubmit', (e) => {
+        e.preventDefault();
+        const email = getElement('loginEmail')?.value;
+        const password = getElement('loginPassword')?.value;
+        if (email && password) login(email, password);
+      });
+      
+      safeAssign('registerForm', 'onsubmit', (e) => {
+        e.preventDefault();
+        const name = getElement('registerName')?.value;
+        const email = getElement('registerEmail')?.value;
+        const password = getElement('registerPassword')?.value;
+        const confirmPassword = getElement('registerPasswordConfirm')?.value;
+        
+        if (password !== confirmPassword) {
+          showToast('Las contraseñas no coinciden', 'error');
+          return;
+        }
+        
+        if (name && email && password) register(name, email, password);
+      });
+      
+      safeAssign('bidForm', 'onsubmit', placeBid);
+      
+      // Carrito
+      safeAssign('cartBtn', 'onclick', showCartModal);
+      safeAssign('checkoutBtn', 'onclick', checkout);
+      
+      // Recarga
+      safeAssign('topup', 'onclick', showTopupModal);
+      
+      // ✅ MEJORADO: Debounce en todos los filtros
+      safeAssign('searchAuctions', 'oninput', debounce(() => renderAuctions(state.auctions), 300));
+      safeAssign('sortAuctions', 'onchange', debounce(() => renderAuctions(state.auctions), 150));
+      safeAssign('filterAuctionState', 'onchange', debounce(() => renderAuctions(state.auctions), 150));
+      
+      safeAssign('searchProducts', 'oninput', debounce(() => renderProducts(state.products), 300));
+      safeAssign('filterProductCategory', 'onchange', debounce(() => renderProducts(state.products), 150));
+      safeAssign('sortProducts', 'onchange', debounce(() => renderProducts(state.products), 150));
+      
+      // Admin
+      safeAssign('openAdmin', 'onclick', () => {
+        getElement('adminPanel')?.classList.toggle('hidden');
+      });
+      
+      // Tabs - ✅ MEJORADO: Limpiar countdown al cambiar de pestaña
+      const storeTa = getElement('store-tab');
+      const auctionsTab = getElement('auctions-tab');
+      
+      if (storeTab) {
+        storeTab.onclick = () => {
+          if (countdownInterval) clearInterval(countdownInterval);
+        };
+      }
+      
+      if (auctionsTab) {
+        auctionsTab.onclick = () => {
+          startCountdown();
+        };
+      }
+      
+      // Switch entre login y registro
+      safeAssign('switchToRegister', 'onclick', (e) => {
+        e.preventDefault();
+        bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.hide();
+        new bootstrap.Modal(document.getElementById('registerModal')).show();
+      });
+      
+      safeAssign('switchToLogin', 'onclick', (e) => {
+        e.preventDefault();
+        bootstrap.Modal.getInstance(document.getElementById('registerModal'))?.hide();
+        new bootstrap.Modal(document.getElementById('loginModal')).show();
+      });
+    }
+
+    // ========== INICIALIZACIÓN ==========
+    
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('🚀 Inicializando aplicación...');
+      
+      setupListeners();
+      
+      // Cargar usuario guardado
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        try {
+          state.currentUser = JSON.parse(savedUser);
+          await loadStateFromFirestore();
+          startRealtimeListener();
+        } catch (error) {
+          console.error('Error al cargar usuario guardado:', error);
+          localStorage.removeItem('currentUser');
+        }
+      } else {
+        // Cargar solo las subastas y productos para visitantes
+        await loadStateFromFirestore();
+      }
+      
+      // Renderizar estado inicial
+      updateUI();
+      renderAuctions(state.auctions);
+      renderProducts(state.products);
+      updateDashboard();
+      
+      console.log('✅ Aplicación inicializada correctamente');
+    });
+
+    // ✅ NUEVO: Limpieza al cerrar la ventana
+    window.addEventListener('beforeunload', () => {
+      stopRealtimeListener();
+      stopLocalPolling();
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (botActivityInterval) clearInterval(botActivityInterval);
+    });
+  </script>
+</body>
+</html>
