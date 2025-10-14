@@ -3664,6 +3664,98 @@ async function handleRegister(e) {
   e.preventDefault();
   
   const name = document.getElementById('registerName').value.trim();
+  const dni = document.getElementById('registerDNI').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const phone = document.getElementById('registerPhone').value.trim();
+  const termsAccepted = document.getElementById('registerTerms').checked;
+  
+  if (!termsAccepted) {
+    showToast('❌ Debes aceptar los términos y condiciones', 'error');
+    return;
+  }
+
+  if (!addressData) {
+    showToast('❌ Error en los datos de dirección', 'error');
+    goToRegisterStep(2);
+    return;
+  }
+  
+  showLoading('Creando cuenta...');
+  
+  try {
+    if (!auth) throw new Error('Firebase Auth no disponible');
+    
+    // Crear usuario en Firebase Auth
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    
+    // Actualizar perfil con nombre
+    await cred.user.updateProfile({
+      displayName: name
+    });
+    
+    // Crear documento completo de usuario en Firestore
+    const userData = {
+      id: cred.user.uid,
+      name: name,
+      dni: dni,
+      email: email,
+      phone: phone,
+      address: {
+        fullAddress: addressData.fullAddress,
+        street: addressData.street,
+        city: addressData.city,
+        province: addressData.province,
+        zipCode: document.getElementById('registerZipCode').value,
+        latitude: addressData.latitude,
+        longitude: addressData.longitude
+      },
+      balance: 0, // Sin saldo inicial - se paga después de ganar/comprar
+      role: 'user',
+      createdAt: new Date().toISOString(),
+      totalBids: 0,
+      totalPurchases: 0,
+      emailVerified: false
+    };
+    
+    await db.collection('users').doc(cred.user.uid).set(userData);
+    
+    // Enviar email de verificación
+    await cred.user.sendEmailVerification();
+    
+    // Establecer usuario actual
+    state.currentUser = userData;
+    
+    // Cerrar modal y resetear
+    bootstrap.Modal.getInstance(document.getElementById('registerModal')).hide();
+    document.getElementById('registerForm').reset();
+    currentRegisterStep = 1;
+    addressData = null;
+    
+    updateUI();
+    createConfetti();
+    showToast(`🎉 ¡Bienvenido ${name}! Revisa tu email para verificar tu cuenta`, 'success');
+    
+    // Iniciar listener después del registro
+    startRealtimeListener();
+    
+  } catch (error) {
+    const messages = {
+      'auth/email-already-in-use': 'Este email ya está registrado',
+      'auth/invalid-email': 'Email inválido',
+      'auth/operation-not-allowed': 'Registro no habilitado',
+      'auth/weak-password': 'Contraseña muy débil',
+      'auth/network-request-failed': 'Error de conexión'
+    };
+    const msg = messages[error.code] || `Error: ${error.message}`;
+    showToast(msg, 'error');
+    console.error('[Registro]', error);
+  } finally {
+    hideLoading();
+  }
+}
+  
+  const name = document.getElementById('registerName').value.trim();
   const email = document.getElementById('registerEmail').value.trim();
   const password = document.getElementById('registerPassword').value;
   const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
