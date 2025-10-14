@@ -1186,6 +1186,216 @@ header .btn:hover::after {
     gap: 0.5rem;
   }
 }
+/* Panel de Administrador Mejorado */
+.admin-stats-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  border-left: 4px solid var(--primary);
+  transition: all 0.3s ease;
+}
+
+.admin-stats-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.admin-stats-card.success {
+  border-left-color: var(--success);
+}
+
+.admin-stats-card.warning {
+  border-left-color: var(--warning);
+}
+
+.admin-stats-card.danger {
+  border-left-color: var(--danger);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.admin-table thead th {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-table tbody tr {
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.3s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.01);
+}
+
+.admin-table tbody td {
+  padding: 15px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-table tbody tr:first-child td:first-child {
+  border-top-left-radius: 12px;
+}
+
+.admin-table tbody tr:first-child td:last-child {
+  border-top-right-radius: 12px;
+}
+
+.admin-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+.admin-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: rgba(255, 204, 0, 0.2);
+  color: var(--warning);
+}
+
+.status-badge.paid {
+  background: rgba(0, 255, 136, 0.2);
+  color: var(--success);
+}
+
+.status-badge.expired {
+  background: rgba(255, 56, 96, 0.2);
+  color: var(--danger);
+}
+
+.status-badge.cancelled {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-light);
+}
+
+.admin-action-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-action-btn:hover {
+  transform: scale(1.05);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-tab {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  font-weight: 500;
+}
+
+.admin-tab:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filter-chip {
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.filter-chip:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.filter-chip.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.item-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
 .inbox-badge {
   position: absolute;
   top: -8px;
