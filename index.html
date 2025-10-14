@@ -4532,36 +4532,6 @@ async function checkout() {
     hideLoading();
   }
 }
-  
-  const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
-  
-  if (state.currentUser.balance < total) {
-    showToast('❌ Saldo insuficiente', 'error');
-    return;
-  }
-  
-  state.currentUser.balance -= total;
-  state.cart.forEach(item => {
-    const p = state.products.find(pr => pr.id === item.productId);
-    if (p) p.stock -= item.quantity;
-  });
-  
-  state.orders.push({
-    id: Date.now(),
-    userId: state.currentUser.id,
-    items: [...state.cart],
-    total,
-    timestamp: new Date().toISOString()
-  });
-  
-  state.cart = [];
-  bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
-  createConfetti();
-  updateUI();
-  renderProducts();
-  saveState();
-  showToast('✅ Compra exitosa', 'success');
-}
 
 // ======================
 // MERCADOPAGO
