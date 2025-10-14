@@ -5634,6 +5634,518 @@ safeAssign('viewTransactions', 'onclick', showTransactionsModal);
 }
 
 // ======================
+// PANEL DE ADMINISTRADOR MEJORADO
+// ======================
+
+function switchAdminTab(tabName) {
+  // Ocultar todos los tabs
+  document.querySelectorAll('.admin-tab-content').forEach(tab => {
+    tab.style.display = 'none';
+  });
+  
+  // Remover clase active de todos los botones
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Mostrar tab seleccionado
+  const tabId = `adminTab${tabName.charAt(0).toUpperCase() + tabName.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase())}`;
+  const tabElement = document.getElementById(tabId);
+  if (tabElement) {
+    tabElement.style.display = 'block';
+  }
+  
+  // Activar botón
+  event.target.classList.add('active');
+  
+  // Cargar datos según el tab
+  if (tabName === 'dashboard') {
+    renderAdminDashboard();
+  } else if (tabName === 'won-auctions') {
+    renderWonAuctionsTable();
+  } else if (tabName === 'purchases') {
+    renderPurchasesTable();
+  } else if (tabName === 'auctions') {
+    renderAdminAuctionsList();
+  } else if (tabName === 'products') {
+    renderAdminProductsList();
+  } else if (tabName === 'users') {
+    renderAdminUsersList();
+  } else if (tabName === 'bots') {
+    renderAdminBotsList();
+  }
+}
+
+function renderAdminDashboard() {
+  // Calcular estadísticas
+  const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
+  
+  // Obtener todas las notificaciones con pagos
+  const paidNotifs = state.notifications.filter(n => n.data.paymentStatus === 'paid');
+  const pendingNotifs = state.notifications.filter(n => {
+    const isExpired = new Date(n.expiresAt) < new Date();
+    return n.data.paymentStatus === 'pending' && !isExpired;
+  });
+  const expiredNotifs = state.notifications.filter(n => {
+    const isExpired = new Date(n.expiresAt) < new Date();
+    return n.data.paymentStatus === 'pending' && isExpired;
+  });
+  
+  const paidAmount = paidNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+  const pendingAmount = pendingNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+  const expiredAmount = expiredNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+  
+  // Actualizar stats
+  document.getElementById('statActiveAuctions').textContent = activeAuctions;
+  document.getElementById('statPaidOrders').textContent = paidNotifs.length;
+  document.getElementById('statPaidAmount').textContent = paidAmount.toLocaleString();
+  document.getElementById('statPendingOrders').textContent = pendingNotifs.length;
+  document.getElementById('statPendingAmount').textContent = pendingAmount.toLocaleString();
+  document.getElementById('statExpiredOrders').textContent = expiredNotifs.length;
+  document.getElementById('statExpiredAmount').textContent = expiredAmount.toLocaleString();
+  
+  // Renderizar actividad reciente
+  renderRecentActivity();
+}
+
+function renderRecentActivity() {
+  const recentList = document.getElementById('recentActivityList');
+  
+  // Combinar todas las actividades
+  const activities = [];
+  
+  // Agregar notificaciones recientes
+  state.notifications.forEach(notif => {
+    activities.push({
+      type: notif.type === 'auction_won' ? 'auction' : 'purchase',
+      date: new Date(notif.createdAt),
+      user: notif.userId,
+      item: notif.data.itemName,
+      amount: notif.data.amount,
+      status: notif.data.paymentStatus
+    });
+  });
+  
+  // Ordenar por fecha
+  activities.sort((a, b) => b.date - a.date);
+  
+  // Tomar las últimas 10
+  const recent = activities.slice(0, 10);
+  
+  if (recent.length === 0) {
+    recentList.innerHTML = '<div class="text-center text-slate-400 py-3">No hay actividad reciente</div>';
+    return;
+  }
+  
+  recentList.innerHTML = recent.map(act => {
+    const user = getUserById(act.user);
+    const statusClass = act.status === 'paid' ? 'success' : act.status === 'pending' ? 'warning' : 'danger';
+    const icon = act.type === 'auction' ? 'fa-trophy' : 'fa-shopping-bag';
+    
+    return `
+      <div class="d-flex justify-content-between align-items-center p-3 mb-2" style="background: rgba(255,255,255,0.03); border-radius: 12px;">
+        <div class="d-flex align-items-center gap-3">
+          <i class="fas ${icon} fa-lg text-${statusClass}"></i>
+          <div>
+            <div class="font-bold">${act.item}</div>
+            <div class="text-sm text-slate-400">
+              ${user ? user.name : 'Usuario'} • ${act.date.toLocaleDateString('es-AR')}
+            </div>
+          </div>
+        </div>
+        <div class="text-end">
+          <div class="price-tag">$${act.amount}</div>
+          <span class="status-badge ${act.status}">${act.status === 'paid' ? 'Pagado' : 'Pendiente'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWonAuctionsTable(filter = 'all') {
+  const tbody = document.getElementById('wonAuctionsTableBody');
+  
+  // Obtener notificaciones de subastas ganadas
+  let wonAuctions = state.notifications.filter(n => n.type === 'auction_won');
+  
+  // Aplicar filtro
+  if (filter === 'pending') {
+    wonAuctions = wonAuctions.filter(n => {
+      const isExpired = new Date(n.expiresAt) < new Date();
+      return n.data.paymentStatus === 'pending' && !isExpired;
+    });
+  } else if (filter === 'paid') {
+    wonAuctions = wonAuctions.filter(n => n.data.paymentStatus === 'paid');
+  } else if (filter === 'expired') {
+    wonAuctions = wonAuctions.filter(n => {
+      const isExpired = new Date(n.expiresAt) < new Date();
+      return n.data.paymentStatus === 'pending' && isExpired;
+    });
+  }
+  
+  if (wonAuctions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400">No hay subastas ganadas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = wonAuctions.map(notif => {
+    const user = getUserById(notif.userId);
+    const isExpired = new Date(notif.expiresAt) < new Date();
+    const timeRemaining = getTimeRemainingForPayment(notif.expiresAt);
+    
+    let statusClass, statusText, statusIcon;
+    if (notif.data.paymentStatus === 'paid') {
+      statusClass = 'paid';
+      statusText = 'Pagado';
+      statusIcon = 'check-circle';
+    } else if (isExpired) {
+      statusClass = 'expired';
+      statusText = 'Expirado';
+      statusIcon = 'times-circle';
+    } else {
+      statusClass = 'pending';
+      statusText = 'Pendiente';
+      statusIcon = 'clock';
+    }
+    
+    return `
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <img src="${notif.data.itemImage}" class="item-thumbnail" alt="${notif.data.itemName}">
+            <div>
+              <div class="font-bold">${notif.data.itemName}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${user ? user.name.charAt(0).toUpperCase() : 'U'}</div>
+            <div>
+              <div class="font-bold">${user ? user.name : 'Desconocido'}</div>
+              <div class="text-xs text-slate-400">${user ? user.email : ''}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="price-tag">$${notif.data.amount}</div>
+        </td>
+        <td>
+          <div class="text-sm">${new Date(notif.createdAt).toLocaleDateString('es-AR')}</div>
+          <div class="text-xs text-slate-400">${new Date(notif.createdAt).toLocaleTimeString('es-AR')}</div>
+        </td>
+        <td>
+          ${!isExpired && timeRemaining ? `
+            <div class="text-sm">${timeRemaining.hours}h ${timeRemaining.minutes}m</div>
+          ` : `
+            <div class="text-sm text-danger">Expirado</div>
+          `}
+        </td>
+        <td>
+          <span class="status-badge ${statusClass}">
+            <i class="fas fa-${statusIcon}"></i> ${statusText}
+          </span>
+        </td>
+        <td>
+          ${notif.data.paymentStatus === 'pending' && !isExpired ? `
+            <button class="admin-action-btn bg-success text-white" onclick="markAsPaid('${notif.id}')">
+              <i class="fas fa-check"></i> Marcar Pagado
+            </button>
+          ` : ''}
+          ${isExpired && notif.data.paymentStatus === 'pending' ? `
+            <button class="admin-action-btn bg-danger text-white" onclick="cancelExpired('${notif.id}')">
+              <i class="fas fa-trash"></i> Eliminar
+            </button>
+          ` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPurchasesTable(filter = 'all') {
+  const tbody = document.getElementById('purchasesTableBody');
+  
+  // Obtener notificaciones de compras
+  let purchases = state.notifications.filter(n => n.type === 'purchase_made');
+  
+  // Aplicar filtro
+  if (filter === 'pending') {
+    purchases = purchases.filter(n => {
+      const isExpired = new Date(n.expiresAt) < new Date();
+      return n.data.paymentStatus === 'pending' && !isExpired;
+    });
+  } else if (filter === 'paid') {
+    purchases = purchases.filter(n => n.data.paymentStatus === 'paid');
+  } else if (filter === 'expired') {
+    purchases = purchases.filter(n => {
+      const isExpired = new Date(n.expiresAt) < new Date();
+      return n.data.paymentStatus === 'pending' && isExpired;
+    });
+  }
+  
+  if (purchases.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400">No hay compras realizadas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = purchases.map(notif => {
+    const user = getUserById(notif.userId);
+    const isExpired = new Date(notif.expiresAt) < new Date();
+    const timeRemaining = getTimeRemainingForPayment(notif.expiresAt);
+    
+    let statusClass, statusText, statusIcon;
+    if (notif.data.paymentStatus === 'paid') {
+      statusClass = 'paid';
+      statusText = 'Pagado';
+      statusIcon = 'check-circle';
+    } else if (isExpired) {
+      statusClass = 'expired';
+      statusText = 'Expirado';
+      statusIcon = 'times-circle';
+    } else {
+      statusClass = 'pending';
+      statusText = 'Pendiente';
+      statusIcon = 'clock';
+    }
+    
+    return `
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <img src="${notif.data.itemImage}" class="item-thumbnail" alt="${notif.data.itemName}">
+            <div>
+              <div class="font-bold">${notif.data.itemName}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${user ? user.name.charAt(0).toUpperCase() : 'U'}</div>
+            <div>
+              <div class="font-bold">${user ? user.name : 'Desconocido'}</div>
+              <div class="text-xs text-slate-400">${user ? user.email : ''}</div>
+            </div>
+          </div>
+        </td>
+        <td class="text-center">${notif.data.quantity || 1}</td>
+        <td>
+          <div class="price-tag">$${notif.data.amount}</div>
+        </td>
+        <td>
+          <div class="text-sm">${new Date(notif.createdAt).toLocaleDateString('es-AR')}</div>
+          <div class="text-xs text-slate-400">${new Date(notif.createdAt).toLocaleTimeString('es-AR')}</div>
+        </td>
+        <td>
+          ${!isExpired && timeRemaining ? `
+            <div class="text-sm">${timeRemaining.hours}h ${timeRemaining.minutes}m</div>
+          ` : `
+            <div class="text-sm text-danger">Expirado</div>
+          `}
+        </td>
+        <td>
+          <span class="status-badge ${statusClass}">
+            <i class="fas fa-${statusIcon}"></i> ${statusText}
+          </span>
+        </td>
+        <td>
+          ${notif.data.paymentStatus === 'pending' && !isExpired ? `
+            <button class="admin-action-btn bg-success text-white" onclick="markAsPaid('${notif.id}')">
+              <i class="fas fa-check"></i> Marcar Pagado
+            </button>
+          ` : ''}
+          ${isExpired && notif.data.paymentStatus === 'pending' ? `
+            <button class="admin-action-btn bg-danger text-white" onclick="cancelExpired('${notif.id}')">
+              <i class="fas fa-trash"></i> Eliminar
+            </button>
+          ` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterWonAuctions(filter) {
+  // Actualizar chips activos
+  document.querySelectorAll('#adminTabWonAuctions .filter-chip').forEach(chip => {
+    chip.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  renderWonAuctionsTable(filter);
+}
+
+function filterPurchases(filter) {
+  // Actualizar chips activos
+  document.querySelectorAll('#adminTabPurchases .filter-chip').forEach(chip => {
+    chip.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  renderPurchasesTable(filter);
+}
+
+function markAsPaid(notificationId) {
+  const notif = state.notifications.find(n => n.id == notificationId);
+  if (!notif) return;
+  
+  if (!confirm('¿Confirmar que este pago fue recibido?')) return;
+  
+  notif.data.paymentStatus = 'paid';
+  notif.data.paidAt = new Date().toISOString();
+  
+  saveState();
+  
+  showToast('✅ Pago marcado como completado', 'success');
+  
+  // Refrescar la vista actual
+  if (notif.type === 'auction_won') {
+    renderWonAuctionsTable();
+  } else {
+    renderPurchasesTable();
+  }
+  
+  renderAdminDashboard();
+}
+
+function cancelExpired(notificationId) {
+  if (!confirm('¿Eliminar esta notificación expirada?')) return;
+  
+  const index = state.notifications.findIndex(n => n.id == notificationId);
+  if (index > -1) {
+    const notif = state.notifications[index];
+    state.notifications.splice(index, 1);
+    
+    saveState();
+    
+    showToast('🗑️ Notificación eliminada', 'success');
+    
+    // Refrescar la vista actual
+    if (notif.type === 'auction_won') {
+      renderWonAuctionsTable();
+    } else {
+      renderPurchasesTable();
+    }
+    
+    renderAdminDashboard();
+  }
+}
+
+function getUserById(userId) {
+  // Buscar en usuarios reales (cuando uses Firebase)
+  // Por ahora, buscar en bots
+  return state.botUsers.find(u => u.id === userId);
+}
+
+function refreshAdminData() {
+  renderAdminDashboard();
+  renderWonAuctionsTable();
+  renderPurchasesTable();
+  showToast('✅ Datos actualizados', 'success');
+}
+
+function renderAdminAuctionsList() {
+  const container = document.getElementById('adminAuctionsList');
+  
+  if (state.auctions.length === 0) {
+    container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay subastas creadas</div>';
+    return;
+  }
+  
+  container.innerHTML = state.auctions.map(auction => `
+    <div class="glass-light p-3 rounded-xl mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <img src="${auction.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+          <div>
+            <div class="font-bold">${auction.title}</div>
+            <div class="text-sm text-slate-400">
+              ${auction.category} • $${auction.startPrice} - ${auction.status}
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteAuction(${auction.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminProductsList() {
+  const container = document.getElementById('adminProductsList');
+  
+  if (state.products.length === 0) {
+    container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay productos agregados</div>';
+    return;
+  }
+  
+  container.innerHTML = state.products.map(product => `
+    <div class="glass-light p-3 rounded-xl mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <img src="${product.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+          <div>
+            <div class="font-bold">${product.title}</div>
+            <div class="text-sm text-slate-400">
+              $${product.price} • Stock: ${product.stock}
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${product.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminUsersList() {
+  const container = document.getElementById('adminUsersList');
+  
+  // Por ahora mostrar mensaje, en Firebase esto se llenará con usuarios reales
+  container.innerHTML = `
+    <div class="text-center text-slate-400 py-4">
+      <i class="fas fa-info-circle fa-2x mb-3"></i>
+      <div>Los usuarios registrados aparecerán aquí cuando uses Firebase Authentication</div>
+    </div>
+  `;
+}
+
+function renderAdminBotsList() {
+  const container = document.getElementById('adminBotsList');
+  
+  if (state.botUsers.length === 0) {
+    container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay bots creados</div>';
+    return;
+  }
+  
+  container.innerHTML = state.botUsers.map(bot => `
+    <div class="glass-light p-3 rounded-xl mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="user-info">
+          <div class="user-avatar">${bot.name.charAt(0)}</div>
+          <div>
+            <div class="font-bold">${bot.name}</div>
+            <div class="text-xs text-slate-400">Balance: $${bot.balance}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteBot('${bot.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Hacer funciones globales
+window.switchAdminTab = switchAdminTab;
+window.filterWonAuctions = filterWonAuctions;
+window.filterPurchases = filterPurchases;
+window.markAsPaid = markAsPaid;
+window.cancelExpired = cancelExpired;
+window.refreshAdminData = refreshAdminData;
+// ======================
 // SISTEMA DE NOTIFICACIONES
 // ======================
 
