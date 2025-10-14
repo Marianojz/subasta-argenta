@@ -1186,6 +1186,122 @@ header .btn:hover::after {
     gap: 0.5rem;
   }
 }
+/* Sistema de Bandeja de Entrada */
+.inbox-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--danger);
+  color: white;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0 4px;
+  animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 56, 96, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(255, 56, 96, 0);
+  }
+}
+
+.notification-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid var(--primary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.notification-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(5px);
+}
+
+.notification-card.unread {
+  background: rgba(255, 62, 127, 0.1);
+  border-left-color: var(--danger);
+}
+
+.notification-card.expired {
+  opacity: 0.6;
+  border-left-color: var(--text-light);
+}
+
+.payment-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(255, 204, 0, 0.2);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.payment-timer.urgent {
+  background: rgba(255, 56, 96, 0.2);
+  color: var(--danger);
+  animation: pulse-urgent 1s infinite;
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.payment-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.payment-status.pending {
+  background: rgba(255, 204, 0, 0.2);
+  color: var(--warning);
+}
+
+.payment-status.paid {
+  background: rgba(0, 255, 136, 0.2);
+  color: var(--success);
+}
+
+.payment-status.expired {
+  background: rgba(255, 56, 96, 0.2);
+  color: var(--danger);
+}
+
+.notification-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notification-icon.auction {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.notification-icon.purchase {
+  background: linear-gradient(135deg, var(--accent), var(--success));
+}
 /* Estilos para registro multi-paso */
 .step-circle {
   width: 40px;
