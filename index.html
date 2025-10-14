@@ -3256,6 +3256,7 @@ function updateUI() {
   const logoutBtn = document.getElementById('logoutBtn');
   const profileBtn = document.getElementById('profileBtn');
   const cartBtn = document.getElementById('cartBtn');
+  const inboxContainer = document.getElementById('inboxContainer');
   const balance = document.getElementById('balance');
   const adminPanel = document.getElementById('adminPanel');
   const openAdmin = document.getElementById('openAdmin');
@@ -3274,6 +3275,8 @@ function updateUI() {
     if (logoutBtn) logoutBtn.style.display = 'block';
     if (profileBtn) profileBtn.style.display = 'block';
     if (cartBtn && cartBtn.parentElement) cartBtn.parentElement.style.display = 'block';
+    if (inboxContainer) inboxContainer.style.display = 'block';
+updateInboxUI();
     if (balance) balance.textContent = `$${state.currentUser.balance}`;
     if (topupBtn) topupBtn.style.display = 'block';
     if (viewTransactionsBtn) viewTransactionsBtn.style.display = 'block';
