@@ -1853,9 +1853,186 @@ header .btn:hover::after {
       </div>
     </div>
   </div>
-  <!-- MODAL DE REGISTRO -->
-  <div class="modal fade" id="registerModal" tabindex="-1">
-    <div class="modal-dialog modal-sm">
+  <!-- MODAL DE REGISTRO MEJORADO -->
+<div class="modal fade" id="registerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content glass border-0 rounded-2xl">
+      <div class="modal-header border-slate-700">
+        <h5 class="modal-title"><i class="fas fa-user-plus text-pink-400"></i> Crear Cuenta</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <form id="registerForm">
+          <!-- Progress Steps -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-center flex-fill">
+                <div class="step-circle active" id="step1-circle">1</div>
+                <small class="text-slate-400">Datos Personales</small>
+              </div>
+              <div class="step-line"></div>
+              <div class="text-center flex-fill">
+                <div class="step-circle" id="step2-circle">2</div>
+                <small class="text-slate-400">Dirección</small>
+              </div>
+              <div class="step-line"></div>
+              <div class="text-center flex-fill">
+                <div class="step-circle" id="step3-circle">3</div>
+                <small class="text-slate-400">Confirmación</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 1: Datos Personales -->
+          <div id="registerStep1" class="register-step">
+            <h6 class="mb-3 text-pink-400">Paso 1: Información Personal</h6>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Nombre completo *</label>
+                <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerName" placeholder="Juan Pérez" required minlength="3">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">DNI *</label>
+                <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerDNI" placeholder="12345678" required pattern="[0-9]{7,8}" maxlength="8">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Email *</label>
+              <input type="email" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                     id="registerEmail" placeholder="tu@email.com" required>
+              <small class="text-slate-400 d-block mt-1">
+                <i class="fas fa-info-circle"></i> Enviaremos un código de verificación
+              </small>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Contraseña *</label>
+                <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Confirmar contraseña *</label>
+                <input type="password" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerPasswordConfirm" placeholder="Repite tu contraseña" required minlength="6">
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary w-100" onclick="goToRegisterStep(2)">
+              Siguiente <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+
+          <!-- PASO 2: Dirección de Envío -->
+          <div id="registerStep2" class="register-step" style="display: none;">
+            <h6 class="mb-3 text-pink-400">Paso 2: Dirección de Envío</h6>
+            
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Buscar dirección *</label>
+              <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                     id="addressAutocomplete" placeholder="Escribe tu dirección...">
+              <small class="text-slate-400 d-block mt-1">
+                <i class="fas fa-map-marker-alt"></i> Escribe y selecciona de las sugerencias
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-xs text-slate-400 mb-1">Dirección completa *</label>
+              <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                     id="registerAddress" placeholder="Calle 123" required readonly>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Localidad *</label>
+                <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerCity" placeholder="Buenos Aires" required readonly>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Provincia *</label>
+                <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerProvince" placeholder="Buenos Aires" required readonly>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Código Postal *</label>
+                <input type="text" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerZipCode" placeholder="1234" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="text-xs text-slate-400 mb-1">Teléfono de contacto *</label>
+                <input type="tel" class="form-control bg-transparent text-light border-slate-700 rounded-xl" 
+                       id="registerPhone" placeholder="11 1234-5678" required>
+              </div>
+            </div>
+
+            <div id="mapPreview" class="mb-3" style="height: 200px; border-radius: 12px; overflow: hidden; display: none;">
+              <!-- Mapa de Google Maps -->
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-light flex-fill" onclick="goToRegisterStep(1)">
+                <i class="fas fa-arrow-left me-2"></i> Atrás
+              </button>
+              <button type="button" class="btn btn-primary flex-fill" onclick="goToRegisterStep(3)">
+                Siguiente <i class="fas fa-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- PASO 3: Confirmación -->
+          <div id="registerStep3" class="register-step" style="display: none;">
+            <h6 class="mb-3 text-pink-400">Paso 3: Confirmar Datos</h6>
+            
+            <div class="glass-light p-3 rounded-xl mb-3">
+              <h6 class="font-bold mb-2"><i class="fas fa-user text-blue-400"></i> Datos Personales</h6>
+              <div class="text-sm text-slate-300">
+                <div><strong>Nombre:</strong> <span id="confirmName"></span></div>
+                <div><strong>DNI:</strong> <span id="confirmDNI"></span></div>
+                <div><strong>Email:</strong> <span id="confirmEmail"></span></div>
+              </div>
+            </div>
+
+            <div class="glass-light p-3 rounded-xl mb-3">
+              <h6 class="font-bold mb-2"><i class="fas fa-map-marker-alt text-pink-400"></i> Dirección</h6>
+              <div class="text-sm text-slate-300">
+                <div id="confirmFullAddress"></div>
+                <div><strong>Teléfono:</strong> <span id="confirmPhone"></span></div>
+              </div>
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="registerTerms" required>
+              <label class="form-check-label text-xs" for="registerTerms">
+                Acepto los <a href="#" class="text-pink-400" id="openTermsLink2">términos y condiciones</a>
+              </label>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-light flex-fill" onclick="goToRegisterStep(2)">
+                <i class="fas fa-arrow-left me-2"></i> Atrás
+              </button>
+              <button type="submit" class="btn btn-primary flex-fill">
+                <i class="fas fa-check-circle me-2"></i> Crear Cuenta
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center text-sm mt-3">
+            <span class="text-slate-400">¿Ya tienes cuenta?</span>
+            <a href="#" id="switchToLogin" class="text-pink-400 ms-1">Inicia sesión</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
       <div class="modal-content glass border-0 rounded-2xl">
         <div class="modal-header border-slate-700">
           <h5 class="modal-title"><i class="fas fa-user-plus text-pink-400"></i> Crear Cuenta</h5>
