@@ -1403,6 +1403,12 @@ header .btn:hover::after {
   
   <!-- LADO DERECHO: Botones de usuario -->
   <div class="flex items-center gap-2 flex-shrink-0">
+    <div class="relative" id="inboxContainer" style="display:none">
+  <button id="inboxBtn" class="btn btn-outline-light btn-sm flex items-center gap-1">
+    <i class="fas fa-inbox"></i> <span class="hidden md:inline">Bandeja</span>
+  </button>
+  <span id="inboxBadge" class="inbox-badge hidden">0</span>
+</div>
     <div class="relative" id="cartContainer" style="display:none">
       <button id="cartBtn" class="btn btn-outline-light btn-sm flex items-center gap-1 glow">
         <i class="fas fa-shopping-cart"></i> <span class="hidden md:inline">Carrito</span>
