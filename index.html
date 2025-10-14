@@ -3815,23 +3815,6 @@ function startCountdown() {
     }
   }, 1000);
 }
-  
-  let secondCounter = 0;
-  
-  countdownInterval = setInterval(() => {
-    // Actualizar contadores en todas las tarjetas
-    document.querySelectorAll('.countdown').forEach(el => {
-      el.textContent = formatTimeRemaining(el.dataset.end);
-    });
-    
-    // Cada 3 segundos, re-renderizar la subasta destacada
-    secondCounter++;
-    if (secondCounter >= 3) {
-      secondCounter = 0;
-      renderFeaturedAuction();
-    }
-  }, 1000);
-}
 
 // ======================
 // AUTH
@@ -7191,7 +7174,7 @@ async function createProduct(e) {
     document.getElementById('createProductForm').reset();
     document.getElementById('productImagePreview').classList.add('hidden');
     state.uploadedProductImageUrl = null;
-    
+
     
     await saveState();
     renderProducts();
