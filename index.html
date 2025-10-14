@@ -5294,6 +5294,416 @@ safeAssign('viewTransactions', 'onclick', showTransactionsModal);
 }
 
 // ======================
+// SISTEMA DE NOTIFICACIONES
+// ======================
+
+function createNotification(type, data) {
+  if (!state.currentUser) return;
+  
+  const notification = {
+    id: Date.now(),
+    userId: state.currentUser.id,
+    type: type, // 'auction_won', 'purchase_made'
+    data: data,
+    read: false,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48 horas
+  };
+  
+  state.notifications.push(notification);
+  saveState();
+  updateInboxUI();
+  
+  // Mostrar toast
+  if (type === 'auction_won') {
+    showToast(`🏆 ¡Felicidades! Ganaste la subasta de "${data.itemName}"`, 'success');
+  } else if (type === 'purchase_made') {
+    showToast(`🛍️ Compra realizada: "${data.itemName}"`, 'success');
+  }
+}
+
+function updateInboxUI() {
+  const inboxContainer = document.getElementById('inboxContainer');
+  const inboxBadge = document.getElementById('inboxBadge');
+  
+  if (!state.currentUser) {
+    if (inboxContainer) inboxContainer.style.display = 'none';
+    return;
+  }
+  
+  const userNotifications = state.notifications.filter(n => 
+    n.userId === state.currentUser.id && !n.read
+  );
+  
+  if (inboxContainer) inboxContainer.style.display = 'block';
+  
+  if (userNotifications.length > 0) {
+    inboxBadge.textContent = userNotifications.length;
+    inboxBadge.classList.remove('hidden');
+  } else {
+    inboxBadge.classList.add('hidden');
+  }
+}
+
+function showInboxModal() {
+  renderNotifications('all');
+  new bootstrap.Modal(document.getElementById('inboxModal')).show();
+}
+
+function filterNotifications(filter) {
+  // Actualizar botones activos
+  document.querySelectorAll('#inboxModal [data-filter]').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`#inboxModal [data-filter="${filter}"]`).classList.add('active');
+  
+  renderNotifications(filter);
+}
+
+function renderNotifications(filter = 'all') {
+  const list = document.getElementById('notificationsList');
+  const noNotifs = document.getElementById('noNotifications');
+  
+  if (!state.currentUser) {
+    list.innerHTML = '';
+    noNotifs.style.display = 'block';
+    return;
+  }
+  
+  let notifications = state.notifications.filter(n => n.userId === state.currentUser.id);
+  
+  // Aplicar filtros
+  if (filter === 'auction') {
+    notifications = notifications.filter(n => n.type === 'auction_won');
+  } else if (filter === 'purchase') {
+    notifications = notifications.filter(n => n.type === 'purchase_made');
+  } else if (filter === 'unread') {
+    notifications = notifications.filter(n => !n.read);
+  }
+  
+  // Ordenar por fecha (más recientes primero)
+  notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  if (notifications.length === 0) {
+    list.innerHTML = '';
+    noNotifs.style.display = 'block';
+    return;
+  }
+  
+  noNotifs.style.display = 'none';
+  
+  list.innerHTML = notifications.map(notif => {
+    const isExpired = new Date(notif.expiresAt) < new Date();
+    const timeRemaining = getTimeRemainingForPayment(notif.expiresAt);
+    const isUrgent = timeRemaining && timeRemaining.hours < 12;
+    
+    let icon, iconClass, title, subtitle;
+    
+    if (notif.type === 'auction_won') {
+      icon = 'fa-trophy';
+      iconClass = 'auction';
+      title = `¡Ganaste la subasta!`;
+      subtitle = notif.data.itemName;
+    } else {
+      icon = 'fa-shopping-bag';
+      iconClass = 'purchase';
+      title = 'Compra realizada';
+      subtitle = notif.data.itemName;
+    }
+    
+    return `
+      <div class="notification-card p-3 rounded-xl mb-2 ${notif.read ? '' : 'unread'} ${isExpired ? 'expired' : ''}" 
+           onclick="showNotificationDetail('${notif.id}')">
+        <div class="d-flex gap-3">
+          <div class="notification-icon ${iconClass}">
+            <i class="fas ${icon}"></i>
+          </div>
+          
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="font-bold">${title}</div>
+                <div class="text-sm text-slate-400">${subtitle}</div>
+              </div>
+              ${!notif.read ? '<span class="badge bg-danger" style="font-size: 0.65rem;">NUEVA</span>' : ''}
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="price-tag" style="font-size: 1.1rem;">$${notif.data.amount}</div>
+              
+              ${!isExpired ? `
+                <div class="payment-timer ${isUrgent ? 'urgent' : ''}">
+                  <i class="fas fa-clock"></i>
+                  ${timeRemaining ? `${timeRemaining.hours}h ${timeRemaining.minutes}m` : 'Expirando...'}
+                </div>
+              ` : `
+                <span class="payment-status expired">
+                  <i class="fas fa-times-circle"></i> Expirado
+                </span>
+              `}
+            </div>
+            
+            ${notif.data.paymentStatus ? `
+              <div class="mt-2">
+                <span class="payment-status ${notif.data.paymentStatus}">
+                  ${notif.data.paymentStatus === 'paid' ? '✅ PAGADO' : '⏳ PENDIENTE'}
+                </span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showNotificationDetail(notificationId) {
+  const notif = state.notifications.find(n => n.id == notificationId);
+  if (!notif) return;
+  
+  // Marcar como leída
+  notif.read = true;
+  saveState();
+  updateInboxUI();
+  
+  const isExpired = new Date(notif.expiresAt) < new Date();
+  const timeRemaining = getTimeRemainingForPayment(notif.expiresAt);
+  
+  let content = '';
+  
+  if (notif.type === 'auction_won') {
+    content = `
+      <div class="text-center mb-4">
+        <div class="notification-icon auction mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <h4 class="font-bold mb-2">🎉 ¡Felicitaciones!</h4>
+        <p class="text-slate-300">Has ganado la subasta</p>
+      </div>
+      
+      <div class="glass-light p-4 rounded-xl mb-3">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <img src="${notif.data.itemImage}" class="w-100 rounded-xl" style="max-height: 150px; object-fit: cover;">
+          </div>
+          <div class="col-md-8">
+            <h5 class="font-bold mb-2">${notif.data.itemName}</h5>
+            <div class="mb-2">
+              <span class="text-slate-400">Precio final:</span>
+              <span class="price-tag ms-2" style="font-size: 1.5rem;">$${notif.data.amount}</span>
+            </div>
+            <div class="text-sm text-slate-400">
+              <i class="fas fa-calendar"></i> Ganada el ${new Date(notif.createdAt).toLocaleDateString('es-AR')}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${!isExpired ? `
+        <div class="alert alert-warning mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>¡Atención! Tiempo límite para pagar:</strong>
+          </div>
+          <div class="payment-timer ${timeRemaining && timeRemaining.hours < 12 ? 'urgent' : ''}" style="font-size: 1.2rem;">
+            <i class="fas fa-clock"></i>
+            ${timeRemaining ? `${timeRemaining.hours} horas y ${timeRemaining.minutes} minutos` : 'Expirando...'}
+          </div>
+        </div>
+        
+        ${notif.data.paymentStatus !== 'paid' ? `
+          <button class="btn btn-primary w-100 btn-lg" onclick="initiateMercadoPagoPayment('${notif.id}')">
+            <i class="fas fa-credit-card"></i> Pagar con MercadoPago
+          </button>
+        ` : `
+          <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle fa-2x mb-2"></i>
+            <div><strong>¡Pago completado!</strong></div>
+            <div class="text-sm">Tu producto será enviado pronto</div>
+          </div>
+        `}
+      ` : `
+        <div class="alert alert-danger text-center">
+          <i class="fas fa-times-circle fa-2x mb-2"></i>
+          <div><strong>Tiempo expirado</strong></div>
+          <div class="text-sm">Esta subasta ha sido cancelada</div>
+        </div>
+      `}
+      
+      <div class="glass-light p-3 rounded-xl mt-3">
+        <h6 class="font-bold mb-2"><i class="fas fa-shipping-fast text-blue-400"></i> Datos de envío</h6>
+        <div class="text-sm text-slate-300">
+          <div><strong>Dirección:</strong> ${state.currentUser.address?.fullAddress || 'No disponible'}</div>
+          <div><strong>Teléfono:</strong> ${state.currentUser.phone || 'No disponible'}</div>
+        </div>
+      </div>
+    `;
+  } else if (notif.type === 'purchase_made') {
+    content = `
+      <div class="text-center mb-4">
+        <div class="notification-icon purchase mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">
+          <i class="fas fa-shopping-bag"></i>
+        </div>
+        <h4 class="font-bold mb-2">🛍️ Compra Realizada</h4>
+        <p class="text-slate-300">Gracias por tu compra</p>
+      </div>
+      
+      <div class="glass-light p-4 rounded-xl mb-3">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <img src="${notif.data.itemImage}" class="w-100 rounded-xl" style="max-height: 150px; object-fit: cover;">
+          </div>
+          <div class="col-md-8">
+            <h5 class="font-bold mb-2">${notif.data.itemName}</h5>
+            <div class="mb-2">
+              <span class="text-slate-400">Total:</span>
+              <span class="price-tag ms-2" style="font-size: 1.5rem;">$${notif.data.amount}</span>
+            </div>
+            <div class="text-sm text-slate-400">
+              <i class="fas fa-calendar"></i> Comprado el ${new Date(notif.createdAt).toLocaleDateString('es-AR')}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${!isExpired ? `
+        <div class="alert alert-info mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fas fa-info-circle"></i>
+            <strong>Tiempo límite para completar el pago:</strong>
+          </div>
+          <div class="payment-timer" style="font-size: 1.2rem;">
+            <i class="fas fa-clock"></i>
+            ${timeRemaining ? `${timeRemaining.hours} horas y ${timeRemaining.minutes} minutos` : 'Expirando...'}
+          </div>
+        </div>
+        
+        ${notif.data.paymentStatus !== 'paid' ? `
+          <button class="btn btn-primary w-100 btn-lg" onclick="initiateMercadoPagoPayment('${notif.id}')">
+            <i class="fas fa-credit-card"></i> Pagar con MercadoPago
+          </button>
+        ` : `
+          <div class="alert alert-success text-center">
+            <i class="fas fa-check-circle fa-2x mb-2"></i>
+            <div><strong>¡Pago completado!</strong></div>
+            <div class="text-sm">Tu pedido será enviado pronto</div>
+          </div>
+        `}
+      ` : `
+        <div class="alert alert-danger text-center">
+          <i class="fas fa-times-circle fa-2x mb-2"></i>
+          <div><strong>Tiempo expirado</strong></div>
+          <div class="text-sm">Esta compra ha sido cancelada</div>
+        </div>
+      `}
+      
+      <div class="glass-light p-3 rounded-xl mt-3">
+        <h6 class="font-bold mb-2"><i class="fas fa-shipping-fast text-blue-400"></i> Datos de envío</h6>
+        <div class="text-sm text-slate-300">
+          <div><strong>Dirección:</strong> ${state.currentUser.address?.fullAddress || 'No disponible'}</div>
+          <div><strong>Teléfono:</strong> ${state.currentUser.phone || 'No disponible'}</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  document.getElementById('notificationDetailContent').innerHTML = content;
+  
+  // Cerrar inbox y abrir detalle
+  bootstrap.Modal.getInstance(document.getElementById('inboxModal'))?.hide();
+  
+  setTimeout(() => {
+    new bootstrap.Modal(document.getElementById('notificationDetailModal')).show();
+  }, 300);
+}
+
+function getTimeRemainingForPayment(expiresAt) {
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const diff = expires - now;
+  
+  if (diff <= 0) return null;
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return { hours, minutes };
+}
+
+function markAllAsRead() {
+  state.notifications.forEach(n => {
+    if (n.userId === state.currentUser.id) {
+      n.read = true;
+    }
+  });
+  saveState();
+  updateInboxUI();
+  renderNotifications('all');
+  showToast('✅ Todas las notificaciones marcadas como leídas', 'success');
+}
+
+// Función para iniciar pago con MercadoPago
+async function initiateMercadoPagoPayment(notificationId) {
+  const notif = state.notifications.find(n => n.id == notificationId);
+  if (!notif) return;
+  
+  const isExpired = new Date(notif.expiresAt) < new Date();
+  if (isExpired) {
+    showToast('❌ El tiempo para pagar ha expirado', 'error');
+    return;
+  }
+  
+  // Cerrar modal de detalle
+  bootstrap.Modal.getInstance(document.getElementById('notificationDetailModal'))?.hide();
+  
+  // Simular proceso de pago
+  showLoading('Redirigiendo a MercadoPago...');
+  
+  setTimeout(async () => {
+    // Simular pago exitoso
+    notif.data.paymentStatus = 'paid';
+    notif.data.paidAt = new Date().toISOString();
+    
+    // Crear orden de pago
+    state.orders.push({
+      id: Date.now(),
+      userId: state.currentUser.id,
+      notificationId: notif.id,
+      type: notif.type,
+      items: [{
+        productId: notif.data.itemId,
+        name: notif.data.itemName,
+        image: notif.data.itemImage,
+        quantity: 1,
+        price: notif.data.amount
+      }],
+      total: notif.data.amount,
+      paymentMethod: 'mercadopago',
+      paymentStatus: 'paid',
+      timestamp: new Date().toISOString(),
+      expiresAt: notif.expiresAt,
+      shippingAddress: state.currentUser.address
+    });
+    
+    await saveState();
+    hideLoading();
+    
+    createConfetti();
+    showToast('🎉 ¡Pago completado exitosamente!', 'success');
+    
+    // Reabrir detalle actualizado
+    setTimeout(() => {
+      showNotificationDetail(notificationId);
+    }, 500);
+  }, 2000);
+}
+
+// Hacer funciones globales
+window.filterNotifications = filterNotifications;
+window.showNotificationDetail = showNotificationDetail;
+window.markAllAsRead = markAllAsRead;
+window.initiateMercadoPagoPayment = initiateMercadoPagoPayment;
+// ======================
 // INICIALIZACIÓN
 // ======================
 
