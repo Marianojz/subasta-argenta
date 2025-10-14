@@ -1186,6 +1186,47 @@ header .btn:hover::after {
     gap: 0.5rem;
   }
 }
+/* Estilos para registro multi-paso */
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-circle.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 5px 15px rgba(255, 62, 127, 0.5);
+}
+
+.step-line {
+  height: 2px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 10px;
+  align-self: center;
+}
+
+.register-step {
+  animation: fadeInStep 0.4s ease;
+}
+
+@keyframes fadeInStep {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 /* Botones de autenticación apilados */
 #authButtonsContainer {
   display: flex;
