@@ -5031,13 +5031,13 @@ function setupListeners() {
     switchToLogin();
   });
   // Términos y condiciones
-  const termsLink = document.getElementById('openTermsLink');
-  if (termsLink) {
-    termsLink.onclick = (e) => {
-      e.preventDefault();
-      new bootstrap.Modal(document.getElementById('termsModal')).show();
-    };
-  }
+  const termsLink2 = document.getElementById('openTermsLink2');
+if (termsLink2) {
+  termsLink2.onclick = (e) => {
+    e.preventDefault();
+    new bootstrap.Modal(document.getElementById('termsModal')).show();
+  };
+}
   
   // Perfil
   safeAssign('profileBtn', 'onclick', () => {
