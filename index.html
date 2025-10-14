@@ -6017,6 +6017,7 @@ function markAsPaid(notificationId) {
 function cancelExpired(notificationId) {
   if (!confirm('¿Eliminar esta notificación expirada?')) return;
   
+  
   const index = state.notifications.findIndex(n => n.id == notificationId);
   if (index > -1) {
     const notif = state.notifications[index];
