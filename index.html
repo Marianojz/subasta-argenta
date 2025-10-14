@@ -3512,13 +3512,15 @@ updateInboxUI();
     if (viewTransactionsBtn) viewTransactionsBtn.style.display = 'block';
     if (balanceSection) balanceSection.style.display = 'block';
     
-    if (state.currentUser.role === 'admin') {
-      if (openAdmin) openAdmin.style.display = 'block';
-      if (adminPanel) adminPanel.classList.remove('hidden');
-    } else {
-      if (openAdmin) openAdmin.style.display = 'none';
-      if (adminPanel) adminPanel.classList.add('hidden');
-    }
+    if (state.currentUser?.role === 'admin') {
+  if (adminBtn) {
+    adminBtn.style.display = 'block';
+    adminBtn.onclick = showAdminPanel;
+  }
+} else {
+  if (adminBtn) adminBtn.style.display = 'none';
+  hideAdminPanel();
+}
   } else {
     // SIN SESIÓN
     if (userInfo) {
