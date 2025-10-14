@@ -5995,28 +5995,11 @@ function markAsPaid(notificationId) {
   const notif = state.notifications.find(n => n.id == notificationId);
   if (!notif) return;
   
-  if (!confirm('¿Confirmar que este pago fue recibido?')) return;
-  
-  notif.data.paymentStatus = 'paid';
-  notif.data.paidAt = new Date().toISOString();
-  
-  saveState();
-  
-  showToast('✅ Pago marcado como completado', 'success');
-  
-  // Refrescar la vista actual
-  if (notif.type === 'auction_won') {
-    renderWonAuctionsTable();
-  } else {
-    renderPurchasesTable();
-  }
-  
-  renderAdminDashboard();
-}
+  if (!confirm('¿Confirmar que este pago fue recibido?'))
 
 function cancelExpired(notificationId) {
   if (!confirm('¿Eliminar esta notificación expirada?')) return;
-  
+
   
   const index = state.notifications.findIndex(n => n.id == notificationId);
   if (index > -1) {
