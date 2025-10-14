@@ -3147,7 +3147,66 @@
     }
 
     // ✅ MEJORADO: Confirmación antes de comprar
-    window.buyNow = async function(auctionId) {
+    window.buyNow = async function buyNow(auctionId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction || !auction.buyNowPrice) {
+    showToast('❌ No disponible', 'error');
+    return;
+  }
+  
+  if (auction.status !== 'active') {
+    showToast('❌ Subasta no activa', 'error');
+    return;
+  }
+  
+  if (!confirm(`¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
+    return;
+  }
+  
+  showLoading('Procesando...');
+  
+  try {
+    // Actualizar estado de la subasta
+    auction.status = 'sold';
+    auction.winner = state.currentUser.id;
+    auction.finalPrice = auction.buyNowPrice;
+    
+    // Crear notificación de compra con pago pendiente
+    createNotification('auction_won', {
+      itemId: auction.id,
+      itemName: auction.title,
+      itemImage: auction.image,
+      amount: auction.buyNowPrice,
+      paymentStatus: 'pending'
+    });
+    
+    await saveState();
+    
+    // Broadcast para sincronización
+    broadcastUpdate('buy_now', { auctionId: auction.id, userId: state.currentUser.id });
+    
+    createConfetti();
+    renderAuctions();
+    renderFeaturedAuction();
+    
+    showToast('✅ ¡Compra realizada! Revisa tu bandeja de entrada', 'success');
+    
+    // Abrir bandeja automáticamente
+    setTimeout(() => {
+      showInboxModal();
+    }, 1500);
+    
+  } catch (error) {
+    handleError(error, 'Compra directa');
+  } finally {
+    hideLoading();
+  }
+}
       if (!state.currentUser) {
         showToast('Debes iniciar sesión', 'error');
         return;
