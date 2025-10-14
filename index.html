@@ -4361,6 +4361,54 @@ async function checkout() {
   
   const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
   
+  showLoading('Procesando compra...');
+  
+  try {
+    // Procesar cada item del carrito
+    state.cart.forEach(item => {
+      const p = state.products.find(pr => pr.id === item.productId);
+      if (p) {
+        p.stock -= item.quantity;
+        
+        // Crear notificación por cada producto
+        createNotification('purchase_made', {
+          itemId: p.id,
+          itemName: p.title,
+          itemImage: p.image,
+          amount: item.quantity * item.price,
+          quantity: item.quantity,
+          paymentStatus: 'pending'
+        });
+      }
+    });
+    
+    // Limpiar carrito
+    state.cart = [];
+    
+    await saveState();
+    
+    bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+    createConfetti();
+    updateUI();
+    updateCartUI();
+    renderProducts();
+    
+    showToast('✅ Compra realizada! Revisa tu bandeja de entrada para pagar', 'success');
+    
+    // Abrir bandeja automáticamente
+    setTimeout(() => {
+      showInboxModal();
+    }, 1500);
+    
+  } catch (error) {
+    handleError(error, 'Checkout');
+  } finally {
+    hideLoading();
+  }
+}
+  
+  const total = state.cart.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+  
   if (state.currentUser.balance < total) {
     showToast('❌ Saldo insuficiente', 'error');
     return;
