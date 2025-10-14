@@ -3469,6 +3469,188 @@ async function logout() {
 // REGISTRO DE USUARIOS
 // ======================
 
+// Variables globales para registro
+let currentRegisterStep = 1;
+let addressData = null;
+let autocomplete = null;
+let mapPreview = null;
+
+// Inicializar Google Maps Autocomplete
+function initAutocomplete() {
+  const input = document.getElementById('addressAutocomplete');
+  if (!input) return;
+
+  autocomplete = new google.maps.places.Autocomplete(input, {
+    componentRestrictions: { country: 'ar' },
+    fields: ['address_components', 'geometry', 'formatted_address']
+  });
+
+  autocomplete.addListener('place_changed', onPlaceChanged);
+}
+
+function onPlaceChanged() {
+  const place = autocomplete.getPlace();
+  
+  if (!place.geometry) {
+    showToast('❌ Por favor selecciona una dirección de la lista', 'error');
+    return;
+  }
+
+  // Extraer componentes de dirección
+  let street = '';
+  let city = '';
+  let province = '';
+  let zipCode = '';
+
+  place.address_components.forEach(component => {
+    const types = component.types;
+    
+    if (types.includes('route')) {
+      street = component.long_name;
+    }
+    if (types.includes('street_number')) {
+      street = component.long_name + ' ' + street;
+    }
+    if (types.includes('locality')) {
+      city = component.long_name;
+    }
+    if (types.includes('administrative_area_level_1')) {
+      province = component.long_name;
+    }
+    if (types.includes('postal_code')) {
+      zipCode = component.long_name;
+    }
+  });
+
+  // Rellenar campos
+  document.getElementById('registerAddress').value = street || place.formatted_address;
+  document.getElementById('registerCity').value = city;
+  document.getElementById('registerProvince').value = province;
+  document.getElementById('registerZipCode').value = zipCode;
+
+  // Guardar datos
+  addressData = {
+    fullAddress: place.formatted_address,
+    street: street,
+    city: city,
+    province: province,
+    zipCode: zipCode,
+    latitude: place.geometry.location.lat(),
+    longitude: place.geometry.location.lng()
+  };
+
+  // Mostrar mapa
+  showMapPreview(place.geometry.location);
+  showToast('✅ Dirección validada correctamente', 'success');
+}
+
+function showMapPreview(location) {
+  const mapDiv = document.getElementById('mapPreview');
+  mapDiv.style.display = 'block';
+
+  mapPreview = new google.maps.Map(mapDiv, {
+    center: location,
+    zoom: 16,
+    disableDefaultUI: true
+  });
+
+  new google.maps.Marker({
+    position: location,
+    map: mapPreview,
+    animation: google.maps.Animation.DROP
+  });
+}
+
+// Navegación entre pasos del registro
+function goToRegisterStep(step) {
+  // Validar paso actual antes de avanzar
+  if (step > currentRegisterStep) {
+    if (currentRegisterStep === 1 && !validateRegisterStep1()) return;
+    if (currentRegisterStep === 2 && !validateRegisterStep2()) return;
+  }
+
+  // Ocultar paso actual
+  document.getElementById(`registerStep${currentRegisterStep}`).style.display = 'none';
+  document.getElementById(`step${currentRegisterStep}-circle`).classList.remove('active');
+
+  // Mostrar nuevo paso
+  document.getElementById(`registerStep${step}`).style.display = 'block';
+  document.getElementById(`step${step}-circle`).classList.add('active');
+
+  // Si es paso 3, llenar confirmación
+  if (step === 3) {
+    fillConfirmationData();
+  }
+
+  currentRegisterStep = step;
+}
+
+function validateRegisterStep1() {
+  const name = document.getElementById('registerName').value.trim();
+  const dni = document.getElementById('registerDNI').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+  const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+  if (name.length < 3) {
+    showToast('❌ El nombre debe tener al menos 3 caracteres', 'error');
+    return false;
+  }
+
+  if (!/^[0-9]{7,8}$/.test(dni)) {
+    showToast('❌ DNI inválido (debe tener 7 u 8 dígitos)', 'error');
+    return false;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('❌ Email inválido', 'error');
+    return false;
+  }
+
+  if (password.length < 6) {
+    showToast('❌ La contraseña debe tener al menos 6 caracteres', 'error');
+    return false;
+  }
+
+  if (password !== passwordConfirm) {
+    showToast('❌ Las contraseñas no coinciden', 'error');
+    return false;
+  }
+
+  return true;
+}
+
+function validateRegisterStep2() {
+  if (!addressData) {
+    showToast('❌ Debes buscar y seleccionar tu dirección', 'error');
+    return false;
+  }
+
+  const phone = document.getElementById('registerPhone').value.trim();
+  const zipCode = document.getElementById('registerZipCode').value.trim();
+
+  if (!phone) {
+    showToast('❌ Ingresa un teléfono de contacto', 'error');
+    return false;
+  }
+
+  if (!zipCode) {
+    showToast('❌ Ingresa el código postal', 'error');
+    return false;
+  }
+
+  return true;
+}
+
+function fillConfirmationData() {
+  document.getElementById('confirmName').textContent = document.getElementById('registerName').value;
+  document.getElementById('confirmDNI').textContent = document.getElementById('registerDNI').value;
+  document.getElementById('confirmEmail').textContent = document.getElementById('registerEmail').value;
+  document.getElementById('confirmPhone').textContent = document.getElementById('registerPhone').value;
+  
+  const fullAddress = `${addressData.fullAddress}, ${document.getElementById('registerCity').value}, ${document.getElementById('registerProvince').value} (CP: ${document.getElementById('registerZipCode').value})`;
+  document.getElementById('confirmFullAddress').textContent = fullAddress;
+}
 function showRegisterModal() {
   // Cerrar modal de login si está abierto
   const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
