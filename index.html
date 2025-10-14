@@ -7776,6 +7776,107 @@ function showInboxModal() {
 }
 
 console.log('✅ JavaScript cargado correctamente');
+  .filter(n => {
+    const isExpired = new Date(n.expiresAt) < new Date();
+    return n.data.paymentStatus === 'pending' && isExpired;
+  });
+
+  // Actualizar estadísticas
+  document.getElementById('statActiveAuctions').textContent = activeAuctions;
+  document.getElementById('statPaidOrders').textContent = paidNotifs.length;
+  document.getElementById('statPendingOrders').textContent = pendingNotifs.length;
+  document.getElementById('statExpiredOrders').textContent = expiredNotifs.length;
+
+  // Calcular montos
+  const paidAmount = paidNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+  const pendingAmount = pendingNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+  const expiredAmount = expiredNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
+
+  document.getElementById('statPaidAmount').textContent = paidAmount;
+  document.getElementById('statPendingAmount').textContent = pendingAmount;
+  document.getElementById('statExpiredAmount').textContent = expiredAmount;
+
+  // Renderizar actividad reciente
+  renderRecentActivity();
+}
+
+function renderRecentActivity() {
+  const container = document.getElementById('recentActivityList');
+  if (!container) return;
+
+  // Combinar y ordenar actividades recientes
+  const recentActivities = [
+    ...state.bids.slice(-10).map(bid => ({
+      type: 'bid',
+      message: `Nueva puja de $${bid.amount}`,
+      timestamp: bid.timestamp,
+      auction: state.auctions.find(a => a.id === bid.auctionId)
+    })),
+    ...state.notifications.slice(-5).map(notif => ({
+      type: 'notification',
+      message: `Notificación: ${notif.type}`,
+      timestamp: notif.createdAt,
+      data: notif.data
+    }))
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+   .slice(0, 8);
+
+  container.innerHTML = recentActivities.map(activity => `
+    <div class="flex items-center gap-3 p-3 border-b border-slate-700 last:border-b-0">
+      <div class="w-2 h-2 rounded-full ${activity.type === 'bid' ? 'bg-pink-500' : 'bg-blue-500'}"></div>
+      <div class="flex-1">
+        <div class="text-sm">${activity.message}</div>
+        <div class="text-xs text-slate-400">${new Date(activity.timestamp).toLocaleString()}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Función para mostrar términos y condiciones
+function showTermsModal() {
+  new bootstrap.Modal(document.getElementById('termsModal')).show();
+}
+
+// INICIALIZACIÓN
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Iniciando Subasta Argenta...');
+  
+  // Cargar estado inicial
+  loadState().then(() => {
+    // Configurar Firebase
+    setupAuthListener();
+    
+    // Configurar UI
+    updateUI();
+    renderAuctions();
+    renderProducts();
+    renderFeaturedAuction();
+    
+    // Configurar listeners
+    setupListeners();
+    setupMobileMenu();
+    
+    // Iniciar servicios
+    startCountdown();
+    startBotActivity();
+    
+    console.log('✅ Aplicación iniciada correctamente');
+  }).catch(error => {
+    console.error('❌ Error al iniciar:', error);
+    showToast('Error al cargar la aplicación', 'error');
+  });
+});
+
+// Configurar el link de términos
+document.addEventListener('DOMContentLoaded', function() {
+  const termsLink = document.getElementById('openTermsLink');
+  if (termsLink) {
+    termsLink.onclick = function(e) {
+      e.preventDefault();
+      showTermsModal();
+    };
+  }
+});
 </script>
 <!-- MODAL DE DETALLES DEL PRODUCTO -->
 <div class="modal fade" id="productDetailModal" tabindex="-1">
