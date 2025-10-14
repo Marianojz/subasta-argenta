@@ -3529,6 +3529,63 @@ function startCountdown() {
       el.textContent = formatTimeRemaining(el.dataset.end);
     });
     
+    // Verificar subastas que expiraron
+    state.auctions.forEach(auction => {
+      if (auction.status === 'active') {
+        const now = new Date();
+        const endTime = new Date(auction.endTime);
+        
+        if (now >= endTime) {
+          // Subasta finalizada
+          auction.status = 'ended';
+          
+          // Si hubo pujas, determinar ganador
+          if (auction.bids && auction.bids.length > 0) {
+            const lastBidderId = auction.bids[auction.bids.length - 1];
+            auction.winner = lastBidderId;
+            auction.finalPrice = auction.currentBid;
+            
+            // Crear notificación para el ganador
+            const winnerUser = state.botUsers.find(b => b.id === lastBidderId);
+            const isRealUser = lastBidderId === state.currentUser?.id;
+            
+            if (isRealUser) {
+              createNotification('auction_won', {
+                itemId: auction.id,
+                itemName: auction.title,
+                itemImage: auction.image,
+                amount: auction.currentBid,
+                paymentStatus: 'pending'
+              });
+              
+              showToast(`🏆 ¡Felicidades! Ganaste "${auction.title}"`, 'success');
+            }
+          }
+          
+          saveState();
+          renderAuctions();
+          renderFeaturedAuction();
+        }
+      }
+    });
+    
+    // Cada 3 segundos, re-renderizar la subasta destacada
+    secondCounter++;
+    if (secondCounter >= 3) {
+      secondCounter = 0;
+      renderFeaturedAuction();
+    }
+  }, 1000);
+}
+  
+  let secondCounter = 0;
+  
+  countdownInterval = setInterval(() => {
+    // Actualizar contadores en todas las tarjetas
+    document.querySelectorAll('.countdown').forEach(el => {
+      el.textContent = formatTimeRemaining(el.dataset.end);
+    });
+    
     // Cada 3 segundos, re-renderizar la subasta destacada
     secondCounter++;
     if (secondCounter >= 3) {
