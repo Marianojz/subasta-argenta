@@ -5287,6 +5287,24 @@ function startBotActivity() {
           
           // NO renderizar aquí, el listener lo hará automáticamente
           
+          function showAdminPanel() {
+  const mainContent = document.getElementById('mainContent');
+  const adminPanel = document.getElementById('adminPanel');
+  
+  if (mainContent) mainContent.style.display = 'none';
+  if (adminPanel) adminPanel.style.display = 'block';
+  
+  // Cargar dashboard por defecto
+  switchAdminTab('dashboard');
+}
+
+function hideAdminPanel() {
+  const mainContent = document.getElementById('mainContent');
+  const adminPanel = document.getElementById('adminPanel');
+  
+  if (mainContent) mainContent.style.display = 'block';
+  if (adminPanel) adminPanel.style.display = 'none';
+}
           // Mostrar notificación SOLO A ADMINS
           if (state.currentUser?.role === 'admin') {
             renderBotUsers();
