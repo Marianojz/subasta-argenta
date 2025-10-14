@@ -6432,6 +6432,67 @@ window.changeAuctionMainImage = changeAuctionMainImage;
     </div>
   </div>
 </div>
+<!-- MODAL DE BANDEJA DE ENTRADA -->
+<div class="modal fade" id="inboxModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content glass border-0 rounded-2xl">
+      <div class="modal-header border-slate-700">
+        <h5 class="modal-title">
+          <i class="fas fa-inbox text-pink-400"></i> Bandeja de Entrada
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+        <!-- Filtros -->
+        <div class="d-flex gap-2 mb-3">
+          <button class="btn btn-sm btn-outline-light active" data-filter="all" onclick="filterNotifications('all')">
+            Todas
+          </button>
+          <button class="btn btn-sm btn-outline-light" data-filter="auction" onclick="filterNotifications('auction')">
+            Subastas
+          </button>
+          <button class="btn btn-sm btn-outline-light" data-filter="purchase" onclick="filterNotifications('purchase')">
+            Compras
+          </button>
+          <button class="btn btn-sm btn-outline-light" data-filter="unread" onclick="filterNotifications('unread')">
+            No leídas
+          </button>
+        </div>
+
+        <!-- Lista de Notificaciones -->
+        <div id="notificationsList"></div>
+        
+        <!-- Sin notificaciones -->
+        <div id="noNotifications" class="text-center py-5 text-slate-400" style="display: none;">
+          <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+          <div>No tienes notificaciones</div>
+        </div>
+      </div>
+      <div class="modal-footer border-slate-700">
+        <button type="button" class="btn btn-outline-light btn-sm" onclick="markAllAsRead()">
+          <i class="fas fa-check-double"></i> Marcar todas como leídas
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE DETALLE DE NOTIFICACIÓN -->
+<div class="modal fade" id="notificationDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content glass border-0 rounded-2xl">
+      <div class="modal-header border-slate-700">
+        <h5 class="modal-title" id="notifDetailTitle">
+          <i class="fas fa-trophy text-warning"></i> Detalle
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="notificationDetailContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- MODAL DE DETALLES DE SUBASTA -->
 <div class="modal fade" id="auctionDetailModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
