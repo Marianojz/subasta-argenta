@@ -4916,16 +4916,7 @@ function filterProducts() {
 
 
 
-  // Filtros
-  safeAssign('searchAuctions', 'oninput', debounce(filterAuctions, 300));
-  safeAssign('sortAuctions', 'onchange', filterAuctions);
-  safeAssign('filterAuctionState', 'onchange', filterAuctions);
-  safeAssign('searchProducts', 'oninput', debounce(filterProducts, 300));
-  safeAssign('filterProductCategory', 'onchange', filterProducts);
-  safeAssign('sortProducts', 'onchange', filterProducts);
-  safeAssign('filterCategory', 'onchange', filterAuctions);
-  safeAssign('filterTime', 'onchange', filterAuctions);
-  // ======================
+
 // INICIALIZACIÓN
 // ======================
 
