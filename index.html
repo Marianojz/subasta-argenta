@@ -5533,7 +5533,7 @@ if (termsLink2) {
   safeAssign('bidForm', 'onsubmit', placeBid);
   safeAssign('createProductForm', 'onsubmit', createProduct);
   
-    // Filtros
+  // Filtros
   safeAssign('searchAuctions', 'oninput', debounce(filterAuctions, 300));
   safeAssign('sortAuctions', 'onchange', filterAuctions);
   safeAssign('filterAuctionState', 'onchange', filterAuctions);
@@ -5638,13 +5638,15 @@ function switchAdminTab(tabName) {
 }
 
 function renderDashboardStats() {
-  // Implementar estadísticas del dashboard
   const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
   const paidOrders = state.orders.filter(o => o.status === 'completed').length;
   
-  document.getElementById('statActiveAuctions').textContent = activeAuctions;
-  document.getElementById('statPaidOrders').textContent = paidOrders;
-  // Agregar más estadísticas según necesites
+  if (document.getElementById('statActiveAuctions')) {
+    document.getElementById('statActiveAuctions').textContent = activeAuctions;
+  }
+  if (document.getElementById('statPaidOrders')) {
+    document.getElementById('statPaidOrders').textContent = paidOrders;
+  }
 }
 
 // ======================
@@ -5680,19 +5682,17 @@ function updateInboxUI() {
 }
 
 function showInboxModal() {
-  // Implementar modal de bandeja de entrada
   showToast('📬 Bandeja de entrada - En desarrollo', 'info');
 }
 
 // ======================
-// FUNCIONES PARA DETALLES DE PRODUCTOS/SUBASTAS
+// FUNCIONES PARA DETALLES
 // ======================
 
 function showProductDetail(productId) {
   const product = state.products.find(p => p.id === productId);
   if (!product) return;
   
-  // Implementar modal de detalle de producto
   const modalContent = `
     <div class="text-center">
       <img src="${product.image}" alt="${product.title}" class="w-full max-w-md mx-auto rounded-lg mb-4">
@@ -5708,7 +5708,6 @@ function showProductDetail(productId) {
     </div>
   `;
   
-  // Crear modal dinámicamente si no existe
   let modal = document.getElementById('productDetailModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -5737,7 +5736,6 @@ function showAuctionDetail(auctionId) {
   const auction = state.auctions.find(a => a.id === auctionId);
   if (!auction) return;
   
-  // Implementación similar a showProductDetail pero para subastas
   showToast(`🔍 Vista detallada de "${auction.title}" - En desarrollo`, 'info');
 }
 
@@ -5779,7 +5777,7 @@ function removeFromCart(itemId) {
 }
 
 // ======================
-// RENDERIZADO DE LISTAS DEL ADMIN
+// RENDERIZADO DEL ADMIN
 // ======================
 
 function renderAdminAuctionsList() {
@@ -5843,7 +5841,6 @@ function renderAdminProductsList() {
   `).join('');
 }
 
-// Función para crear producto
 async function createProduct(e) {
   e.preventDefault();
   
@@ -5898,16 +5895,13 @@ async function createProduct(e) {
 // ======================
 
 function initGoogleMaps() {
-  // Esperar a que Google Maps esté disponible
   if (typeof google !== 'undefined' && google.maps) {
     initAutocomplete();
   } else {
-    // Reintentar después de un tiempo
     setTimeout(initGoogleMaps, 500);
   }
 }
 
-// Llamar a la inicialización de Google Maps cuando esté listo
 if (typeof google !== 'undefined') {
   initGoogleMaps();
 } else {
