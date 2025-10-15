@@ -4889,6 +4889,53 @@ async function placeBid(e) {
   }
 }
 
+async function buyNow(auctionId) {
+  if (!state.currentUser) {
+    showLoginModal();
+    return;
+  }
+  
+  const auction = state.auctions.find(a => a.id === auctionId);
+  if (!auction || !auction.buyNowPrice) return;
+  
+  if (state.currentUser.balance < auction.buyNowPrice) {
+    showToast('⌛ Saldo insuficiente', 'error');
+    showTopupModal();
+    return;
+  }
+  
+  if (confirm(`¿Comprar "${auction.title}" por $${auction.buyNowPrice}?`)) {
+    showLoading('Procesando compra...');
+    
+    try {
+      state.currentUser.balance -= auction.buyNowPrice;
+      auction.status = 'sold';
+      auction.winner = state.currentUser.id;
+      auction.finalPrice = auction.buyNowPrice;
+      
+      createNotification('auction_won', {
+        itemId: auction.id,
+        itemName: auction.title,
+        itemImage: auction.image,
+        amount: auction.buyNowPrice,
+        paymentStatus: 'paid'
+      });
+      
+      await saveState();
+      createConfetti();
+      renderAuctions();
+      renderFeaturedAuction();
+      updateUI();
+      showToast('🎉 ¡Compra exitosa!', 'success');
+      
+    } catch (error) {
+      state.currentUser.balance += auction.buyNowPrice;
+      handleError(error, 'Compra directa');
+    } finally {
+      hideLoading();
+    }
+  }
+}
 
 // ======================
 // FILTROS
