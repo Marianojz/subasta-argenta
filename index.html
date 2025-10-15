@@ -4913,17 +4913,7 @@ function filterProducts() {
   
   renderProducts(filtered);
 }
-function filterProducts() {
-  const search = document.getElementById('searchProducts')?.value.toLowerCase() || '';
-  const category = document.getElementById('filterProductCategory')?.value || 'all';
-  const sortBy = document.getElementById('sortProducts')?.value || 'newest'; // ⬅️ AGREGA ESTA LÍNEA
-  
-  let filtered = state.products.filter(p => {
-    const matchSearch = p.title.toLowerCase().includes(search) || 
-                        p.description.toLowerCase().includes(search);
-    const matchCategory = category === 'all' || p.category === category;
-    return matchSearch && matchCategory;
-  });
+
 
 
   // Filtros
