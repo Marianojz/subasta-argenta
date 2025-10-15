@@ -4891,29 +4891,17 @@ async function buyNow(auctionId) {
 // FILTROS
 // ======================
 
-function filterAuctions() {
-  const search = document.getElementById('searchAuctions')?.value.toLowerCase() || '';
-  const sortBy = document.getElementById('sortAuctions')?.value || 'ending';
-  const filterState = document.getElementById('filterAuctionState')?.value || 'all';
+function filterProducts() {
+  const search = document.getElementById('searchProducts')?.value.toLowerCase() || '';
+  const category = document.getElementById('filterProductCategory')?.value || 'all';
+  const sortBy = document.getElementById('sortProducts')?.value || 'newest'; // ⬅️ FALTABA ESTA LÍNEA
   
-  let filtered = state.auctions.filter(a => {
-    const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
-    const matchState = filterState === 'all' || a.status === filterState;
-    return matchSearch && matchState;
+  let filtered = state.products.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search) || 
+                        p.description.toLowerCase().includes(search);
+    const matchCategory = category === 'all' || p.category === category;
+    return matchSearch && matchCategory;
   });
-  
-  if (sortBy === 'highest') {
-    filtered.sort((a, b) => (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice));
-  } else if (sortBy === 'newest') {
-    filtered.sort((a, b) => new Date(b.lastBidTime) - new Date(a.lastBidTime));
-  } else {
-    filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
-  }
-  
-  renderAuctions(filtered);
-}
-
-
   
   if (sortBy === 'price-asc') {
     filtered.sort((a, b) => a.price - b.price);
@@ -4924,6 +4912,19 @@ function filterAuctions() {
   }
   
   renderProducts(filtered);
+}
+function filterProducts() {
+  const search = document.getElementById('searchProducts')?.value.toLowerCase() || '';
+  const category = document.getElementById('filterProductCategory')?.value || 'all';
+  const sortBy = document.getElementById('sortProducts')?.value || 'newest'; // ⬅️ AGREGA ESTA LÍNEA
+  
+  let filtered = state.products.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search) || 
+                        p.description.toLowerCase().includes(search);
+    const matchCategory = category === 'all' || p.category === category;
+    return matchSearch && matchCategory;
+  });
+
 
   // Filtros
   safeAssign('searchAuctions', 'oninput', debounce(filterAuctions, 300));
