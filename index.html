@@ -5560,6 +5560,168 @@ function switchAdminTab(tabName) {
 }
 
 function renderAdminDashboard() {
+function renderWonAuctionsTable() {
+  const tbody = document.getElementById('wonAuctionsTableBody');
+  if (!tbody) return;
+  
+  // Obtener subastas ganadas
+  const wonAuctions = state.auctions.filter(a => a.status === 'ended' && a.winner);
+  
+  if (!wonAuctions.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400">No hay subastas ganadas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = wonAuctions.map(auction => {
+    const winner = state.currentUser && auction.winner === state.currentUser.id 
+      ? state.currentUser 
+      : state.botUsers.find(b => b.id === auction.winner);
+    
+    const paymentStatus = 'pending'; // Simplificado
+    const expirationTime = new Date(new Date(auction.endTime).getTime() + 24*60*60*1000);
+    
+    return `
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <img src="${auction.image}" alt="${auction.title}" class="item-thumbnail">
+            <span>${auction.title}</span>
+          </div>
+        </td>
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${winner ? winner.name.charAt(0) : '?'}</div>
+            <span>${winner ? winner.name : 'Unknown'}</span>
+          </div>
+        </td>
+        <td>$${auction.finalPrice || auction.currentBid}</td>
+        <td>${new Date(auction.endTime).toLocaleDateString()}</td>
+        <td>${expirationTime.toLocaleDateString()}</td>
+        <td><span class="status-badge ${paymentStatus}">${paymentStatus.toUpperCase()}</span></td>
+        <td>
+          <button class="btn btn-sm btn-primary" onclick="markAsPaid(${auction.id})">Marcar Pagado</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPurchasesTable() {
+  const tbody = document.getElementById('purchasesTableBody');
+  if (!tbody) return;
+  
+  if (!state.orders.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400">No hay compras</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = state.orders.map(order => `
+    <tr>
+      <td>${order.id}</td>
+      <td>${order.userId === state.currentUser?.id ? state.currentUser.name : 'Usuario'}</td>
+      <td>${order.items.length} items</td>
+      <td>$${order.total}</td>
+      <td>${new Date(order.timestamp).toLocaleDateString()}</td>
+      <td>-</td>
+      <td><span class="status-badge ${order.status}">${order.status.toUpperCase()}</span></td>
+      <td>
+        <button class="btn btn-sm btn-info" onclick="viewOrderDetails(${order.id})">Ver</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderAdminAuctionsList() {
+  const list = document.getElementById('adminAuctionsList');
+  if (!list) return;
+  
+  if (!state.auctions.length) {
+    list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay subastas</div>';
+    return;
+  }
+  
+  list.innerHTML = state.auctions.map(a => `
+    <div class="glass-light p-3 rounded mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="font-bold">${sanitizeHTML(a.title)}</div>
+          <small class="text-slate-400">$${a.currentBid} • ${a.status}</small>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-warning me-2" onclick="editAuction(${a.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAuction(${a.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminProductsList() {
+  const list = document.getElementById('adminProductsList');
+  if (!list) return;
+  
+  if (!state.products.length) {
+    list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay productos</div>';
+    return;
+  }
+  
+  list.innerHTML = state.products.map(p => `
+    <div class="glass-light p-3 rounded mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="font-bold">${sanitizeHTML(p.title)}</div>
+          <small class="text-slate-400">$${p.price} • Stock: ${p.stock}</small>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-warning me-2" onclick="editProduct(${p.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminUsersList() {
+  const list = document.getElementById('adminUsersList');
+  if (!list) return;
+  
+  const users = [];
+  if (state.currentUser) users.push(state.currentUser);
+  
+  if (!users.length) {
+    list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay usuarios</div>';
+    return;
+  }
+  
+  list.innerHTML = users.map(u => `
+    <div class="glass-light p-3 rounded mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="font-bold">${sanitizeHTML(u.name)}</div>
+          <small class="text-slate-400">${u.email} • Saldo: $${u.balance}</small>
+        </div>
+        <div>
+          <span class="badge bg-${u.role === 'admin' ? 'warning' : 'info'}">${u.role}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminBotsList() {
+  const list = document.getElementById('adminBotsList');
+  if (!list) return;
+  
+  renderBotUsers();
+}
   // Calcular estadísticas
   const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
   
