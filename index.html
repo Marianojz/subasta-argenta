@@ -5822,34 +5822,6 @@ function renderAdminAuctionsList() {
   `).join('');
 }
 
-function renderAdminProductsList() {
-  const list = document.getElementById('adminProductsList');
-  if (!list) return;
-  
-  if (!state.products.length) {
-    list.innerHTML = '<div class="text-center py-4 text-slate-400">No hay productos</div>';
-    return;
-  }
-  
-  list.innerHTML = state.products.map(p => `
-    <div class="glass-light p-3 rounded mb-2">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="font-bold">${sanitizeHTML(p.title)}</div>
-          <small class="text-slate-400">$${p.price} • Stock: ${p.stock}</small>
-        </div>
-        <div>
-          <button class="btn btn-sm btn-warning me-2" onclick="editProduct(${p.id})">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
 
 function renderAdminUsersList() {
   const list = document.getElementById('adminUsersList');
