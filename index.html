@@ -7506,8 +7506,6 @@ function setupAuctionDetailHandlers() {
 window.showAuctionDetail = showAuctionDetail;
 window.changeAuctionMainImage = changeAuctionMainImage;
 
-// Agrega esto al final del archivo, antes de </script>
-
 function renderAdminDashboard() {
   // Calcular estadísticas
   const activeAuctions = state.auctions.filter(a => a.status === 'active').length;
