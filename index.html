@@ -7523,360 +7523,78 @@ function renderAdminDashboard() {
     return n.data.paymentStatus === 'pending' && isExpired;
   });
 
-  // Actualizar estadísticas
-  document.getElementById('statActiveAuctions').textContent = activeAuctions;
-  document.getElementById('statPaidOrders').textContent = paidNotifs.length;
-  document.getElementById('statPendingOrders').textContent = pendingNotifs.length;
-  document.getElementById('statExpiredOrders').textContent = expiredNotifs.length;
-
-  // Calcular montos
-  const paidAmount = paidNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
-  const pendingAmount = pendingNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
-  const expiredAmount = expiredNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
-
-  document.getElementById('statPaidAmount').textContent = paidAmount;
-  document.getElementById('statPendingAmount').textContent = pendingAmount;
-  document.getElementById('statExpiredAmount').textContent = expiredAmount;
-
-  // Renderizar actividad reciente
-  renderRecentActivity();
-}
-
-function renderRecentActivity() {
-  const container = document.getElementById('recentActivityList');
-  if (!container) return;
-
-  // Combinar y ordenar actividades recientes
-  const recentActivities = [
-    ...state.bids.slice(-10).map(bid => ({
-      type: 'bid',
-      message: `Nueva puja de $${bid.amount}`,
-      timestamp: bid.timestamp,
-      auction: state.auctions.find(a => a.id === bid.auctionId)
-    })),
-    ...state.notifications.slice(-5).map(notif => ({
-      type: 'notification',
-      message: `Notificación: ${notif.type}`,
-      timestamp: notif.createdAt,
-      data: notif.data
-    }))
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-   .slice(0, 8);
-
-  container.innerHTML = recentActivities.map(activity => `
-    <div class="flex items-center gap-3 p-3 border-b border-slate-700 last:border-b-0">
-      <div class="w-2 h-2 rounded-full ${activity.type === 'bid' ? 'bg-pink-500' : 'bg-blue-500'}"></div>
-      <div class="flex-1">
-        <div class="text-sm">${activity.message}</div>
-        <div class="text-xs text-slate-400">${new Date(activity.timestamp).toLocaleString()}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// INICIALIZACIÓN
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Iniciando Subasta Argenta...');
-  
-  // Cargar estado inicial
-  loadState().then(() => {
-    // Configurar Firebase
-    setupAuthListener();
-    
-    // Configurar UI
-    updateUI();
-    renderAuctions();
-    renderProducts();
-    renderFeaturedAuction();
-    
-    // Configurar listeners
-    setupListeners();
-    setupMobileMenu();
-    
-    // Iniciar servicios
-    startCountdown();
-    startBotActivity();
-    
-    // Inicializar componentes específicos
-    if (typeof initAutocomplete === 'function') {
-      initAutocomplete();
-    }
-    
-    console.log('✅ Aplicación iniciada correctamente');
-  }).catch(error => {
-    console.error('❌ Error al iniciar:', error);
-    showToast('Error al cargar la aplicación', 'error');
-  });
-});
-
-// Función para mostrar términos y condiciones
-function showTermsModal() {
-  new bootstrap.Modal(document.getElementById('termsModal')).show();
-}
-
-// Configurar el link de términos
-document.addEventListener('DOMContentLoaded', function() {
-  const termsLink = document.getElementById('openTermsLink');
-  if (termsLink) {
-    termsLink.onclick = function(e) {
-      e.preventDefault();
-      showTermsModal();
-    };
-  }
-});
-
-// Función para mostrar el modal de perfil
-function showProfileModal() {
-  if (!state.currentUser) return;
-  
-  const nameInput = document.getElementById('profileName');
-  const emailInput = document.getElementById('profileEmail');
-  
-  if (nameInput) nameInput.value = state.currentUser.name || '';
-  if (emailInput) emailInput.value = state.currentUser.email || '';
-  
-  new bootstrap.Modal(document.getElementById('profileModal')).show();
-}
-
-// Función para actualizar el carrito
-function updateCartQuantity(itemId, change) {
-  const item = state.cart.find(i => i.id === itemId);
-  if (!item) return;
-  
-  const product = state.products.find(p => p.id === item.productId);
-  if (!product) return;
-  
-  const newQuantity = item.quantity + change;
-  
-  if (newQuantity < 1) {
-    removeFromCart(itemId);
-    return;
-  }
-  
-  if (newQuantity > product.stock) {
-    showToast('❌ No hay suficiente stock', 'error');
-    return;
-  }
-  
-  item.quantity = newQuantity;
-  saveState();
-  renderCartItems();
-  updateCartUI();
-}
-
-function removeFromCart(itemId) {
-  state.cart = state.cart.filter(i => i.id !== itemId);
-  saveState();
-  renderCartItems();
-  updateCartUI();
-  showToast('🗑️ Producto eliminado', 'info');
-}
-
-// Función para compra inmediata
-async function buyNow(auctionId) {
-  if (!state.currentUser) {
-    showLoginModal();
-    return;
-  }
-  
-  const auction = state.auctions.find(a => a.id === auctionId);
-  if (!auction || !auction.buyNowPrice) {
-    showToast('❌ Compra directa no disponible', 'error');
-    return;
-  }
-  
-  if (state.currentUser.balance < auction.buyNowPrice) {
-    showToast('❌ Saldo insuficiente', 'error');
-    showTopupModal();
-    return;
-  }
-  
-  showLoading('Procesando compra...');
-  
-  try {
-    // Debitar saldo
-    state.currentUser.balance -= auction.buyNowPrice;
-    
-    // Finalizar subasta
-    auction.status = 'sold';
-    auction.winner = state.currentUser.id;
-    auction.finalPrice = auction.buyNowPrice;
-    
-    // Crear notificación
-    createNotification('auction_won', {
-      itemId: auction.id,
-      itemName: auction.title,
-      itemImage: auction.image,
-      amount: auction.buyNowPrice,
-      paymentStatus: 'pending'
-    });
-    
-    // Actualizar en Firestore
-    if (db && state.currentUser) {
-      await db.collection('users').doc(state.currentUser.id).update({
-        balance: state.currentUser.balance
-      });
-    }
-    
-    await saveState();
-    
-    createConfetti();
-    renderAuctions();
-    renderFeaturedAuction();
-    updateUI();
-    
-    showToast(`🎉 ¡Felicidades! Compraste "${auction.title}"`, 'success');
-    
-  } catch (error) {
-    handleError(error, 'Compra directa');
-  } finally {
-    hideLoading();
-  }
-}
-
-// Función para crear notificaciones
-function createNotification(type, data) {
-  const notification = {
-    id: Date.now(),
-    type,
-    data,
-    userId: state.currentUser?.id,
-    read: false,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
-  };
-  
-  state.notifications.push(notification);
-  saveState();
-  updateInboxUI();
-}
-
-// Función para actualizar la bandeja de entrada
-function updateInboxUI() {
-  const badge = document.getElementById('inboxBadge');
-  const unreadCount = state.notifications.filter(n => !n.read && n.userId === state.currentUser?.id).length;
-  
-  if (badge) {
-    if (unreadCount > 0) {
-      badge.textContent = unreadCount;
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
-    }
-  }
-}
-
-// Función para mostrar la bandeja de entrada
-function showInboxModal() {
-  if (!state.currentUser) return;
-  
-  // Aquí iría el código para renderizar las notificaciones
-  // Por ahora mostramos un mensaje básico
-  showToast('📬 Bandeja de entrada', 'info');
-}
-
-console.log('✅ JavaScript cargado correctamente');
-  .filter(n => {
+    .filter(n => {
     const isExpired = new Date(n.expiresAt) < new Date();
     return n.data.paymentStatus === 'pending' && isExpired;
   });
 
   // Actualizar estadísticas
-  document.getElementById('statActiveAuctions').textContent = activeAuctions;
-  document.getElementById('statPaidOrders').textContent = paidNotifs.length;
-  document.getElementById('statPendingOrders').textContent = pendingNotifs.length;
-  document.getElementById('statExpiredOrders').textContent = expiredNotifs.length;
+  const statActiveAuctions = document.getElementById('statActiveAuctions');
+  const statPaidOrders = document.getElementById('statPaidOrders');
+  const statPendingOrders = document.getElementById('statPendingOrders');
+  const statExpiredOrders = document.getElementById('statExpiredOrders');
+  
+  if (statActiveAuctions) statActiveAuctions.textContent = activeAuctions;
+  if (statPaidOrders) statPaidOrders.textContent = paidNotifs.length;
+  if (statPendingOrders) statPendingOrders.textContent = pendingNotifs.length;
+  if (statExpiredOrders) statExpiredOrders.textContent = expiredNotifs.length;
 
   // Calcular montos
   const paidAmount = paidNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
   const pendingAmount = pendingNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
   const expiredAmount = expiredNotifs.reduce((sum, n) => sum + (n.data.amount || 0), 0);
 
-  document.getElementById('statPaidAmount').textContent = paidAmount;
-  document.getElementById('statPendingAmount').textContent = pendingAmount;
-  document.getElementById('statExpiredAmount').textContent = expiredAmount;
-
-  // Renderizar actividad reciente
-  renderRecentActivity();
-}
-
-function renderRecentActivity() {
-  const container = document.getElementById('recentActivityList');
-  if (!container) return;
-
-  // Combinar y ordenar actividades recientes
-  const recentActivities = [
-    ...state.bids.slice(-10).map(bid => ({
-      type: 'bid',
-      message: `Nueva puja de $${bid.amount}`,
-      timestamp: bid.timestamp,
-      auction: state.auctions.find(a => a.id === bid.auctionId)
-    })),
-    ...state.notifications.slice(-5).map(notif => ({
-      type: 'notification',
-      message: `Notificación: ${notif.type}`,
-      timestamp: notif.createdAt,
-      data: notif.data
-    }))
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-   .slice(0, 8);
-
-  container.innerHTML = recentActivities.map(activity => `
-    <div class="flex items-center gap-3 p-3 border-b border-slate-700 last:border-b-0">
-      <div class="w-2 h-2 rounded-full ${activity.type === 'bid' ? 'bg-pink-500' : 'bg-blue-500'}"></div>
-      <div class="flex-1">
-        <div class="text-sm">${activity.message}</div>
-        <div class="text-xs text-slate-400">${new Date(activity.timestamp).toLocaleString()}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Función para mostrar términos y condiciones
-function showTermsModal() {
-  new bootstrap.Modal(document.getElementById('termsModal')).show();
-}
-
-// INICIALIZACIÓN
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Iniciando Subasta Argenta...');
+  const statPaidAmount = document.getElementById('statPaidAmount');
+  const statPendingAmount = document.getElementById('statPendingAmount');
+  const statExpiredAmount = document.getElementById('statExpiredAmount');
   
-  // Cargar estado inicial
-  loadState().then(() => {
-    // Configurar Firebase
-    setupAuthListener();
-    
-    // Configurar UI
-    updateUI();
-    renderAuctions();
-    renderProducts();
-    renderFeaturedAuction();
-    
-    // Configurar listeners
-    setupListeners();
-    setupMobileMenu();
-    
-    // Iniciar servicios
-    startCountdown();
-    startBotActivity();
-    
-    console.log('✅ Aplicación iniciada correctamente');
-  }).catch(error => {
-    console.error('❌ Error al iniciar:', error);
-    showToast('Error al cargar la aplicación', 'error');
-  });
+  if (statPaidAmount) statPaidAmount.textContent = paidAmount;
+  if (statPendingAmount) statPendingAmount.textContent = pendingAmount;
+  if (statExpiredAmount) statExpiredAmount.textContent = expiredAmount;
+}
+
+// INICIALIZACIÓN BÁSICA PARA EVITAR ERRORES
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔄 Iniciando aplicación...');
+  
+  // Cargar datos básicos
+  setTimeout(() => {
+    if (typeof loadState === 'function') {
+      loadState();
+    }
+    if (typeof updateUI === 'function') {
+      updateUI();
+    }
+    if (typeof renderAuctions === 'function') {
+      renderAuctions();
+    }
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    console.log('✅ Aplicación lista');
+  }, 100);
 });
 
-// Configurar el link de términos
+// Función básica para mostrar términos
+function showTermsModal() {
+  const termsModal = document.getElementById('termsModal');
+  if (termsModal) {
+    new bootstrap.Modal(termsModal).show();
+  }
+}
+
+// Configurar links de términos
 document.addEventListener('DOMContentLoaded', function() {
-  const termsLink = document.getElementById('openTermsLink');
-  if (termsLink) {
-    termsLink.onclick = function(e) {
+  const termsLinks = document.querySelectorAll('[id*="openTermsLink"]');
+  termsLinks.forEach(link => {
+    link.onclick = function(e) {
       e.preventDefault();
       showTermsModal();
     };
-  }
+  });
 });
+
+console.log('📦 JavaScript cargado - Listo para usar');
 </script>
 <!-- MODAL DE DETALLES DEL PRODUCTO -->
 <div class="modal fade" id="productDetailModal" tabindex="-1">
