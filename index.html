@@ -4986,6 +4986,76 @@ function filterProducts() {
   renderProducts(filtered);
 }
 
+async function createProduct(e) {
+  e.preventDefault();
+  
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('⌛ Solo administradores', 'error');
+    return;
+  }
+  
+  const title = document.getElementById('productTitle').value;
+  const description = document.getElementById('productDescription').value;
+  const price = parseFloat(document.getElementById('productPrice').value);
+  const stock = parseInt(document.getElementById('productStock').value);
+  const category = document.getElementById('productCategory').value;
+  const image = document.getElementById('productImage').value || 
+                'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  
+  showLoading('Creando producto...');
+  
+  try {
+    const newProduct = {
+      id: Math.max(0, ...state.products.map(p => p.id || 0)) + 1,
+      title,
+      description,
+      price,
+      stock,
+      category,
+      image,
+      featured: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    state.products.push(newProduct);
+    await saveState();
+    
+    document.getElementById('createProductForm').reset();
+    renderProducts();
+    renderAdminProductsList();
+    
+    showToast('✅ Producto creado', 'success');
+  } catch (error) {
+    handleError(error, 'Crear producto');
+  } finally {
+    hideLoading();
+  }
+}
+
+function editProduct(id) {
+  const product = state.products.find(p => p.id === id);
+  if (!product) return;
+  
+  const newPrice = prompt('Nuevo precio:', product.price);
+  if (newPrice && !isNaN(newPrice)) {
+    product.price = parseFloat(newPrice);
+    saveState();
+    renderProducts();
+    renderAdminProductsList();
+    showToast('✅ Precio actualizado', 'success');
+  }
+}
+
+function deleteProduct(id) {
+  if (confirm('¿Eliminar este producto?')) {
+    state.products = state.products.filter(p => p.id !== id);
+    saveState();
+    renderProducts();
+    renderAdminProductsList();
+    showToast('🗑️ Producto eliminado', 'info');
+  }
+}
+
 function filterProducts() {
   const search = document.getElementById('searchProducts')?.value.toLowerCase() || '';
   const category = document.getElementById('filterProductCategory')?.value || 'all';
