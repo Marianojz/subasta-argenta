@@ -5202,6 +5202,47 @@ function setupListeners() {
   safeAssign('filterTime', 'onchange', filterAuctions);
 }
 
+function setupAuthListeners() {
+  // Botones principales
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  
+  if (loginBtn) loginBtn.addEventListener('click', showLoginModal);
+  if (registerBtn) registerBtn.addEventListener('click', showRegisterModal);
+  if (logoutBtn) logoutBtn.addEventListener('click', logout);
+  
+  // Formularios
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  
+  if (loginForm) loginForm.addEventListener('submit', handleLogin);
+  if (registerForm) registerForm.addEventListener('submit', handleRegister);
+  
+  // Switches entre modales
+  const switchToRegister = document.getElementById('switchToRegister');
+  const switchToLogin = document.getElementById('switchToLogin');
+  
+  if (switchToRegister) {
+    switchToRegister.addEventListener('click', function(e) {
+      e.preventDefault();
+      const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+      if (loginModal) loginModal.hide();
+      setTimeout(() => new bootstrap.Modal(document.getElementById('registerModal')).show(), 300);
+    });
+  }
+  
+  if (switchToLogin) {
+    switchToLogin.addEventListener('click', function(e) {
+      e.preventDefault();
+      const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+      if (registerModal) registerModal.hide();
+      setTimeout(() => new bootstrap.Modal(document.getElementById('loginModal')).show(), 300);
+    });
+  }
+}
+
+
 // ======================
 // FUNCIONES DEMO Y UTILIDADES
 // ======================
