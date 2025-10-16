@@ -5012,6 +5012,87 @@ function setupListeners() {
   safeAssign('filterTime', 'onchange', filterAuctions);
 }
 
+// ======================
+// FUNCIONES DEMO Y UTILIDADES
+// ======================
+
+function createDemoData() {
+  if (confirm('¿Crear datos de demostración? Esto agregará subastas y productos de ejemplo.')) {
+    const now = new Date();
+    
+    // Agregar subastas de demo
+    const demoAuctions = [
+      {
+        id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
+        title: 'iPhone 15 Pro Max',
+        description: 'Nuevo en caja sellada, 256GB',
+        image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+        category: 'Electrónicos',
+        startPrice: 1000,
+        currentBid: 1000,
+        buyNowPrice: 2000,
+        endTime: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+        sellerId: 999,
+        bids: [],
+        lastBidTime: now.toISOString(),
+        status: 'active'
+      },
+      {
+        id: Math.max(0, ...state.auctions.map(a => a.id)) + 2,
+        title: 'PlayStation 5',
+        description: 'Edición standard con 2 joysticks',
+        image: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500',
+        category: 'Electrónicos',
+        startPrice: 800,
+        currentBid: 800,
+        buyNowPrice: 1500,
+        endTime: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+        sellerId: 999,
+        bids: [],
+        lastBidTime: now.toISOString(),
+        status: 'active'
+      }
+    ];
+    
+    // Agregar productos de demo
+    const demoProducts = [
+      {
+        id: Math.max(0, ...state.products.map(p => p.id)) + 1,
+        title: 'Auriculares Bluetooth',
+        description: 'Cancelación de ruido, batería 30h',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+        category: 'Electrónicos',
+        price: 150,
+        stock: 10,
+        featured: true
+      },
+      {
+        id: Math.max(0, ...state.products.map(p => p.id)) + 2,
+        title: 'Smartwatch Deportivo',
+        description: 'Resistente al agua, GPS incorporado',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
+        category: 'Electrónicos',
+        price: 200,
+        stock: 5,
+        featured: false
+      }
+    ];
+    
+    // Agregar a los estados
+    state.auctions.push(...demoAuctions);
+    state.products.push(...demoProducts);
+    
+    // Guardar y actualizar
+    saveState();
+    renderAuctions();
+    renderProducts();
+    renderFeaturedAuction();
+    updateCategoryFilter();
+    
+    showToast('🎉 Datos de demostración creados exitosamente', 'success');
+  }
+}
+
 function toggleAdminPanel() {
   if (!state.currentUser || state.currentUser.role !== 'admin') {
     showToast('❌ Solo administradores pueden acceder', 'error');
