@@ -5149,6 +5149,32 @@ async function createAuction(e) {
       imageUrl = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
     }
     
+    // ======================
+// FUNCIONES DE FILTRADO
+// ======================
+
+function filterAuctions() {
+  const search = document.getElementById('searchAuctions')?.value.toLowerCase() || '';
+  const sortBy = document.getElementById('sortAuctions')?.value || 'ending';
+  const filterState = document.getElementById('filterAuctionState')?.value || 'all';
+  
+  let filtered = state.auctions.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(search) || a.description.toLowerCase().includes(search);
+    const matchState = filterState === 'all' || a.status === filterState;
+    return matchSearch && matchState;
+  });
+  
+  if (sortBy === 'highest') {
+    filtered.sort((a, b) => (b.currentBid || b.startPrice) - (a.currentBid || a.startPrice));
+  } else if (sortBy === 'newest') {
+    filtered.sort((a, b) => new Date(b.lastBidTime) - new Date(a.lastBidTime));
+  } else {
+    filtered.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+  }
+  
+  renderAuctions(filtered);
+}
+
     // Calcular fecha de finalización
     const endTime = new Date();
     endTime.setMinutes(endTime.getMinutes() + duration);
