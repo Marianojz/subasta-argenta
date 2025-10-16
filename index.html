@@ -5103,6 +5103,10 @@ function createDemoData() {
   }
 }
 
+function showAddFundsModal() {
+  showTopupModal();
+}
+
 function toggleAdminPanel() {
   if (!state.currentUser || state.currentUser.role !== 'admin') {
     showToast('❌ Solo administradores pueden acceder', 'error');
