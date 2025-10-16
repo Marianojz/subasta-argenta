@@ -5057,6 +5057,61 @@ function initParticles() {
   
   animate();
 }
+
+// ======================
+// SISTEMA DE BOTS
+// ======================
+
+function startBotActivity() {
+  if (botActivityInterval) clearInterval(botActivityInterval);
+  
+  botActivityInterval = setInterval(() => {
+    if (!state.botSettings.enabled || !state.currentUser) return;
+    
+    const activeAuctions = state.auctions.filter(a => a.status === 'active');
+    
+    activeAuctions.forEach(auction => {
+      const activeBots = state.botUsers.filter(b => {
+        if (!b.active || b.balance <= (auction.currentBid || auction.startPrice) + 50) return false;
+        const botDelay = (b.delay || state.botSettings.delayGlobal) * 60000;
+        const timeSince = new Date() - new Date(auction.lastBidTime);
+        return timeSince >= botDelay;
+      });
+      
+      if (!activeBots.length) return;
+      
+      if (Math.random() * 100 <= state.botSettings.probability) {
+        const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
+        const bidAmount = (auction.currentBid || auction.startPrice) + 500 + (Math.floor(Math.random() * 3) * 100);
+        
+        if (bot.balance >= bidAmount) {
+          // Descontar saldo del bot
+          bot.balance -= bidAmount;
+          
+          state.bids.push({ 
+            id: state.bids.length + 1, 
+            auctionId: auction.id, 
+            userId: bot.id, 
+            amount: bidAmount, 
+            timestamp: new Date().toISOString() 
+          });
+          
+          auction.bids.push(bot.id);
+          auction.currentBid = bidAmount;
+          auction.lastBidTime = new Date().toISOString();
+          
+          // Guardar inmediatamente
+          saveState();
+          
+          // Mostrar notificación SOLO A ADMINS
+          if (state.currentUser?.role === 'admin') {
+            showToast(`🤖 ${bot.name} pujó $${bidAmount}`, 'info');
+          }
+        }
+      }
+    });
+  }, 30000); // Verificar cada 30 segundos
+}
 // ======================
 // CONFIGURACIÓN DE LISTENERS
 // ======================
