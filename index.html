@@ -5492,35 +5492,37 @@ function hideAdminPanel() {
 async function init() {
   console.log("🚀 Iniciando Subasta Argenta...");
   
-  // Cargar estado
-  await loadState();
-  
-  // Configurar listeners
-  setupListeners();
-  
-  // Inicializar UI
-  updateUI();
-  renderAuctions();
-  renderProducts();
-  renderFeaturedAuction();
-  startCountdown();
-  setupMobileMenu();
-  initParticles();
-  
-  // Configurar auth
-  setupAuthListener();
-  
-  // Iniciar actividad de bots
-  startBotActivity();
-  
-  console.log("✅ App inicializada");
-}
-
-// Iniciar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+  try {
+    // Cargar estado inicial
+    await loadState();
+    
+    // Configurar todos los listeners
+    setupListeners();
+    setupAuthListeners(); // ✅ AGREGAR ESTA LÍNEA
+    
+    // Inicializar UI
+    updateUI();
+    renderAuctions();
+    renderProducts();
+    renderFeaturedAuction();
+    startCountdown();
+    
+    // Efectos visuales
+    initParticles();
+    setupMobileMenu();
+    
+    // Sistema de bots
+    startBotActivity();
+    
+    // Configurar auth persistence
+    setupAuthListener();
+    
+    console.log("✅ App completamente inicializada");
+    
+  } catch (error) {
+    console.error('❌ Error en inicialización:', error);
+    showToast('⚠️ Error al cargar la aplicación', 'error');
+  }
 }
 
 // ======================
