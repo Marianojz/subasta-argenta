@@ -5012,6 +5012,25 @@ function setupListeners() {
   safeAssign('filterTime', 'onchange', filterAuctions);
 }
 
+function toggleAdminPanel() {
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('❌ Solo administradores pueden acceder', 'error');
+    return;
+  }
+  
+  const adminPanel = document.getElementById('adminPanel');
+  const mainContent = document.querySelector('main');
+  
+  if (adminPanel.style.display === 'none' || !adminPanel.style.display) {
+    adminPanel.style.display = 'block';
+    if (mainContent) mainContent.style.display = 'none';
+    showToast('🔧 Panel de administración activado', 'info');
+  } else {
+    adminPanel.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'block';
+  }
+}
+
 // INICIALIZACIÓN
 // ======================
 
