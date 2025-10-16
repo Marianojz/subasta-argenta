@@ -4958,6 +4958,40 @@ function filterAuctions() {
   renderAuctions(filtered);
 }
 // ======================
+// FUNCIONES DE INTERFAZ MÓVIL
+// ======================
+
+function setupMobileMenu() {
+  const menuItems = document.querySelectorAll('.mobile-menu-item');
+  
+  menuItems.forEach(item => {
+    item.addEventListener('click', function() {
+      // Remover activo de todos los items
+      menuItems.forEach(i => i.classList.remove('active'));
+      
+      // Agregar activo al item clickeado
+      this.classList.add('active');
+      
+      const target = this.dataset.target;
+      
+      // Navegar según el target
+      switch(target) {
+        case 'auctions':
+          document.getElementById('auctions-tab').click();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          break;
+        case 'store':
+          document.getElementById('store-tab').click();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          break;
+        case 'cart':
+          showCartModal();
+          break;
+      }
+    });
+  });
+}
+// ======================
 // CONFIGURACIÓN DE LISTENERS
 // ======================
 
