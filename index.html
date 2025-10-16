@@ -5107,6 +5107,91 @@ function showAddFundsModal() {
   showTopupModal();
 }
 
+// ======================
+// FUNCIONES DE ADMINISTRACIÓN
+// ======================
+
+async function createAuction(e) {
+  e.preventDefault();
+  
+  if (!state.currentUser || state.currentUser.role !== 'admin') {
+    showToast('❌ Solo administradores pueden crear subastas', 'error');
+    return;
+  }
+  
+  const title = document.getElementById('auctionTitle').value;
+  const description = document.getElementById('auctionDescription').value;
+  const startPrice = parseFloat(document.getElementById('auctionStartPrice').value);
+  const buyNowPrice = document.getElementById('auctionBuyNow').value ? 
+    parseFloat(document.getElementById('auctionBuyNow').value) : null;
+  const duration = parseInt(document.getElementById('auctionDuration').value);
+  const category = document.getElementById('auctionCategory').value;
+  
+  // Validar campos requeridos
+  if (!title || !description || !startPrice || !duration || !category) {
+    showToast('❌ Completa todos los campos requeridos', 'error');
+    return;
+  }
+  
+  // Validar que buyNowPrice sea mayor que startPrice si se especifica
+  if (buyNowPrice && buyNowPrice <= startPrice) {
+    showToast('❌ El precio de compra directa debe ser mayor al precio inicial', 'error');
+    return;
+  }
+  
+  showLoading('Creando subasta...');
+  
+  try {
+    // Obtener imagen (usar URL o imagen por defecto)
+    let imageUrl = document.getElementById('auctionImageURL').value;
+    if (!imageUrl) {
+      // Usar imagen por defecto si no se proporciona URL
+      imageUrl = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=500';
+    }
+    
+    // Calcular fecha de finalización
+    const endTime = new Date();
+    endTime.setMinutes(endTime.getMinutes() + duration);
+    
+    // Crear nueva subasta
+    const newAuction = {
+      id: Math.max(0, ...state.auctions.map(a => a.id)) + 1,
+      title: title,
+      description: description,
+      image: imageUrl,
+      category: category,
+      startPrice: startPrice,
+      currentBid: startPrice,
+      buyNowPrice: buyNowPrice,
+      endTime: endTime.toISOString(),
+      sellerId: state.currentUser.id,
+      bids: [],
+      lastBidTime: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    // Agregar a las subastas
+    state.auctions.push(newAuction);
+    
+    // Limpiar formulario
+    document.getElementById('createAuctionForm').reset();
+    
+    // Guardar y actualizar
+    await saveState();
+    renderAuctions();
+    renderFeaturedAuction();
+    updateCategoryFilter();
+    
+    showToast('✅ Subasta creada exitosamente', 'success');
+    
+  } catch (error) {
+    console.error('Error creando subasta:', error);
+    showToast('❌ Error al crear la subasta', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
 function toggleAdminPanel() {
   if (!state.currentUser || state.currentUser.role !== 'admin') {
     showToast('❌ Solo administradores pueden acceder', 'error');
