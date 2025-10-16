@@ -3477,7 +3477,14 @@ updateInboxUI();
       if (openAdminBtn) openAdminBtn.style.display = 'none';
       hideAdminPanel();
     }
-    
+    function hideAdminPanel() {
+  const adminPanel = document.getElementById('adminPanel');
+  const mainContent = document.querySelector('main');
+  
+  if (adminPanel) adminPanel.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
+}
+
   } else {
     // SIN SESIÓN
     if (userInfo) {
