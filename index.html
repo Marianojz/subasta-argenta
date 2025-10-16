@@ -5386,10 +5386,21 @@ function toggleAdminPanel() {
     adminPanel.style.display = 'block';
     if (mainContent) mainContent.style.display = 'none';
     showToast('🔧 Panel de administración activado', 'info');
+    
+    // Cargar datos del dashboard
+    renderDashboardStats();
   } else {
     adminPanel.style.display = 'none';
     if (mainContent) mainContent.style.display = 'block';
   }
+}
+
+function hideAdminPanel() {
+  const adminPanel = document.getElementById('adminPanel');
+  const mainContent = document.querySelector('main');
+  
+  if (adminPanel) adminPanel.style.display = 'none';
+  if (mainContent) mainContent.style.display = 'block';
 }
 
 // INICIALIZACIÓN
