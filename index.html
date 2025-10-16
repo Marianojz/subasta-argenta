@@ -1581,6 +1581,47 @@ header .btn:hover::after {
     margin: 0;
   }
 }
+
+  /* ✅ AGREGAR JUSTO AQUÍ - ANTES DE </style> */
+  /* Correcciones de visualización */
+  .admin-tab-content {
+    display: none;
+  }
+
+  .admin-tab-content:first-child {
+    display: block;
+  }
+
+  .status-badge.status-active {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--success);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+  }
+
+  .status-badge.status-ended {
+    background: rgba(255, 56, 96, 0.2);
+    color: var(--danger);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+  }
+
+  /* Mejoras responsive */
+  @media (max-width: 768px) {
+    .admin-tabs {
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    
+    .admin-tab {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+  }
+
+  
   </style>
 </head><body class="text-slate-100 pb-16 md:pb-0">
   <div id="particles-js"></div>
