@@ -3838,17 +3838,25 @@ let addressData = null;
 let autocomplete = null;
 let mapPreview = null;
 
-// Inicializar Google Maps Autocomplete
+
 function initAutocomplete() {
   const input = document.getElementById('addressAutocomplete');
-  if (!input) return;
+  if (!input || typeof google === 'undefined' || !google.maps || !google.maps.places) {
+    console.warn('⚠️ Google Maps Places no disponible');
+    return;
+  }
 
-  autocomplete = new google.maps.places.Autocomplete(input, {
-    componentRestrictions: { country: 'ar' },
-    fields: ['address_components', 'geometry', 'formatted_address']
-  });
+  try {
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'ar' },
+      fields: ['address_components', 'geometry', 'formatted_address']
+    });
 
-  autocomplete.addListener('place_changed', onPlaceChanged);
+    autocomplete.addListener('place_changed', onPlaceChanged);
+    console.log('✅ Google Maps Autocomplete inicializado');
+  } catch (error) {
+    console.error('❌ Error inicializando Autocomplete:', error);
+  }
 }
 
 function onPlaceChanged() {
