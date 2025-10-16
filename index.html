@@ -5329,6 +5329,43 @@ function createDemoData() {
   showToast('🎉 Datos de demostración creados exitosamente!', 'success');
 }
 
+// ✅ AGREGAR ESTA FUNCIÓN NUEVA:
+function renderDashboardStats() {
+  // Contar subastas activas
+  const activeAuctions = state.auctions.filter(a => 
+    a.status === 'active' && new Date(a.endTime) > new Date()
+  ).length;
+  
+  // Contar órdenes pagadas
+  const paidOrders = state.orders.filter(o => o.status === 'completed').length;
+  const paidAmount = state.orders
+    .filter(o => o.status === 'completed')
+    .reduce((sum, o) => sum + o.total, 0);
+  
+  // Órdenes pendientes
+  const pendingOrders = state.orders.filter(o => o.status === 'pending').length;
+  const pendingAmount = state.orders
+    .filter(o => o.status === 'pending')
+    .reduce((sum, o) => sum + o.total, 0);
+  
+  // Actualizar UI
+  if (document.getElementById('statActiveAuctions')) {
+    document.getElementById('statActiveAuctions').textContent = activeAuctions;
+  }
+  if (document.getElementById('statPaidOrders')) {
+    document.getElementById('statPaidOrders').textContent = paidOrders;
+  }
+  if (document.getElementById('statPaidAmount')) {
+    document.getElementById('statPaidAmount').textContent = paidAmount;
+  }
+  if (document.getElementById('statPendingOrders')) {
+    document.getElementById('statPendingOrders').textContent = pendingOrders;
+  }
+  if (document.getElementById('statPendingAmount')) {
+    document.getElementById('statPendingAmount').textContent = pendingAmount;
+  }
+}
+
 function showAddFundsModal() {
   showTopupModal();
 }
