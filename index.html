@@ -4284,47 +4284,24 @@ async function processTopupPayment() {
   document.getElementById('topupLoading').classList.remove('hidden');
   
   try {
-    // Simulación de procesamiento con MercadoPago
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulación de procesamiento de pago
+    await new Promise(resolve => setTimeout(resolve, 2500));
     
-    // Simular transacción exitosa
+    // Actualizar saldo del usuario
     state.currentUser.balance += topupAmount;
-    
-    // Guardar transacción
-    state.orders.push({
-      id: Date.now(),
-      userId: state.currentUser.id,
-      type: 'topup',
-      items: [],
-      total: topupAmount,
-      paymentMethod: 'mercadopago',
-      timestamp: new Date().toISOString(),
-      status: 'completed'
-    });
-    
-    // Actualizar saldo en Firestore
-    if (db && state.currentUser) {
-      await db.collection('users').doc(state.currentUser.id).update({
-        balance: state.currentUser.balance
-      });
-    }
-    
     await saveState();
     
+    // Mostrar éxito
     document.getElementById('topupLoading').classList.add('hidden');
     document.getElementById('topupSuccess').classList.remove('hidden');
-    document.getElementById('topupDetails').innerHTML = `
-      <div class="glass-light p-3 rounded mt-3">
-        <div class="mb-2"><strong>💰 Monto recargado:</strong> $${topupAmount}</div>
-        <div class="mb-2"><strong>💳 Método:</strong> MercadoPago</div>
-        <div class="mb-2"><strong>✅ Estado:</strong> <span class="text-success">Aprobado</span></div>
-        <div class="mb-2"><strong>🆔 ID Transacción:</strong> #${Date.now()}</div>
-        <div class="mb-2"><strong>💵 Nuevo saldo:</strong> <span class="price-tag">$${state.currentUser.balance}</span></div>
-        <div class="text-xs text-slate-400 mt-2">
-          <i class="fas fa-info-circle"></i> Esta es una simulación. La integración real con MercadoPago se agregará próximamente.
-        </div>
-      </div>
-    `;
+    document.getElementById('topupSuccessAmount').textContent = topupAmount;
+    
+    updateBalanceDisplay();
+    
+    setTimeout(() => {
+      bootstrap.Modal.getInstance(document.getElementById('topupModal')).hide();
+      createConfetti();
+    }, 2000);
     
     updateUI();
     
