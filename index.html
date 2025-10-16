@@ -4922,8 +4922,95 @@ function filterProducts() {
   renderProducts(filtered);
 }
 
+// ======================
+// CONFIGURACIÓN DE LISTENERS
+// ======================
 
+function setupListeners() {
+  // Helper para asignar eventos de forma segura
+  function safeAssign(id, event, handler) {
+    const element = document.getElementById(id);
+    if (element) {
+      element[event] = handler;
+    } else {
+      console.warn(`⚠️ Elemento no encontrado: ${id}`);
+    }
+  }
+  
+  // Auth y perfil
+  safeAssign('loginBtn', 'onclick', showLoginModal);
+  safeAssign('registerBtn', 'onclick', showRegisterModal);
+  safeAssign('logoutBtn', 'onclick', logout);
+  safeAssign('loginForm', 'onsubmit', handleLogin);
+  
+  // Registro
+  safeAssign('registerForm', 'onsubmit', handleRegister);
+  safeAssign('switchToRegister', 'onclick', (e) => {
+    e.preventDefault();
+    switchToRegister();
+  });
+  safeAssign('switchToLogin', 'onclick', (e) => {
+    e.preventDefault();
+    switchToLogin();
+  });
+  
+  // Términos y condiciones
+  const termsLink = document.getElementById('openTermsLink');
+  if (termsLink) {
+    termsLink.onclick = (e) => {
+      e.preventDefault();
+      new bootstrap.Modal(document.getElementById('termsModal')).show();
+    };
+  }
+  
+  // Perfil
+  safeAssign('profileBtn', 'onclick', () => {
+    if (!state.currentUser) return;
+    const nameInput = document.getElementById('profileName');
+    const emailInput = document.getElementById('profileEmail');
+    if (nameInput) nameInput.value = state.currentUser.name || '';
+    if (emailInput) emailInput.value = state.currentUser.email || '';
+    new bootstrap.Modal(document.getElementById('profileModal')).show();
+  });
 
+  safeAssign('profileForm', 'onsubmit', (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('profileName');
+    if (nameInput && state.currentUser) {
+      state.currentUser.name = nameInput.value;
+      saveState();
+      updateUI();
+      bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+      showToast('Perfil actualizado', 'success');
+    }
+  });
+  
+  // Carrito y pagos
+  safeAssign('cartBtn', 'onclick', showCartModal);
+  safeAssign('inboxBtn', 'onclick', showInboxModal);
+  safeAssign('checkoutBtn', 'onclick', checkout);
+  safeAssign('mercadopagoBtn', 'onclick', showMercadoPagoModal);
+  
+  // Admin
+  safeAssign('btnCreateDemo', 'onclick', createDemoData);
+  safeAssign('openAdmin', 'onclick', toggleAdminPanel);
+  safeAssign('topup', 'onclick', showTopupModal);
+  
+  // Formularios
+  safeAssign('createAuctionForm', 'onsubmit', createAuction);
+  safeAssign('bidForm', 'onsubmit', placeBid);
+  safeAssign('createProductForm', 'onsubmit', createProduct);
+  
+  // Filtros
+  safeAssign('searchAuctions', 'oninput', debounce(filterAuctions, 300));
+  safeAssign('sortAuctions', 'onchange', filterAuctions);
+  safeAssign('filterAuctionState', 'onchange', filterAuctions);
+  safeAssign('searchProducts', 'oninput', debounce(filterProducts, 300));
+  safeAssign('filterProductCategory', 'onchange', filterProducts);
+  safeAssign('sortProducts', 'onchange', filterProducts);
+  safeAssign('filterCategory', 'onchange', filterAuctions);
+  safeAssign('filterTime', 'onchange', filterAuctions);
+}
 
 // INICIALIZACIÓN
 // ======================
